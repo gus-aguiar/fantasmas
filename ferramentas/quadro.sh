@@ -9,7 +9,7 @@ altura="${3:-42}"
 app="$(cd "$(dirname "$0")/.." && pwd)"
 spark="$(cd "$app/../../.." && pwd)"
 bin="$app/bin/fantasmas"
-mkdir -p "$app/shots" "$spark/.delegate/2026-10-26-pipes-universais/logs"
+mkdir -p "$app/shots"
 
 if [ ! -x "$bin" ] || [ -n "$(find "$app" -path "$app/bin" -prune -o -path "$app/shots" -prune -o \( -name '*.go' -o -name go.mod -o -name go.sum \) -newer "$bin" -print -quit)" ]; then
   bash "$spark/scripts/orca-orchestration/heavy-run.sh" -C "$app" "fantasmas build" env GOTOOLCHAIN=local go build -o bin/fantasmas . >&2

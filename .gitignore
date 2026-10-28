@@ -1,2 +1,3 @@
 bin/
 shots/
+__pycache__/

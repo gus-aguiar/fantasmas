@@ -12,7 +12,7 @@ func EstadoDemo(agora time.Time) dados.Estado {
 		At:       agora,
 		Raiz:     "/demo/spark",
 		Vivos:    map[string]bool{"c-pl-1": true, "c-pl-2": true, "c-pl-3": true, "c-pl-4": true},
-		Recursos: dados.Recursos{GH: true, Herdr: true, Delegate: true, Autor: "demo"},
+		Recursos: dados.Recursos{GH: true, Herdr: true, Delegate: true, Painel: "/demo/spark/scripts/delegate/painel.py", Autor: "demo"},
 		Tasks: []dados.Linha{
 			{Chave: "t-working", Rotulo: "c-pl-1", Detalhe: "working · PL-1001 · implementando", Extra: "aba-1"},
 			{Chave: "t-espera", Rotulo: "c-pl-2", Detalhe: "esperando você · PL-1002", Extra: "aba-2"},
@@ -29,6 +29,7 @@ func EstadoDemo(agora time.Time) dados.Estado {
 			{Repo: "PrologE2E", Number: 504, Motivo: "aprovado · mergear", Title: "[PL-1006] Spec de checklist", URL: "https://github.com/prologapp/PrologE2E/pull/504", Branch: "feature/e2e-PL-1006"},
 			{Repo: "GlorpDesignSystem", Number: 605, Motivo: "aprovado · mergear", Title: "[PL-1007] Token de borda", URL: "https://github.com/prologapp/GlorpDesignSystem/pull/605", Branch: "feature/borda-PL-1007"},
 			{Repo: "PrologMessaging", Number: 706, Motivo: "aguardando revisão", Title: "[PL-1008] Evento de notificação", URL: "https://github.com/prologapp/PrologMessaging/pull/706", Branch: "feature/evento-PL-1008"},
+			{Repo: "PrologExportService", Number: 807, Motivo: "aguardando revisão", Title: "[PL-1009] Exportação sem CI", URL: "https://github.com/prologapp/PrologExportService/pull/807", Branch: "feature/export-PL-1009"},
 		},
 		CI: []dados.Linha{
 			{Chave: "https://github.com/prologapp/PrologWebReact/actions/runs/1", Rotulo: "PrologWebReact · CI", Detalhe: "completed/failure · lint e testes"},
