@@ -8,12 +8,6 @@ import (
 
 const MascoteColunas, MascoteLinhas = 8, 4
 
-const (
-	corpoCor = lipgloss.Color("#a66bff")
-	olhoCor  = lipgloss.Color("#ff3355")
-	bocaCor  = lipgloss.Color("#4b2a8a")
-)
-
 var (
 	corpoAberto = [3]string{".CCCCCC.", "CCECCECC", "CCCLRCCC"}
 	corpoPisca  = [3]string{".CCCCCC.", "CC-CC-CC", "CCCLRCCC"}
@@ -22,18 +16,18 @@ var (
 )
 
 func celula(c byte, fundo lipgloss.Color) string {
-	corpo := lipgloss.NewStyle().Background(corpoCor)
+	corpo := lipgloss.NewStyle().Background(T.MascoteCorpo)
 	switch c {
 	case 'C':
 		return corpo.Render(" ")
 	case 'E':
-		return corpo.Foreground(olhoCor).Render("●")
+		return corpo.Foreground(T.MascoteOlho).Render("●")
 	case '-':
-		return corpo.Foreground(bocaCor).Render("─")
+		return corpo.Foreground(T.MascoteBoca).Render("─")
 	case 'L':
-		return corpo.Foreground(bocaCor).Render("╰")
+		return corpo.Foreground(T.MascoteBoca).Render("╰")
 	case 'R':
-		return corpo.Foreground(bocaCor).Render("╯")
+		return corpo.Foreground(T.MascoteBoca).Render("╯")
 	}
 	return lipgloss.NewStyle().Background(fundo).Render(" ")
 }

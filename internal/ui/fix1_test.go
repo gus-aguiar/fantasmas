@@ -204,7 +204,7 @@ func TestSelecaoVisivelNoAgora(t *testing.T) {
 	m.largura, m.altura = 96, 30
 	_, y := onde(t, m, "decidir", 0)
 	l := strings.Split(m.Render(96, 30), "\n")[y]
-	if !strings.Contains(l, "48;2;68;71;89") {
+	if !strings.Contains(l, "48;2;58;42;85") {
 		t.Fatalf("linha selecionada sem fundo sel: %q", l)
 	}
 }
