@@ -17,7 +17,9 @@ import (
 	"fantasmas/internal/ui"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/x/term"
+	"github.com/muesli/termenv"
 )
 
 func main() {
@@ -27,6 +29,9 @@ func main() {
 	altura := flag.Int("altura", 0, "altura do quadro (só com --uma-vez)")
 	umaVez := flag.Bool("uma-vez", false, "coleta, imprime um quadro e sai")
 	sprite := flag.String("sprite", os.Getenv("FANTASMAS_SPRITE"), "GIF do topo no lugar do Gengar embutido (ou FANTASMAS_SPRITE)")
+	cor := flag.Bool("cor", false, "força cor de 24 bits (só com --uma-vez)")
+	demo := flag.Bool("demo", false, "usa o estado de demonstração (só com --uma-vez)")
+	gaveta := flag.String("gaveta", "", "gaveta inicial: agora|crew|prs|ci|ambiente|maquina|mais (só com --uma-vez)")
 	flag.Parse()
 	if *intervalo <= 0 {
 		fmt.Fprintln(os.Stderr, "fantasmas: --intervalo deve ser positivo")
@@ -81,7 +86,17 @@ func main() {
 		if h <= 0 {
 			h = 30
 		}
-		fmt.Println(m.ComEstado(coleta(context.Background())).Render(w, h))
+		if *cor {
+			lipgloss.SetColorProfile(termenv.TrueColor)
+		}
+		if *gaveta != "" {
+			m = m.ComGaveta(*gaveta)
+		}
+		est := func() dados.Estado { return coleta(context.Background()) }
+		if *demo {
+			est = func() dados.Estado { return ui.EstadoDemo(time.Now()) }
+		}
+		fmt.Println(m.ComEstado(est()).Render(w, h))
 		return
 	}
 	logf := abrirLog(os.Getenv("FANTASMAS_DEBUG"))

@@ -102,6 +102,11 @@ func (m Model) ComEstado(e dados.Estado) Model {
 	return m
 }
 
+// ComGaveta abre o app na gaveta pedida (id desconhecido cai na primeira).
+func (m Model) ComGaveta(id string) Model {
+	return m.irGaveta(indiceGaveta(id))
+}
+
 // ComGrafico liga o Gengar como imagem kitty no lugar do sprite em células.
 func (m Model) ComGrafico(g *Grafico) Model {
 	m.img = g
