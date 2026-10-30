@@ -22,6 +22,7 @@ type Acoes struct {
 	Responder   func(chave, resposta string) (dados.Entrega, error)
 	LerArquivo  func(string) ([]byte, error)
 	Arquivar    func(chave string) error
+	Retomar     func(c dados.Caido) error
 	MarcarVisto func(pasta string) (string, error)
 	// botões da gaveta máquina
 	Daydreaming    func() (string, error)
@@ -86,6 +87,7 @@ type Model struct {
 	antigas   bool
 	rascunhos bool
 	armadoArq string
+	armadoRet string
 	vistos    map[string]bool
 	pedindoDD bool
 	vigiaMCP  bool
@@ -569,9 +571,12 @@ func (m Model) mouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) tecla(k string) (tea.Model, tea.Cmd) {
-	armadoArq := m.armadoArq
-	m.armadoArq = ""
+	armadoArq, armadoRet := m.armadoArq, m.armadoRet
+	m.armadoArq, m.armadoRet = "", ""
 	switch k {
+	case "R":
+		m.armadoRet = armadoRet
+		return m.retomar()
 	case "x":
 		m.armadoArq = armadoArq
 		return m.arquivar()
@@ -733,6 +738,7 @@ func (m Model) ajudaLinhas(largura int) []string {
 		k("p", "abre o painel do delegate"),
 		k("a", "abre · recolhe as antigas"),
 		k("x 2×", "arquiva a pergunta antiga"),
+		k("R 2×", "retoma fantasminha caído (crew)"),
 		k("d", "PRs: mostra · esconde rascunhos"),
 		k("D", "pede rodada do DayDreaming"),
 		k("M", "reconecta os MCPs de todas as sessões"),
@@ -961,6 +967,46 @@ func botoesItem(bg lipgloss.Color, a alvo, armadoArq string) string {
 }
 
 // arquivar pede confirmação: o primeiro x (ou clique) arma, o segundo grava.
+func (m Model) retomar() (tea.Model, tea.Cmd) {
+	a, ok := m.selecionado()
+	if !ok || a.retomar == "" {
+		m.armadoRet = ""
+		return m, nil
+	}
+	var c dados.Caido
+	for _, x := range m.estado.Caidos {
+		if x.Nome == a.retomar {
+			c = x
+		}
+	}
+	if c.SessionID == "" || c.Pane == "" {
+		m.armadoRet = ""
+		return m.mostrarToast("sem session_id; retome à mão", T.Espera)
+	}
+	if m.armadoRet != c.Nome {
+		m.armadoRet = c.Nome
+		m.status = "R de novo confirma retomar " + c.Nome
+		return m, nil
+	}
+	m.armadoRet = ""
+	if m.acoes.Retomar == nil {
+		return m.mostrarToast("não retomei: sem como retomar nesta máquina", T.Erro)
+	}
+	if err := m.acoes.Retomar(c); err != nil {
+		return m.mostrarToast("não retomei: "+err.Error(), T.Erro)
+	}
+	var resto []dados.Caido
+	for _, x := range m.estado.Caidos {
+		if x.Nome != c.Nome {
+			resto = append(resto, x)
+		}
+	}
+	m.estado.Caidos = resto
+	m.status = "retomando " + c.Nome
+	m = m.mover(0)
+	return m.mostrarToast("retomando "+c.Nome+" no pane "+c.Pane, T.Ok)
+}
+
 func (m Model) arquivar() (tea.Model, tea.Cmd) {
 	a, ok := m.selecionado()
 	if !ok || a.arquivar == "" {

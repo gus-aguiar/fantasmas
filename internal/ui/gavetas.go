@@ -281,7 +281,28 @@ func estadoTask(d string) string {
 	return ""
 }
 
+// raiaCaidos lista os fantasminhas fora do Herdr que dá para retomar com R.
+func raiaCaidos(c *corpo, e dados.Estado) {
+	if len(e.Caidos) == 0 {
+		return
+	}
+	c.branco()
+	c.secao("caídos · R retoma", fmt.Sprintf("%d fora do Herdr", len(e.Caidos)))
+	for _, x := range e.Caidos {
+		sid := x.SessionID
+		if len(sid) > 8 {
+			sid = sid[:8]
+		}
+		det := "sessão " + sid
+		if sid == "" {
+			det = "sem session_id"
+		}
+		c.linhaLista(alvo{retomar: x.Nome}, "↻", T.Acao, x.Nome, "caído", T.Espera, det+" · pane "+x.Pane)
+	}
+}
+
 func gavetaCrew(c *corpo, e dados.Estado) {
+	defer raiaCaidos(c, e)
 	if len(e.Linhas) > 0 {
 		gavetaCrewViva(c, e)
 		return

@@ -24,10 +24,64 @@ func Responder(ctx context.Context, r Runner, raiz string, rec Recursos, chave, 
 		ctx, cancel = context.WithTimeout(ctx, timeoutResposta)
 		defer cancel()
 	}
+	if fonteDdbLigada() {
+		return respondePeloDdb(ctx, r, raiz, chave, resposta)
+	}
 	if rec.Painel != "" {
 		return respondePeloPainel(ctx, r, raiz, rec, chave, resposta)
 	}
 	return respondeSemPainel(ctx, r, raiz, rec, chave, resposta)
+}
+
+// slugDe tira o slug da chave: a pasta da questions.json ou a própria pasta.
+func slugDe(arquivo string) string {
+	if strings.HasSuffix(arquivo, ".json") {
+		arquivo = filepath.Dir(arquivo)
+	}
+	return filepath.Base(arquivo)
+}
+
+func respondePeloDdb(ctx context.Context, r Runner, raiz, chave, resposta string) (Entrega, error) {
+	arquivo, id := Separar(chave)
+	if id == "" {
+		return Entrega{}, fmt.Errorf("chave sem id de pergunta: %q", chave)
+	}
+	out, err := r.Run(ctx, "python3", scriptDdbDe(raiz), "--raiz", raiz, "answer", slugDe(arquivo)+"#"+id, resposta, "--via", "control-panel")
+	if err != nil {
+		return Entrega{}, err
+	}
+	cols := strings.Split(strings.TrimRight(out, "\r\n"), "\t")
+	if len(cols) < 5 {
+		return Entrega{}, fmt.Errorf("saída inesperada do ddb: %q", strings.TrimSpace(out))
+	}
+	e := Entrega{Slug: cols[0], Crew: cols[1], Titulo: cols[2], Resposta: cols[3]}
+	e.Entregue, e.Motivo = veredito(cols[4])
+	return e, nil
+}
+
+// ArquivarPeloDdb grava "(arquivado)" pelo ddb, sem entregar a ninguém.
+func ArquivarPeloDdb(ctx context.Context, r Runner, raiz, chave string) error {
+	arquivo, id := Separar(chave)
+	if id == "" {
+		return os.ErrInvalid
+	}
+	if _, ok := ctx.Deadline(); !ok {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, timeoutResposta)
+		defer cancel()
+	}
+	_, err := r.Run(ctx, "python3", scriptDdbDe(raiz), "--raiz", raiz, "arquivar", slugDe(arquivo)+"#"+id)
+	return err
+}
+
+// Arquivador escolhe o caminho de arquivar: ddb com a chave ligada, arquivo sem ela.
+func Arquivador(r Runner, raiz string) func(string) error {
+	return func(chave string) error {
+		if fonteDdbLigada() {
+			return ArquivarPeloDdb(context.Background(), r, raiz, chave)
+		}
+		return Arquivar(chave)
+	}
 }
 
 func respondePeloPainel(ctx context.Context, r Runner, raiz string, rec Recursos, chave, resposta string) (Entrega, error) {

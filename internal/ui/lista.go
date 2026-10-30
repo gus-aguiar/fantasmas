@@ -11,6 +11,7 @@ import (
 type alvo struct {
 	url, aba, pergunta, relatorio string
 	arquivar                      string
+	retomar                       string
 	antigas                       bool
 	acao                          string
 }

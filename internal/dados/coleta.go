@@ -140,6 +140,7 @@ func (c *Coletor) Coletar(ctx context.Context) Estado {
 			e.Mural = nil
 		}
 	}
+	e.Caidos = CaidosDe(c.Raiz, vivos, maxCaidos)
 	e.Linhas = LinhasVivas(e, c.Raiz, DirClaude(), time.Now())
 	return e
 }

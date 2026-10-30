@@ -98,12 +98,14 @@ func DeDdb(saida []byte, agora time.Time) (ParteDdb, error) {
 
 func fonteDdbLigada() bool { return os.Getenv("FANTASMAS_FONTE") == "ddb" }
 
-func (c *Coletor) scriptDdb() string {
+func scriptDdbDe(raiz string) string {
 	if s := os.Getenv("FANTASMAS_DDB_SCRIPT"); s != "" {
 		return s
 	}
-	return filepath.Join(c.Raiz, "scripts", "delegate", "ddb.py")
+	return filepath.Join(raiz, "scripts", "delegate", "ddb.py")
 }
+
+func (c *Coletor) scriptDdb() string { return scriptDdbDe(c.Raiz) }
 
 // lerDdb roda import + state. O erro vira a linha de "falta nesta máquina".
 func (c *Coletor) lerDdb(ctx context.Context) (ParteDdb, error) {

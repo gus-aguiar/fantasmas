@@ -43,4 +43,5 @@ type Estado struct {
 	Daydreamer                                   Daydreamer
 	MCP                                          ProgressoMCP
 	Mural                                        []Aviso
+	Caidos                                       []Caido
 }

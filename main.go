@@ -66,8 +66,11 @@ func main() {
 			mu.Unlock()
 			return dados.Responder(context.Background(), runner, *raiz, rec, chave, resposta)
 		},
-		LerArquivo:  os.ReadFile,
-		Arquivar:    dados.Arquivar,
+		LerArquivo: os.ReadFile,
+		Arquivar:   dados.Arquivador(runner, *raiz),
+		Retomar: func(c dados.Caido) error {
+			return dados.Retomar(context.Background(), runner, c)
+		},
 		MarcarVisto: dados.MarcarVisto,
 		Daydreaming: func() (string, error) {
 			brief := filepath.Join(*raiz, "shared", "tui", "fantasmas", "assets", "daydreamer-brief.md")

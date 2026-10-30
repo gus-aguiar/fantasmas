@@ -41,6 +41,9 @@ func EstadoDemo(agora time.Time) dados.Estado {
 			{Nome: "c-pl-3", Pasta: "/demo/spark/.delegate/c-pl-3", Aba: "aba-3", Etapa: "implementar", Agora: "parado com tarefa há 14 min", Estado: dados.Parado, CtxPct: -1, Hora: agora.Add(-14 * time.Minute)},
 			{Nome: "c-pl-4", Pasta: "/demo/spark/.delegate/c-pl-4", Aba: "aba-4", Etapa: "implementar", Agora: "entregou relatório", Estado: dados.Terminou, CtxPct: 100, Hora: agora.Add(-20 * time.Minute)},
 		},
+		Caidos: []dados.Caido{
+			{Nome: "c-pl-7", Pane: "w1:p7", SessionID: "9f3c2a71-5b0e-4d8a-a1c4-2e7b60d1f5aa", Pasta: "/demo/spark/.delegate/c-pl-7"},
+		},
 		Esperando: []dados.Linha{
 			{Chave: "t-espera/q1", Rotulo: "c-pl-2 · plano", Detalhe: "Aprovar o plano de migração da tela de frota?"},
 		},
