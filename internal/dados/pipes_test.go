@@ -2,6 +2,7 @@ package dados
 
 import (
 	"context"
+	"encoding/json"
 	"strings"
 	"testing"
 	"time"
@@ -109,5 +110,16 @@ func TestPipesMontaComandos(t *testing.T) {
 	}
 	if err := p.Etapa(3, "homologar", "veto"); err == nil {
 		t.Error("ação fora de advance|skip|retry aceita")
+	}
+}
+
+func TestRunLeProntidao(t *testing.T) {
+	var rs []Run
+	js := `[{"id":1,"prontidao":"pronto"},{"id":2,"prontidao":"aguardando prontidão"},{"id":3,"prontidao":null}]`
+	if err := json.Unmarshal([]byte(js), &rs); err != nil {
+		t.Fatal(err)
+	}
+	if rs[0].Prontidao != "pronto" || rs[1].Prontidao != "aguardando prontidão" || rs[2].Prontidao != "" {
+		t.Fatalf("%+v", rs)
 	}
 }

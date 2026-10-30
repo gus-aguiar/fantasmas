@@ -201,3 +201,78 @@ func TestPipesFormularioRecusaEntradaVazia(t *testing.T) {
 		t.Fatal("formulário fechou")
 	}
 }
+
+func TestPipesNMaiusculoPedeConfirmacaoEChamaGengar(t *testing.T) {
+	r := &runnerPipes{}
+	m := tecla(modeloPipes(r), "N")
+	if m.form != nil || !strings.Contains(m.status, "N de novo") {
+		t.Fatalf("primeiro N deveria só armar: form=%v status=%q", m.form, m.status)
+	}
+	m = tecla(m, "N")
+	if m.form == nil {
+		t.Fatal("segundo N não abriu o formulário")
+	}
+	m = tecla(m, "enter")
+	m = digitaPipe(m, "PL-9")
+	m = teclaMsg(m, tea.KeyMsg{Type: tea.KeyTab})
+	m = digitaPipe(m, "WS React")
+	m = teclaMsg(m, tea.KeyMsg{Type: tea.KeyTab})
+	m = tecla(m, "enter")
+	n := len(r.calls)
+	if n < 2 {
+		t.Fatalf("calls=%v", r.calls)
+	}
+	if !strings.Contains(r.calls[n-2], " run new implementar ") {
+		t.Fatalf("run new ausente: %v", r.calls)
+	}
+	if quer := "bash /r/scripts/delegate/gengar-spawn.sh 7 --assunto PL-9"; r.calls[n-1] != quer {
+		t.Fatalf("calls=%v quer %q", r.calls, quer)
+	}
+	if !strings.Contains(m.toast, "gengar") {
+		t.Fatalf("toast=%q", m.toast)
+	}
+}
+
+func TestPipesNMinusculoNaoChamaGengar(t *testing.T) {
+	r := &runnerPipes{}
+	m := tecla(modeloPipes(r), "n")
+	m = tecla(m, "enter")
+	m = digitaPipe(m, "PL-9")
+	m = teclaMsg(m, tea.KeyMsg{Type: tea.KeyTab})
+	m = digitaPipe(m, "WS")
+	m = teclaMsg(m, tea.KeyMsg{Type: tea.KeyTab})
+	m = tecla(m, "enter")
+	for _, c := range r.calls {
+		if strings.Contains(c, "gengar-spawn") {
+			t.Fatalf("n não deveria abrir gengar: %v", r.calls)
+		}
+	}
+}
+
+func TestPipesNMoverDesarma(t *testing.T) {
+	m := tecla(modeloPipes(&runnerPipes{}), "N")
+	m = tecla(m, "j")
+	m = tecla(m, "N")
+	if m.form != nil {
+		t.Fatal("mover entre os dois N deveria desarmar")
+	}
+}
+
+func TestPipesLinhaMostraGengarEProntidao(t *testing.T) {
+	for _, w := range larguras {
+		m := modeloPipes(&runnerPipes{})
+		p := ansi.Strip(m.Render(w, 40))
+		if w >= 46 {
+			for _, s := range []string{"g-multas", "aguardando prontidão", "g-filtro-frota", "✓ pronto"} {
+				if !strings.Contains(p, s) {
+					t.Errorf("w=%d: falta %q:\n%s", w, s, p)
+				}
+			}
+		}
+		for i, l := range strings.Split(m.Render(w, 40), "\n") {
+			if lipgloss.Width(l) > w {
+				t.Fatalf("w=%d linha %d larga: %d", w, i, lipgloss.Width(l))
+			}
+		}
+	}
+}

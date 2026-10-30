@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os/exec"
 	"sort"
+	"strconv"
 	"strings"
 
 	"fantasmas/internal/dados"
@@ -18,6 +19,7 @@ type OpsPipes interface {
 	Listar() ([]dados.Pipeline, error)
 	Novo(pipeline string, entradas [][2]string, titulo string) (string, error)
 	Etapa(run int, etapa, acao string) error
+	Gengar(run int, assunto string) (string, error)
 	Validar(alvo string) (string, error)
 }
 
@@ -36,6 +38,7 @@ type formPipe struct {
 	campos    []textinput.Model
 	nomes     []string
 	foco      int
+	gengar    bool // N: depois do run new, abre o gengar dedicado
 }
 
 var glifoEtapa = map[string]string{
@@ -121,6 +124,18 @@ func chips(bg lipgloss.Color, es []dados.Etapa, curto bool) string {
 	return b.String()
 }
 
+// gengarChip é o "g-assunto" do gengar dedicado e a prontidão dele; vazio sem gengar dedicado.
+func gengarChip(bg lipgloss.Color, r dados.Run) string {
+	if r.Prontidao == "" {
+		return ""
+	}
+	s := st(bg, T.Info).Bold(true).Render(r.Coordinator)
+	if r.Prontidao == "pronto" {
+		return s + st(bg, T.Ok).Bold(true).Render(" ✓ pronto")
+	}
+	return s + st(bg, T.Espera).Bold(true).Render(" ◷ aguardando prontidão")
+}
+
 func larguraChips(es []dados.Etapa) int {
 	return lipgloss.Width(chips(T.Base, es, false))
 }
@@ -141,7 +156,7 @@ func gavetaPipes(c *corpo, e dados.Estado) {
 		extra += fmt.Sprintf(" · %d esperam você", espera)
 	}
 	if c.largura >= 70 {
-		extra += " · n lança · e edita"
+		extra += " · n lança · N lança com gengar · e edita"
 	}
 	c.secao("pipes", extra)
 	if len(e.Runs) == 0 {
@@ -155,6 +170,16 @@ func gavetaPipes(c *corpo, e dados.Estado) {
 			continue
 		}
 		c.linhaRun(r)
+	}
+}
+
+// linhaGengar é a linha extra do run com gengar dedicado (g-<assunto> e prontidão); nil sem gengar.
+func (c *corpo) linhaGengar(r dados.Run, recuo int) func(bg lipgloss.Color) string {
+	if r.Prontidao == "" {
+		return nil
+	}
+	return func(bg lipgloss.Color) string {
+		return espacos(recuo, bg) + st(bg, T.Dim).Render("gengar ") + gengarChip(bg, r)
 	}
 }
 
@@ -185,7 +210,7 @@ func (c *corpo) linhaRun(r dados.Run) {
 				st(bg, T.Texto).Bold(true).Render(Col(nome, wNome)) + espacos(2, bg) + chips(bg, r.Etapas, false)
 			d := dir(bg)
 			return esq + espacos(max(1, w-lipgloss.Width(esq)-lipgloss.Width(d)), bg) + d
-		})
+		}, c.linhaGengar(r, 2))
 		c.branco()
 		return
 	}
@@ -206,7 +231,7 @@ func (c *corpo) linhaRun(r dados.Run) {
 		}
 		s += chips(bg, r.Etapas, curto) + espacos(2, bg) + st(bg, T.Dim).Render(quando)
 		return s
-	})
+	}, c.linhaGengar(r, 2))
 	c.branco()
 }
 
@@ -282,7 +307,9 @@ func (m Model) conteudoPipe(w int) []linhaPipe {
 		s := st(bg, T.Info).Render(fmt.Sprintf("run %d · %s", r.ID, r.Pipeline)) + st(bg, T.Dim).Render("  ·  ") +
 			st(bg, corEtapa(map[string]string{"done": "done", "failed": "failed", "running": "running"}[r.Status])).Render(r.Status) +
 			st(bg, T.Dim).Render("  ·  "+idade(r.IdadeMin))
-		if r.Coordinator != "" {
+		if r.Prontidao != "" {
+			s += st(bg, T.Dim).Render("  ·  ") + gengarChip(bg, r)
+		} else if r.Coordinator != "" {
 			s += st(bg, T.Dim).Render("  ·  gengar " + r.Coordinator)
 		}
 		return s
@@ -505,6 +532,25 @@ func (m Model) acaoEtapa(k, armado string) (tea.Model, tea.Cmd) {
 
 // ---- n: lançar ----
 
+// pedeGengar: o primeiro N arma, o segundo abre o formulário em modo gengar.
+func (m Model) pedeGengar(armado bool) (tea.Model, tea.Cmd) {
+	if !armado {
+		if !m.estado.PipesLigado {
+			return m.mostrarToast(MsgPipesDesligado, T.Espera)
+		}
+		m.armadoGengar = true
+		m.status = "N de novo lança o run e abre o gengar dedicado"
+		return m, nil
+	}
+	m.status = ""
+	m2, cmd := m.abrirForm()
+	if mm := m2.(Model); mm.form != nil {
+		mm.form.gengar = true
+		return mm, cmd
+	}
+	return m2, cmd
+}
+
 func (m Model) abrirForm() (tea.Model, tea.Cmd) {
 	if !m.estado.PipesLigado {
 		return m.mostrarToast(MsgPipesDesligado, T.Espera)
@@ -628,7 +674,32 @@ func (m Model) lancar() (tea.Model, tea.Cmd) {
 	}
 	m.form, m.status = nil, ""
 	id, _, _ := strings.Cut(out, " ")
+	if f.gengar {
+		return m.abrirGengar(id, p.Name, ents)
+	}
 	m2, toast := m.mostrarToast("run "+id+" criado em intake ("+p.Name+") · o tick avisa o gengar", T.Ok)
+	m3, col := m2.coletar()
+	return m3, tea.Batch(toast, col)
+}
+
+// abrirGengar chama o gengar-spawn.sh do run recém-criado; o assunto é o card (ou o pipeline), como o slug_base do ddb.
+func (m Model) abrirGengar(id, pipeline string, ents [][2]string) (tea.Model, tea.Cmd) {
+	assunto := pipeline
+	for _, kv := range ents {
+		if kv[0] == "card" && kv[1] != "" {
+			assunto = kv[1]
+		}
+	}
+	n, err := strconv.Atoi(id)
+	if err != nil {
+		return m.mostrarToast("run criado, mas o id veio ilegível: "+id, T.Erro)
+	}
+	if _, err := m.acoes.Pipes.Gengar(n, assunto); err != nil {
+		m2, toast := m.mostrarToast("run "+id+" criado; gengar falhou: "+err.Error(), T.Erro)
+		m3, col := m2.coletar()
+		return m3, tea.Batch(toast, col)
+	}
+	m2, toast := m.mostrarToast("run "+id+" criado · gengar aberto na aba g-"+strings.ToLower(assunto)+", aguardando prontidão", T.Ok)
 	m3, col := m2.coletar()
 	return m3, tea.Batch(toast, col)
 }
@@ -639,7 +710,11 @@ func (m Model) formLinhas(w, h int) []string {
 	pad := func(s string, bg lipgloss.Color) string { return encaixa(espacos(margem, bg)+s, w, bg) }
 	var out []string
 	add := func(s string, bg lipgloss.Color) { out = append(out, pad(s, bg)) }
-	add(st(T.Base, T.Acao).Render("› ")+st(T.Base, T.Texto).Bold(true).Render("lançar pipeline"), T.Base)
+	titulo := "lançar pipeline"
+	if f.gengar {
+		titulo += " com gengar dedicado"
+	}
+	add(st(T.Base, T.Acao).Render("› ")+st(T.Base, T.Texto).Bold(true).Render(titulo), T.Base)
 	add("", T.Base)
 	if f.passo == 0 {
 		add(st(T.Base, T.Dim).Bold(true).Render("PIPELINE"), T.Base)

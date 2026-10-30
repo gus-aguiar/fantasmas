@@ -91,6 +91,9 @@ func (c *corpo) item(a alvo, fs ...func(bg lipgloss.Color) string) {
 	i := len(c.alvos)
 	c.alvos = append(c.alvos, a)
 	for _, f := range fs {
+		if f == nil {
+			continue
+		}
 		c.linhas = append(c.linhas, linha{desenha: f, item: i})
 	}
 }

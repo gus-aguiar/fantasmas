@@ -46,8 +46,8 @@ func runsDemo(agora time.Time) []dados.Run {
 	hfeita.Report = []byte(`{"status":"done","links":["https://github.com/prologapp/PrologE2E/pull/512"]}`)
 	return []dados.Run{
 		{ID: 13, Pipeline: "implementar-homologar", Title: "Filtro de frota por unidade", SlugBase: "PL-1203", Status: "running",
-			Coordinator: "gengar-1030-0900", Inputs: map[string]string{"card": "PL-1203", "repos": "WS React", "homolog_alvo": "hml"},
-			IdadeMin: 42, EsperaVoce: 1,
+			Coordinator: "g-filtro-frota", Inputs: map[string]string{"card": "PL-1203", "repos": "WS React", "homolog_alvo": "hml"},
+			IdadeMin: 42, EsperaVoce: 1, Prontidao: "pronto",
 			Etapas: []dados.Etapa{impl("PL-1203", "needs_input", "gate:plano", "c-pl-1203", "w1:t3"), homol("PL-1203", "pending")}},
 		{ID: 12, Pipeline: "bugfix", Title: "Km travado no abastecimento", SlugBase: "PL-1188", Status: "running",
 			Coordinator: "gengar-1030-0900", Inputs: map[string]string{"card": "PL-1188", "repos": "WS"}, IdadeMin: 95,
@@ -57,6 +57,7 @@ func runsDemo(agora time.Time) []dados.Run {
 			Coordinator: "gengar-1030-0900", Inputs: map[string]string{"card": "PL-1150", "repos": "React", "homolog_alvo": "local"},
 			IdadeMin: 26 * 60, Etapas: []dados.Etapa{feita, hfeita}},
 		{ID: 10, Pipeline: "implementar", Title: "Tela de multas por veículo", SlugBase: "PL-1210", Status: "intake",
+			Coordinator: "g-multas", Prontidao: "aguardando prontidão",
 			Inputs: map[string]string{"card": "PL-1210", "repos": "React"}, IdadeMin: 3,
 			Etapas: []dados.Etapa{impl("PL-1210", "ready", "", "", "")}},
 	}

@@ -19,7 +19,9 @@ type Run struct {
 	Inputs      map[string]string `json:"inputs"`
 	IdadeMin    int               `json:"idade_min"`
 	EsperaVoce  int               `json:"espera_voce"`
-	Etapas      []Etapa           `json:"stages"`
+	// Prontidao é "" (sem gengar dedicado), "aguardando prontidão" ou "pronto".
+	Prontidao string  `json:"prontidao"`
+	Etapas    []Etapa `json:"stages"`
 }
 
 type Gate struct {
@@ -147,6 +149,16 @@ func (p *Pipes) Novo(pipeline string, entradas [][2]string, titulo string) (stri
 	out, err := p.ddb(args...)
 	l, _, _ := strings.Cut(strings.TrimSpace(out), "\n")
 	return l, err
+}
+
+const timeoutGengar = 90 * time.Second
+
+// Gengar abre o gengar dedicado do run (gengar-spawn.sh) e devolve a linha JSON que ele imprime.
+func (p *Pipes) Gengar(run int, assunto string) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeoutGengar)
+	defer cancel()
+	out, err := p.R.Run(ctx, "bash", p.Raiz+"/scripts/delegate/gengar-spawn.sh", fmt.Sprint(run), "--assunto", assunto)
+	return strings.TrimSpace(out), err
 }
 
 // Etapa é o escape manual: advance, skip ou retry.

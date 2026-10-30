@@ -67,43 +67,44 @@ type Model struct {
 	acoes     Acoes
 	intervalo time.Duration
 
-	estado      dados.Estado
-	coletando   bool
-	genColeta   int
-	quadro      int
-	gaveta      int
-	sel         int
-	status      string
-	largura     int
-	altura      int
-	aberto      *dados.Aberto
-	rascunho    *textinput.Model
-	opcao       int
-	rolagem     int
-	diagrama    bool
-	enviando    string
-	ajuda       bool
-	toast       string
-	toastCor    lipgloss.Color
-	genToast    int
-	filtro      *textinput.Model
-	busca       string
-	armado      int
-	focoTexto   bool
-	img         *Grafico
-	imgPos      areaImg
-	imgQuadro   int
-	modoImg     string
-	antigas     bool
-	rascunhos   bool
-	armadoArq   string
-	armadoRet   string
-	vistos      map[string]bool
-	pedindoDD   bool
-	vigiaMCP    bool
-	armadoAtu   bool
-	atualizando bool
-	reiniciar   string
+	estado       dados.Estado
+	coletando    bool
+	genColeta    int
+	quadro       int
+	gaveta       int
+	sel          int
+	status       string
+	largura      int
+	altura       int
+	aberto       *dados.Aberto
+	rascunho     *textinput.Model
+	opcao        int
+	rolagem      int
+	diagrama     bool
+	enviando     string
+	ajuda        bool
+	toast        string
+	toastCor     lipgloss.Color
+	genToast     int
+	filtro       *textinput.Model
+	busca        string
+	armado       int
+	focoTexto    bool
+	img          *Grafico
+	imgPos       areaImg
+	imgQuadro    int
+	modoImg      string
+	antigas      bool
+	rascunhos    bool
+	armadoArq    string
+	armadoRet    string
+	vistos       map[string]bool
+	pedindoDD    bool
+	vigiaMCP     bool
+	armadoAtu    bool
+	armadoGengar bool
+	atualizando  bool
+	reiniciar    string
 
 	pipe       int
 	pipeSel    int
@@ -668,7 +669,8 @@ func (m Model) mouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 
 func (m Model) tecla(k string) (tea.Model, tea.Cmd) {
 	armadoArq, armadoRet, armadoAtu := m.armadoArq, m.armadoRet, m.armadoAtu
-	m.armadoArq, m.armadoRet, m.armadoAtu = "", "", false
+	armadoGengar := m.armadoGengar
+	m.armadoArq, m.armadoRet, m.armadoAtu, m.armadoGengar = "", "", false, false
 	switch k {
 	case "U":
 		m.armadoAtu = armadoAtu
@@ -692,6 +694,10 @@ func (m Model) tecla(k string) (tea.Model, tea.Cmd) {
 	case "n":
 		if Gavetas[m.gaveta].ID == "pipes" {
 			return m.abrirForm()
+		}
+	case "N":
+		if Gavetas[m.gaveta].ID == "pipes" {
+			return m.pedeGengar(armadoGengar)
 		}
 	case "e":
 		if Gavetas[m.gaveta].ID == "pipes" {
