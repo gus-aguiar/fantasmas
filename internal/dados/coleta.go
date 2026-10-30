@@ -64,6 +64,15 @@ func (c *Coletor) Coletar(ctx context.Context) Estado {
 	cl := filepath.Join(scripts, "coleta.sh")
 
 	var tasks, esperando, opcoes, local, worktrees, maquina, prs, agentes string
+	var ddb *ParteDdb
+	c.recursos.FalhaDdb = ""
+	if fonteDdbLigada() {
+		if p, err := c.lerDdb(ctx); err == nil {
+			ddb = &p
+		} else {
+			c.recursos.FalhaDdb = err.Error()
+		}
+	}
 	var wg sync.WaitGroup
 	roda := func(dst *string, limite time.Duration, argv ...string) {
 		wg.Add(1)
@@ -74,9 +83,11 @@ func (c *Coletor) Coletar(ctx context.Context) Estado {
 			}
 		}()
 	}
-	roda(&tasks, timeoutColetor, "python3", py, "tasks")
-	roda(&esperando, timeoutColetor, "python3", py, "esperando")
-	roda(&opcoes, timeoutColetor, "python3", py, "opcoes-todas")
+	if ddb == nil {
+		roda(&tasks, timeoutColetor, "python3", py, "tasks")
+		roda(&esperando, timeoutColetor, "python3", py, "esperando")
+		roda(&opcoes, timeoutColetor, "python3", py, "opcoes-todas")
+	}
 	roda(&local, timeoutColetor, "bash", filepath.Join(scripts, "local.sh"))
 	roda(&worktrees, timeoutColetor, "bash", cl, "worktrees")
 	roda(&maquina, timeoutColetor, "bash", filepath.Join(scripts, "maquina.sh"))
@@ -123,6 +134,12 @@ func (c *Coletor) Coletar(ctx context.Context) Estado {
 		Agentes:    ags,
 		Mural:      MuralDe(filepath.Join(c.Raiz, ".delegate", "_mural.jsonl"), time.Now(), 3),
 	}
+	if ddb != nil {
+		e.Tasks, e.Esperando, e.Opcoes, e.Mural = ddb.Tasks, ddb.Esperando, ddb.Opcoes, ddb.Mural
+		if os.Getenv("FANTASMAS_MURAL") == "off" {
+			e.Mural = nil
+		}
+	}
 	e.Linhas = LinhasVivas(e, c.Raiz, DirClaude(), time.Now())
 	return e
 }
@@ -144,5 +161,5 @@ func FaltaDe(r Recursos) []string {
 	if r.Delegate && r.Painel == "" {
 		f = append(f, "painel.py: resposta só grava; a entrega fica com o coordenador")
 	}
-	return f
+	return append(f, faltaDdb(r)...)
 }

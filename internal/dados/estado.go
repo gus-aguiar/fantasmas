@@ -26,6 +26,7 @@ type Merge struct {
 type Recursos struct {
 	GH, Herdr, Delegate bool
 	Painel, Autor       string
+	FalhaDdb            string
 }
 
 type Estado struct {
