@@ -115,8 +115,8 @@ func main() {
 		if *cor {
 			lipgloss.SetColorProfile(termenv.TrueColor)
 		}
-		if *gaveta != "" {
-			m = m.ComGaveta(*gaveta)
+		if g := gavetaInicial(*gaveta, os.Getenv); g != "" {
+			m = m.ComGaveta(g)
 		}
 		est := func() dados.Estado { return coleta(context.Background()) }
 		if *demo {
@@ -263,6 +263,17 @@ func comandoAbrir(goos, editor, alvo string) []string {
 		return []string{"xdg-open", alvo}
 	}
 	return []string{"cmd", "/c", "start", "", alvo}
+}
+
+// gavetaInicial: a flag --gaveta manda; sem ela, FANTASMAS_FONTE=ddb abre em "missoes". Vazio = a primeira.
+func gavetaInicial(flag string, getenv func(string) string) string {
+	if flag != "" {
+		return flag
+	}
+	if getenv("FANTASMAS_FONTE") == "ddb" {
+		return "missoes"
+	}
+	return ""
 }
 
 // validarGaveta recusa nome desconhecido em vez de cair calado na primeira gaveta.

@@ -155,3 +155,26 @@ func TestUmaVezNaoEscreve(t *testing.T) {
 		t.Errorf("cache mudou:\nantes=%v\ndepois=%v", antesCache, got)
 	}
 }
+
+func TestGavetaInicial(t *testing.T) {
+	env := func(v string) func(string) string {
+		return func(k string) string {
+			if k == "FANTASMAS_FONTE" {
+				return v
+			}
+			return ""
+		}
+	}
+	if g := gavetaInicial("", env("")); g != "" {
+		t.Fatalf("sem a variável deve manter o padrão (agora), veio %q", g)
+	}
+	if g := gavetaInicial("", env("ddb")); g != "missoes" || !ui.GavetaValida(g) {
+		t.Fatalf("com FANTASMAS_FONTE=ddb deve abrir em missoes, veio %q", g)
+	}
+	if g := gavetaInicial("pipes", env("ddb")); g != "pipes" {
+		t.Fatalf("a flag --gaveta manda, veio %q", g)
+	}
+	if g := gavetaInicial("", env("arquivos")); g != "" {
+		t.Fatalf("outra fonte não muda a gaveta, veio %q", g)
+	}
+}

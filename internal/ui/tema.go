@@ -31,8 +31,9 @@ var T = Tokens{
 	BarraCheia: "#c4a6ff", BarraVazia: "#5f4890",
 	CtxBaixo: "#7ee7a8", CtxMedio: "#ffd166", CtxAlto: "#ff6fbf",
 	MascoteCorpo: "#a66bff", MascoteOlho: "#ff3388", MascoteBoca: "#4b2a8a",
-	// rosa, turquesa, pêssego, céu, lavanda e lima: claros o bastante para o Sel.
-	Acentos: [6]lipgloss.Color{"#ff9bd2", "#5fe3d6", "#ffb88c", "#8fc1ff", "#d3adff", "#c6ec7c"},
+	// Os mesmos 6 acentos, na mesma ordem, do painel (ACENTOS em delegate-painel/painel.py): a cor da missão
+	// é idêntica nos dois. Todos passam de 4.5:1 sobre Base e Sel.
+	Acentos: [6]lipgloss.Color{"#b69cff", "#6ee7b7", "#fbbf5a", "#ff8f80", "#67d4f0", "#f59ad8"},
 }
 
 // corCtx escolhe a cor da barra de contexto: verde, amarelo e rosa conforme o uso sobe.

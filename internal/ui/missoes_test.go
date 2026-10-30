@@ -150,3 +150,23 @@ func TestFiltroPorWorkspaceSemDdb(t *testing.T) {
 		t.Fatalf("linhas=%+v", f.Linhas)
 	}
 }
+
+// Valores calculados em Python com o fnv1a32 do painel (painel.py: utf-8, 32 bits, ACENTOS[h % 6]).
+func TestCorMissaoIdenticaAoPainel(t *testing.T) {
+	casos := map[string]string{
+		"multas":             "#6ee7b7", // fnv1a32 = 2612968891, índice 1
+		"economia-de-multas": "#f59ad8", // fnv1a32 = 743490299, índice 5
+		"frota-por-unidade":  "#67d4f0", // fnv1a32 = 2777837278, índice 4
+	}
+	for slug, esperada := range casos {
+		if got := string(corMissao(slug)); got != esperada {
+			t.Errorf("corMissao(%q) = %s, painel usa %s", slug, got, esperada)
+		}
+	}
+	painel := []string{"#b69cff", "#6ee7b7", "#fbbf5a", "#ff8f80", "#67d4f0", "#f59ad8"}
+	for i, c := range T.Acentos {
+		if string(c) != painel[i] {
+			t.Errorf("Acentos[%d] = %s, painel usa %s", i, c, painel[i])
+		}
+	}
+}
