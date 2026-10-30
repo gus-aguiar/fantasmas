@@ -67,3 +67,57 @@ func TestMuralAusente(t *testing.T) {
 		t.Fatalf("FANTASMAS_MURAL=off devia desligar: %+v", got)
 	}
 }
+
+func TestMuralSoLeACauda(t *testing.T) {
+	agora := time.Date(2026, 10, 30, 12, 0, 0, 0, time.UTC)
+	var linhas []string
+	velho := `{"at":"2026-10-20T11:00:00Z","autor":"velho","texto":"` + strings.Repeat("x", 150) + `"}`
+	for i := 0; i < 600; i++ {
+		linhas = append(linhas, velho)
+	}
+	linhas = append(linhas, `{"at":"2026-10-30T11:55:00Z","autor":"novo","texto":"no fim"}`)
+	p := escreveMural(t, linhas...)
+	if st, _ := os.Stat(p); st.Size() <= 64*1024 {
+		t.Fatalf("arquivo de teste pequeno demais: %d", st.Size())
+	}
+	got := MuralDe(p, agora, 3)
+	if len(got) != 1 || got[0].Autor != "novo" {
+		t.Fatalf("got = %+v", got)
+	}
+}
+
+func TestMuralLinhaGiganteNaoAborta(t *testing.T) {
+	agora := time.Date(2026, 10, 30, 12, 0, 0, 0, time.UTC)
+	p := escreveMural(t,
+		`{"at":"2026-10-30T11:00:00Z","autor":"a","texto":"`+strings.Repeat("y", 40*1024)+`"}`,
+		`{"at":"2026-10-30T11:30:00Z","autor":"b","texto":"depois"}`,
+	)
+	got := MuralDe(p, agora, 3)
+	if len(got) != 2 || got[0].Autor != "b" {
+		t.Fatalf("got = %+v", got)
+	}
+}
+
+func TestMuralAteSemSegundos(t *testing.T) {
+	agora := time.Date(2026, 10, 30, 12, 0, 0, 0, time.UTC)
+	p := escreveMural(t,
+		`{"at":"2026-10-30T10:00:00Z","autor":"vale","texto":"x","ate":"2026-10-30T12:30Z"}`,
+		`{"at":"2026-10-30T10:30:00Z","autor":"expirou","texto":"x","ate":"2026-10-30T11:45Z"}`,
+	)
+	got := MuralDe(p, agora, 3)
+	if len(got) != 1 || got[0].Autor != "vale" {
+		t.Fatalf("got = %+v", got)
+	}
+}
+
+func TestMuralAtNoFuturoApareceNoTopo(t *testing.T) {
+	agora := time.Date(2026, 10, 30, 12, 0, 0, 0, time.UTC)
+	p := escreveMural(t,
+		`{"at":"2026-10-30T11:00:00Z","autor":"a","texto":"x"}`,
+		`{"at":"2026-10-30T13:00:00Z","autor":"futuro","texto":"x"}`,
+	)
+	got := MuralDe(p, agora, 3)
+	if len(got) != 2 || got[0].Autor != "futuro" {
+		t.Fatalf("got = %+v", got)
+	}
+}
