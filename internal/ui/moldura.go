@@ -24,8 +24,8 @@ func Faixa(largura int) string {
 type Gaveta struct{ ID, Tecla, Nome string }
 
 var Gavetas = []Gaveta{
-	{"agora", "1", "agora"}, {"crew", "2", "fantasminhas"}, {"prs", "3", "PRs"}, {"ci", "4", "CI"},
-	{"ambiente", "5", "ambiente"}, {"maquina", "6", "máquina"}, {"mais", "7", "mais"},
+	{"agora", "1", "agora"}, {"crew", "2", "fantasminhas"}, {"pipes", "3", "pipes"}, {"prs", "4", "PRs"},
+	{"ci", "5", "CI"}, {"ambiente", "6", "ambiente"}, {"maquina", "7", "máquina"}, {"mais", "8", "mais"},
 }
 
 func fundo(c lipgloss.Color) lipgloss.Style { return lipgloss.NewStyle().Background(c) }

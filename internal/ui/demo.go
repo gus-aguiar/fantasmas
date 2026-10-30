@@ -19,6 +19,50 @@ func EstadoDemoVerde(agora time.Time) dados.Estado {
 
 // EstadoDemo é um estado determinístico para a olhada renderizada (--demo).
 func EstadoDemo(agora time.Time) dados.Estado {
+	e := estadoDemoBase(agora)
+	e.PipesLigado = true
+	e.Runs = runsDemo(agora)
+	e.Proximo = map[string]string{
+		"2026-10-30-PL-1210":         "lançaria (implementer, skill writing-plans)",
+		"2026-10-30-PL-1203-homolog": "não lança: aguarda implementar (after)",
+	}
+	return e
+}
+
+func runsDemo(agora time.Time) []dados.Run {
+	dia := agora.Format("2006-01-02")
+	impl := func(slug, status, reason, agent, tab string) dados.Etapa {
+		return dados.Etapa{ID: "implementar", Role: "implementer", Skill: "writing-plans", Status: status, Reason: reason,
+			Slug: dia + "-" + slug, Agent: agent, Tab: tab,
+			Gates: []dados.Gate{{Item: "plano", By: "human"}, {Item: "juntar", By: "human"}}}
+	}
+	homol := func(slug, status string) dados.Etapa {
+		return dados.Etapa{ID: "homologar", Role: "homolog", Skill: "homolog", Status: status, Slug: dia + "-" + slug + "-homolog",
+			After: []string{"implementar.done"}, Gates: []dados.Gate{{Item: "login", By: "human"}}}
+	}
+	feita := impl("PL-1150", "done", "", "c-pl-1150", "")
+	feita.Report = []byte(`{"status":"done","links":["https://github.com/prologapp/PrologWebReact/pull/3120"]}`)
+	hfeita := homol("PL-1150", "done")
+	hfeita.Report = []byte(`{"status":"done","links":["https://github.com/prologapp/PrologE2E/pull/512"]}`)
+	return []dados.Run{
+		{ID: 13, Pipeline: "implementar-homologar", Title: "Filtro de frota por unidade", SlugBase: "PL-1203", Status: "running",
+			Coordinator: "gengar-1030-0900", Inputs: map[string]string{"card": "PL-1203", "repos": "WS React", "homolog_alvo": "hml"},
+			IdadeMin: 42, EsperaVoce: 1,
+			Etapas: []dados.Etapa{impl("PL-1203", "needs_input", "gate:plano", "c-pl-1203", "w1:t3"), homol("PL-1203", "pending")}},
+		{ID: 12, Pipeline: "bugfix", Title: "Km travado no abastecimento", SlugBase: "PL-1188", Status: "running",
+			Coordinator: "gengar-1030-0900", Inputs: map[string]string{"card": "PL-1188", "repos": "WS"}, IdadeMin: 95,
+			Etapas: []dados.Etapa{{ID: "implementar", Role: "implementer", Skill: "debug-for-fix", Status: "running",
+				Slug: dia + "-PL-1188", Agent: "c-pl-1188", Tab: "w1:t4", Gates: []dados.Gate{{Item: "plano", By: "human"}}}}},
+		{ID: 11, Pipeline: "implementar-homologar", Title: "Exportar checklist em PDF", SlugBase: "PL-1150", Status: "done",
+			Coordinator: "gengar-1030-0900", Inputs: map[string]string{"card": "PL-1150", "repos": "React", "homolog_alvo": "local"},
+			IdadeMin: 26 * 60, Etapas: []dados.Etapa{feita, hfeita}},
+		{ID: 10, Pipeline: "implementar", Title: "Tela de multas por veículo", SlugBase: "PL-1210", Status: "intake",
+			Inputs: map[string]string{"card": "PL-1210", "repos": "React"}, IdadeMin: 3,
+			Etapas: []dados.Etapa{impl("PL-1210", "ready", "", "", "")}},
+	}
+}
+
+func estadoDemoBase(agora time.Time) dados.Estado {
 	return dados.Estado{
 		At:   agora,
 		Raiz: "/demo/spark",

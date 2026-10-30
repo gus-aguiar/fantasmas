@@ -32,7 +32,8 @@ func main() {
 	cor := flag.Bool("cor", false, "força cor de 24 bits (só com --uma-vez)")
 	demo := flag.Bool("demo", false, "usa o estado de demonstração (só com --uma-vez)")
 	demoVerde := flag.Bool("demo-verde", false, "demonstração com todos os PRs de CI verde (só com --uma-vez)")
-	gaveta := flag.String("gaveta", "", "gaveta inicial: agora|crew|prs|ci|ambiente|maquina|mais (só com --uma-vez)")
+	gaveta := flag.String("gaveta", "", "gaveta inicial: agora|crew|pipes|prs|ci|ambiente|maquina|mais (só com --uma-vez)")
+	pipe := flag.Int("pipe", 0, "abre o detalhe do run N da gaveta pipes (só com --uma-vez)")
 	flag.Parse()
 	if *intervalo <= 0 {
 		fmt.Fprintln(os.Stderr, "fantasmas: --intervalo deve ser positivo")
@@ -80,6 +81,8 @@ func main() {
 		},
 		ReconectarMCPs: func() error { return dados.ReconectarMCPs(*raiz) },
 		ProgressoMCP:   func() dados.ProgressoMCP { return dados.LerProgressoMCP(*raiz, time.Now()) },
+		Pipes:          &dados.Pipes{R: runner, Raiz: *raiz, Script: dados.ScriptDdb(*raiz)},
+		Editar:         func(arq string) *exec.Cmd { return ui.ComandoEditor(os.Getenv("FANTASMAS_EDITOR"), arq) },
 	}
 	m := ui.Novo(coleta, acoes, *intervalo)
 	if *sprite != "" {
@@ -109,7 +112,11 @@ func main() {
 		if *demoVerde {
 			est = func() dados.Estado { return ui.EstadoDemoVerde(time.Now()) }
 		}
-		fmt.Println(m.ComEstado(est()).Render(w, h))
+		m = m.ComEstado(est())
+		if *pipe != 0 {
+			m = m.ComPipe(*pipe)
+		}
+		fmt.Println(m.Render(w, h))
 		return
 	}
 	logf := abrirLog(os.Getenv("FANTASMAS_DEBUG"))

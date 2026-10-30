@@ -3,6 +3,7 @@ package ui
 import (
 	"context"
 	"fmt"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -28,6 +29,9 @@ type Acoes struct {
 	Daydreaming    func() (string, error)
 	ReconectarMCPs func() error
 	ProgressoMCP   func() dados.ProgressoMCP
+	// gaveta pipes
+	Pipes  OpsPipes
+	Editar func(arquivo string) *exec.Cmd
 }
 
 type coletouMsg struct{ dados.Estado }
@@ -91,6 +95,11 @@ type Model struct {
 	vistos    map[string]bool
 	pedindoDD bool
 	vigiaMCP  bool
+
+	pipe       int
+	pipeSel    int
+	armadoPipe string
+	form       *formPipe
 }
 
 // Novo já nasce coletando: o Init dispara a primeira coleta.
@@ -197,7 +206,7 @@ func (m Model) alturaEfetiva() int {
 }
 
 func (m Model) temBarra() bool {
-	return m.aberto == nil && !m.ajuda && (m.filtro != nil || m.busca != "")
+	return m.aberto == nil && m.pipe == 0 && m.form == nil && !m.ajuda && (m.filtro != nil || m.busca != "")
 }
 
 // alturaLista é a altura do corpo da gaveta, a mesma usada no desenho, para enter e clique baterem.
@@ -217,6 +226,15 @@ func (m Model) alvos() []alvo {
 func (m Model) atual() (aba, url string) {
 	if m.aberto != nil {
 		return abaDaChave(m.estado, m.aberto.Chave), m.urlDetalhe()
+	}
+	if m.pipe != 0 {
+		if es := m.runAberto().Etapas; m.pipeSel >= 0 && m.pipeSel < len(es) {
+			if ls := dados.LinksDoReport(es[m.pipeSel].Report); len(ls) > 0 {
+				url = ls[0]
+			}
+			return es[m.pipeSel].Tab, url
+		}
+		return "", ""
 	}
 	if a, ok := m.selecionado(); ok {
 		return a.aba, a.url
@@ -327,6 +345,8 @@ func (m Model) enter() Model {
 	case a.antigas:
 		m.antigas = !m.antigas
 		return m
+	case a.pipe != 0:
+		return m.abrirPipe(a.pipe)
 	case a.pergunta != "":
 		return m.abrirDetalhe(a.pergunta, "pergunta")
 	case a.relatorio != "":
@@ -466,6 +486,8 @@ func (m Model) atualizar(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.toast = ""
 		}
 		return m, nil
+	case editouMsg:
+		return m.editou(msg)
 	case respondeuMsg:
 		m = m.respondeu(msg)
 		cor := T.Ok
@@ -490,11 +512,24 @@ func (m Model) atualizar(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.aberto != nil {
 			return m.teclaDetalhe(msg)
 		}
+		if m.form != nil {
+			return m.teclaForm(msg)
+		}
+		if m.pipe != 0 {
+			return m.teclaPipe(msg.String())
+		}
 		if m.filtro != nil {
 			return m.teclaFiltro(msg)
 		}
 		return m.tecla(msg.String())
 	default:
+		if m.form != nil && m.form.passo == 1 {
+			f := *m.form
+			ti, cmd := f.campos[f.foco].Update(msg)
+			f.campos[f.foco] = ti
+			m.form = &f
+			return m, cmd
+		}
 		if m.rascunho != nil {
 			ti, cmd := m.rascunho.Update(msg)
 			m.rascunho = &ti
@@ -538,6 +573,9 @@ func (m Model) mouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 	case dentro(q.atualizar):
 		return m.coletar()
 	case dentro(q.voltar):
+		if m.pipe != 0 || m.form != nil {
+			return m.fecharPipe(), nil
+		}
 		return m.fecharDetalhe(), nil
 	case dentro(q.irAba):
 		return m.irAba(), nil
@@ -557,6 +595,13 @@ func (m Model) mouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 	}
 	r := y - q.topo
 	if r < 0 || r >= len(q.dono) || q.dono[r] < 0 {
+		return m, nil
+	}
+	if m.form != nil {
+		return m, nil
+	}
+	if m.pipe != 0 {
+		m.pipeSel = q.dono[r]
 		return m, nil
 	}
 	if m.aberto != nil {
@@ -584,6 +629,14 @@ func (m Model) tecla(k string) (tea.Model, tea.Cmd) {
 		if Gavetas[m.gaveta].ID == "agora" {
 			m.antigas = !m.antigas
 			return m.mover(0), nil
+		}
+	case "n":
+		if Gavetas[m.gaveta].ID == "pipes" {
+			return m.abrirForm()
+		}
+	case "e":
+		if Gavetas[m.gaveta].ID == "pipes" {
+			return m.editarPipeline()
 		}
 	case "d":
 		if Gavetas[m.gaveta].ID == "prs" {
@@ -639,6 +692,8 @@ func (m Model) montarCorpo(largura, altura int) *corpo {
 		gavetaAgora(c, e, altura)
 	case "crew":
 		gavetaCrew(c, e)
+	case "pipes":
+		gavetaPipes(c, e)
 	case "prs":
 		gavetaPRs(c, e)
 	case "ci":
@@ -730,7 +785,7 @@ func (m Model) ajudaLinhas(largura int) []string {
 		k("enter", "abre · responde"),
 		k("enter 2×", "confirma Liberar merge"),
 		k("", "e Não vou fazer"),
-		k("← → 1-7", "troca de gaveta"),
+		k("← → 1-8", "troca de gaveta"),
 		k("/", "filtra a lista"),
 		k("esc", "volta · limpa o filtro"),
 		k("o", "abre o link (abrir ↗)"),
@@ -740,6 +795,7 @@ func (m Model) ajudaLinhas(largura int) []string {
 		k("x 2×", "arquiva a pergunta antiga"),
 		k("R 2×", "retoma fantasminha caído (crew)"),
 		k("d", "PRs: mostra · esconde rascunhos"),
+		k("n e · A S T 2×", "pipes: lança · edita o YAML · avança, pula, retry"),
 		k("D", "pede rodada do DayDreaming"),
 		k("M", "reconecta os MCPs de todas as sessões"),
 		k("r", "atualiza agora"),
@@ -798,7 +854,7 @@ type tela struct {
 
 func (m Model) linhasTopo(largura int) ([]string, areaImg) {
 	status := Corte(m.status, largura)
-	if m.aberto != nil || m.ajuda {
+	if m.aberto != nil || m.ajuda || m.pipe != 0 || m.form != nil {
 		return []string{TopoCompacto(m.estado, largura, m.quadro, m.coletando, status)}, areaImg{}
 	}
 	return topoArea(m.estado, largura, m.quadro, m.coletando, status, m.img != nil)
@@ -831,7 +887,7 @@ func (m Model) montar(largura, altura int) tela {
 		q.img = area
 	}
 	q.atualizar = achar(topo, "↻ atualizado", largura)
-	if m.aberto != nil || m.ajuda {
+	if m.aberto != nil || m.ajuda || m.pipe != 0 || m.form != nil {
 		q.voltar = achar(topo, Voltar, largura)
 	}
 	h := altura - 1 - len(topo)
@@ -843,6 +899,10 @@ func (m Model) montar(largura, altura int) tela {
 			corpo = m.ajudaLinhas(largura)
 		case m.aberto != nil:
 			corpo, q.dono = m.detalheLinhas(largura, h)
+		case m.form != nil:
+			corpo = m.formLinhas(largura, h)
+		case m.pipe != 0:
+			corpo, q.dono = m.pipeLinhas(largura, h)
 		default:
 			hl := h
 			if m.temBarra() && h > 1 {

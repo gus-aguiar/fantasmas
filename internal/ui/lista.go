@@ -14,6 +14,7 @@ type alvo struct {
 	retomar                       string
 	antigas                       bool
 	acao                          string
+	pipe                          int
 }
 
 // linha do corpo; item é o índice do alvo dono da linha, ou -1.

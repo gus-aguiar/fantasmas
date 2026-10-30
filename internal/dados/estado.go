@@ -44,4 +44,7 @@ type Estado struct {
 	MCP                                          ProgressoMCP
 	Mural                                        []Aviso
 	Caidos                                       []Caido
+	Runs                                         []Run
+	PipesLigado                                  bool
+	Proximo                                      map[string]string
 }

@@ -65,10 +65,12 @@ func (c *Coletor) Coletar(ctx context.Context) Estado {
 
 	var tasks, esperando, opcoes, local, worktrees, maquina, prs, agentes string
 	var ddb *ParteDdb
+	var proximo map[string]string
 	c.recursos.FalhaDdb = ""
 	if fonteDdbLigada() {
 		if p, err := c.lerDdb(ctx); err == nil {
 			ddb = &p
+			proximo = c.lerTick(ctx)
 		} else {
 			c.recursos.FalhaDdb = err.Error()
 		}
@@ -136,6 +138,7 @@ func (c *Coletor) Coletar(ctx context.Context) Estado {
 	}
 	if ddb != nil {
 		e.Tasks, e.Esperando, e.Opcoes, e.Mural = ddb.Tasks, ddb.Esperando, ddb.Opcoes, ddb.Mural
+		e.Runs, e.PipesLigado, e.Proximo = ddb.Runs, true, proximo
 		if os.Getenv("FANTASMAS_MURAL") == "off" {
 			e.Mural = nil
 		}

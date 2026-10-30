@@ -194,7 +194,7 @@ func TestCliqueNaAbaTrocaGaveta(t *testing.T) {
 		m.largura, m.altura = w, 30
 		rot := "PRs"
 		if w < 70 {
-			rot = " 3 "
+			rot = " 4 "
 		}
 		x, y := onde(t, m, rot, 29)
 		m, _ = clique(t, m, x+1, y)

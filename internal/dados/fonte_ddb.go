@@ -18,6 +18,7 @@ const maxTasksDdb = 14
 type ParteDdb struct {
 	Tasks, Esperando, Opcoes []Linha
 	Mural                    []Aviso
+	Runs                     []Run
 }
 
 type estadoDdbJSON struct {
@@ -45,6 +46,7 @@ type estadoDdbJSON struct {
 		Texto string `json:"texto"`
 		Ate   string `json:"ate"`
 	} `json:"mural"`
+	Runs []Run `json:"runs"`
 }
 
 type opcaoDdb struct {
@@ -89,6 +91,7 @@ func DeDdb(saida []byte, agora time.Time) (ParteDdb, error) {
 			p.Mural = append(p.Mural, a)
 		}
 	}
+	p.Runs = s.Runs
 	sort.SliceStable(p.Mural, func(i, j int) bool { return p.Mural[i].At.After(p.Mural[j].At) })
 	if len(p.Mural) > 3 {
 		p.Mural = p.Mural[:3]
@@ -120,11 +123,16 @@ func (c *Coletor) lerDdb(ctx context.Context) (ParteDdb, error) {
 	if !ok {
 		return ParteDdb{}, fmt.Errorf("state falhou")
 	}
-	p, err := DeDdb([]byte(out), time.Now())
-	if err != nil {
-		return ParteDdb{}, err
+	return DeDdb([]byte(out), time.Now())
+}
+
+// lerTick roda o tick em dry-run só para o "próximo passo" do detalhe; nunca executa.
+func (c *Coletor) lerTick(ctx context.Context) map[string]string {
+	out, ok := c.rodar(ctx, timeoutColetor, "python3", c.scriptDdb(), "--raiz", c.Raiz, "tick", "--dry-run")
+	if !ok {
+		return nil
 	}
-	return p, nil
+	return ProximoDoTick(out)
 }
 
 func faltaDdb(r Recursos) []string {

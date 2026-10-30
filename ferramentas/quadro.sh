@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
-# Renderiza uma gaveta da TUI com a demo e grava shots/<tela>.{ansi,html}; imprime o caminho do HTML.
+# Renderiza uma gaveta da TUI com a demo e grava shots/<nome>.{ansi,html}; imprime o caminho do HTML.
+# Uso: quadro.sh <tela> [largura=140] [altura=42] [nome=<tela>] [flags extras do binário, ex.: --pipe 13]
 set -euo pipefail
 
-tela="${1:?uso: quadro.sh <tela> [largura=140] [altura=42]}"
+tela="${1:?uso: quadro.sh <tela> [largura=140] [altura=42] [nome] [flags...]}"
 largura="${2:-140}"
 altura="${3:-42}"
+nome="${4:-$tela}"
+shift $(( $# < 4 ? $# : 4 ))
 
 app="$(cd "$(dirname "$0")/.." && pwd)"
 spark="$(cd "$app/../../.." && pwd)"
@@ -15,6 +18,6 @@ if [ ! -x "$bin" ] || [ -n "$(find "$app" -path "$app/bin" -prune -o -path "$app
   bash "$spark/scripts/orca-orchestration/heavy-run.sh" -C "$app" "fantasmas build" env GOTOOLCHAIN=local go build -o bin/fantasmas-pipes . >&2
 fi
 
-"$bin" --uma-vez --cor --demo --gaveta "$tela" --largura "$largura" --altura "$altura" > "$app/shots/$tela.ansi"
-python3 -I "$app/ferramentas/ansi2html.py" --fundo '#2c2244' < "$app/shots/$tela.ansi" > "$app/shots/$tela.html"
-echo "$app/shots/$tela.html"
+"$bin" --uma-vez --cor --demo --gaveta "$tela" --largura "$largura" --altura "$altura" "$@" > "$app/shots/$nome.ansi"
+python3 -I "$app/ferramentas/ansi2html.py" --fundo '#2c2244' < "$app/shots/$nome.ansi" > "$app/shots/$nome.html"
+echo "$app/shots/$nome.html"

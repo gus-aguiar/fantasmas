@@ -73,7 +73,7 @@ func TestFonteDdbUsaState(t *testing.T) {
 	f := novoFake()
 	f.saida[" state --json"] = estadoDdb
 	e := (&Coletor{Raiz: raizDdb(t), R: f}).Coletar(context.Background())
-	if f.vezes("python3 "+e.Raiz+"/scripts/delegate/ddb.py") != 2 {
+	if f.vezes("python3 "+e.Raiz+"/scripts/delegate/ddb.py") != 3 { // import, state e tick --dry-run
 		t.Errorf("calls=%v", f.calls)
 	}
 	if len(e.Tasks) != 2 || e.Tasks[0].Rotulo != "c-a" || len(e.Esperando) != 1 || len(e.Opcoes) != 2 {

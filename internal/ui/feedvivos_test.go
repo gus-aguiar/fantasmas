@@ -128,7 +128,7 @@ func TestRascunhosOcultos(t *testing.T) {
 	e.Travados[1].Title = "rascunho-x"
 	m := modelo(e, &registro{})
 	m.largura, m.altura = 96, 40
-	m = aperta(t, m, "3")
+	m = aperta(t, m, "4")
 	out := render(m, 96, 40)
 	if strings.Contains(out, "rascunho-x") || !strings.Contains(out, "1 rascunhos ocultos · d mostra") {
 		t.Fatalf("rascunho deveria estar oculto:\n%s", out)
@@ -160,7 +160,7 @@ func TestLargurasSemCorte(t *testing.T) {
 	e := fixture()
 	e.Travados[0].Draft = true
 	p := modelo(e, &registro{})
-	p = aperta(t, p, "3")
+	p = aperta(t, p, "4")
 	for _, w := range []int{46, 56, 96} {
 		cabeTudo(t, p, w, 30)
 		if !strings.Contains(render(p, w, 30), "rascunhos ocultos · d mostra") {
