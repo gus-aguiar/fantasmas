@@ -17,6 +17,8 @@ type Tokens struct {
 	BarraCheia, BarraVazia                  lipgloss.Color
 	CtxBaixo, CtxMedio, CtxAlto             lipgloss.Color
 	MascoteCorpo, MascoteOlho, MascoteBoca  lipgloss.Color
+	// Acentos dão a cada missão uma cor estável (ver corMissao).
+	Acentos [6]lipgloss.Color
 }
 
 var T = Tokens{
@@ -29,6 +31,8 @@ var T = Tokens{
 	BarraCheia: "#c4a6ff", BarraVazia: "#5f4890",
 	CtxBaixo: "#7ee7a8", CtxMedio: "#ffd166", CtxAlto: "#ff6fbf",
 	MascoteCorpo: "#a66bff", MascoteOlho: "#ff3388", MascoteBoca: "#4b2a8a",
+	// rosa, turquesa, pêssego, céu, lavanda e lima: claros o bastante para o Sel.
+	Acentos: [6]lipgloss.Color{"#ff9bd2", "#5fe3d6", "#ffb88c", "#8fc1ff", "#d3adff", "#c6ec7c"},
 }
 
 // corCtx escolhe a cor da barra de contexto: verde, amarelo e rosa conforme o uso sobe.

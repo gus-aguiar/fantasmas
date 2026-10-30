@@ -19,6 +19,8 @@ type ParteDdb struct {
 	Tasks, Esperando, Opcoes []Linha
 	Mural                    []Aviso
 	Runs                     []Run
+	Principal                Principal
+	Missoes                  []Missao
 }
 
 type estadoDdbJSON struct {
@@ -31,6 +33,7 @@ type estadoDdbJSON struct {
 		Total     int    `json:"total"`
 		Quando    string `json:"quando"`
 		Herdr     string `json:"herdr"`
+		Missao    string `json:"missao"`
 	} `json:"tasks"`
 	Pendentes []struct {
 		Chave   string          `json:"chave"`
@@ -38,15 +41,19 @@ type estadoDdbJSON struct {
 		Detalhe string          `json:"detalhe"`
 		Extra   string          `json:"extra"`
 		Merge   json.RawMessage `json:"merge"`
+		Missao  string          `json:"missao"`
 	} `json:"pendentes"`
 	OpcoesRaw map[string][]opcaoDdb `json:"opcoes"`
 	Mural     []struct {
-		At    string `json:"at"`
-		Autor string `json:"autor"`
-		Texto string `json:"texto"`
-		Ate   string `json:"ate"`
+		At     string `json:"at"`
+		Autor  string `json:"autor"`
+		Texto  string `json:"texto"`
+		Ate    string `json:"ate"`
+		Missao string `json:"missao,omitempty"`
 	} `json:"mural"`
-	Runs []Run `json:"runs"`
+	Runs      []Run        `json:"runs"`
+	Principal principalDdb `json:"principal"`
+	Missoes   []missaoDdb  `json:"missoes"`
 }
 
 type opcaoDdb struct {
@@ -70,10 +77,10 @@ func DeDdb(saida []byte, agora time.Time) (ParteDdb, error) {
 		if t.Herdr != "" {
 			det += " · " + t.Herdr
 		}
-		p.Tasks = append(p.Tasks, Linha{Chave: t.Chave, Rotulo: t.Nome, Detalhe: det, Extra: t.Tab})
+		p.Tasks = append(p.Tasks, Linha{Chave: t.Chave, Rotulo: t.Nome, Detalhe: det, Extra: t.Tab, Missao: t.Missao})
 	}
 	for _, q := range s.Pendentes {
-		l := Linha{Chave: q.Chave, Rotulo: q.Rotulo, Detalhe: q.Detalhe, Extra: q.Extra}
+		l := Linha{Chave: q.Chave, Rotulo: q.Rotulo, Detalhe: q.Detalhe, Extra: q.Extra, Missao: q.Missao}
 		if m := bytes.TrimSpace(q.Merge); len(m) > 0 && string(m) != "null" {
 			var b bytes.Buffer
 			if json.Compact(&b, m) == nil {
@@ -92,6 +99,10 @@ func DeDdb(saida []byte, agora time.Time) (ParteDdb, error) {
 		}
 	}
 	p.Runs = s.Runs
+	p.Principal = Principal(s.Principal)
+	for _, m := range s.Missoes {
+		p.Missoes = append(p.Missoes, m.missao())
+	}
 	sort.SliceStable(p.Mural, func(i, j int) bool { return p.Mural[i].At.After(p.Mural[j].At) })
 	if len(p.Mural) > 3 {
 		p.Mural = p.Mural[:3]

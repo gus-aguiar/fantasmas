@@ -2,7 +2,7 @@ package dados
 
 import "strings"
 
-type Linha struct{ Chave, Rotulo, Detalhe, Extra, Merge string }
+type Linha struct{ Chave, Rotulo, Detalhe, Extra, Merge, Missao string }
 
 func TSV(saida string) []Linha {
 	var out []Linha

@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"fmt"
 	"math"
 	"os"
 	"path/filepath"
@@ -30,6 +31,10 @@ func TestContrasteLegivel(t *testing.T) {
 	}
 	checa("ChipTexto", T.ChipTexto, 4.5, map[string]lipgloss.Color{"Chip": T.Chip})
 	checa("ChipVerdeTexto", T.ChipVerdeTexto, 4.5, map[string]lipgloss.Color{"ChipVerde": T.ChipVerde})
+	for i, c := range T.Acentos {
+		checa(fmt.Sprintf("Acento%d", i), c, 4.5, quatro)
+		checa(fmt.Sprintf("Mantle sobre Acento%d", i), T.Mantle, 4.5, map[string]lipgloss.Color{"acento": c})
+	}
 	for n, c := range map[string]lipgloss.Color{"CtxBaixo": T.CtxBaixo, "CtxMedio": T.CtxMedio, "CtxAlto": T.CtxAlto} {
 		checa(n, c, 4.5, dois)
 	}
@@ -63,6 +68,22 @@ func TestEstadosDistinguiveis(t *testing.T) {
 			d := 255 * math.Sqrt((r1-r2)*(r1-r2)+(g1-g2)*(g1-g2)+(b1-b2)*(b1-b2))
 			if d < 60 {
 				t.Errorf("%s x %s: distancia %.1f < 60", est[i].n, est[j].n, d)
+			}
+		}
+	}
+}
+
+func TestAcentosDistintosEntreSi(t *testing.T) {
+	for i := range T.Acentos {
+		for j := i + 1; j < len(T.Acentos); j++ {
+			h1, _ := matiz(T.Acentos[i])
+			h2, _ := matiz(T.Acentos[j])
+			d := math.Abs(h1 - h2)
+			if d > 180 {
+				d = 360 - d
+			}
+			if d < 25 {
+				t.Errorf("acentos %d e %d: matiz a %.0f°", i, j, d)
 			}
 		}
 	}

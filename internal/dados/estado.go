@@ -47,4 +47,9 @@ type Estado struct {
 	Runs                                         []Run
 	PipesLigado                                  bool
 	Proximo                                      map[string]string
+	// missões (só com FANTASMAS_FONTE=ddb)
+	MissoesLigado bool
+	Principal     Principal
+	Missoes       []Missao
+	Coordenadores map[string]LinhaViva
 }

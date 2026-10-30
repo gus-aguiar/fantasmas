@@ -26,7 +26,67 @@ func EstadoDemo(agora time.Time) dados.Estado {
 		"2026-10-30-PL-1210":         "lançaria (implementer, skill writing-plans)",
 		"2026-10-30-PL-1203-homolog": "não lança: aguarda implementar (after)",
 	}
+	missoesDemo(&e, agora)
 	return e
+}
+
+const (
+	demoFrota     = "frota-por-unidade"
+	demoMultas    = "multas-por-veiculo"
+	demoChecklist = "checklist-pdf"
+)
+
+// missoesDemo: o Genguinha e três missões, uma em cada estado (espera você, trabalhando, concluída).
+func missoesDemo(e *dados.Estado, agora time.Time) {
+	um := 1
+	zero := 0
+	e.MissoesLigado = true
+	e.Principal = dados.Principal{Nome: "Genguinha", Workspace: "w1", Gengar: "gengar-1030-0900"}
+	e.Missoes = []dados.Missao{
+		{Slug: demoChecklist, Nome: "Checklist em PDF", Workspace: "w17", Origem: "designer", OrigemRef: "pedido da Ana",
+			Cards: []string{"PL-1150", "PL-1004"}, Estado: "concluida", Gengar: "g-checklist-pdf",
+			Objetivo: "Exportar o checklist preenchido em PDF.", Contagem: dados.Contagem{PrsVermelhos: &zero},
+			UltimaAtividade: agora.Add(-26 * time.Hour)},
+		{Slug: demoMultas, Nome: "Multas por veículo", Workspace: "w16", Origem: "produto", OrigemRef: "pedido do CS",
+			Cards: []string{"PL-1210"}, Estado: "aberta", Gengar: "g-multas-por-veiculo",
+			Objetivo: "Listar as multas de cada veículo.", Prototipo: "https://claude.ai/design/multas",
+			Contagem:        dados.Contagem{Trabalhando: 1, PipesAtivos: 1, PrsVermelhos: &zero},
+			UltimaAtividade: agora.Add(-2 * time.Minute)},
+		{Slug: demoFrota, Nome: "Frota por unidade", Workspace: "w15", Origem: "PDY", OrigemRef: "PDY-123",
+			Cards: []string{"PL-1203", "PL-1003", "PL-1001"}, Estado: "aberta", Gengar: "g-frota-por-unidade",
+			Objetivo:        "Filtrar a frota por unidade.",
+			Contagem:        dados.Contagem{Trabalhando: 1, Parados: 1, Pendentes: 1, PipesAtivos: 1, PrsVermelhos: &um},
+			UltimaAtividade: agora.Add(-1 * time.Minute)},
+	}
+	e.Coordenadores = map[string]dados.LinhaViva{
+		"gengar-1030-0900": {Nome: "gengar-1030-0900", Aba: "w1:t1", Etapa: "gengar", Estado: dados.Trabalhando, CtxPct: 62,
+			Agora: "lendo o relatório do g-frota-por-unidade e respondendo o mural", Hora: agora.Add(-1 * time.Minute)},
+		"g-frota-por-unidade": {Nome: "g-frota-por-unidade", Aba: "w15:t1", Etapa: "gengar", Estado: dados.EsperaVoce, CtxPct: 38,
+			Agora: "1 sua: aprovar o plano do filtro de frota (c-pl-2)", Hora: agora.Add(-1 * time.Minute)},
+		"g-multas-por-veiculo": {Nome: "g-multas-por-veiculo", Aba: "w16:t1", Etapa: "gengar", Estado: dados.Trabalhando, CtxPct: 17,
+			Agora: "Bash: herdr agent wait h-pl-5 --until blocked", Hora: agora.Add(-2 * time.Minute)},
+		"g-checklist-pdf": {Nome: "g-checklist-pdf", Aba: "w17:t1", Etapa: "gengar", Estado: dados.Terminou, CtxPct: 81,
+			Agora: "entregou: PR #3120 mergeado e homologado", Hora: agora.Add(-26 * time.Hour)},
+	}
+	ws := map[string][2]string{
+		"c-pl-1": {"w15", demoFrota}, "c-pl-2": {"w15", demoFrota}, "c-pl-3": {"w15", demoFrota},
+		"h-pl-5": {"w16", demoMultas}, "c-pl-4": {"w17", demoChecklist},
+	}
+	for i, l := range e.Linhas {
+		e.Linhas[i].Workspace, e.Linhas[i].Missao = ws[l.Nome][0], ws[l.Nome][1]
+	}
+	for i, t := range e.Tasks {
+		e.Tasks[i].Missao = ws[t.Rotulo][1]
+	}
+	for i := range e.Esperando {
+		e.Esperando[i].Missao = demoFrota
+	}
+	porRun := map[int]string{13: demoFrota, 10: demoMultas, 11: demoChecklist}
+	for i, r := range e.Runs {
+		e.Runs[i].Missao = porRun[r.ID]
+	}
+	e.Mural = append([]dados.Aviso{{At: agora.Add(-4 * time.Minute), Autor: "g-frota-por-unidade",
+		Texto: "plano do filtro de frota pronto, esperando o humano", Missao: demoFrota}}, e.Mural...)
 }
 
 func runsDemo(agora time.Time) []dados.Run {

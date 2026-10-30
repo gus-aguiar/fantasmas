@@ -22,6 +22,7 @@ type Run struct {
 	// Prontidao é "" (sem gengar dedicado), "aguardando prontidão" ou "pronto".
 	Prontidao string  `json:"prontidao"`
 	Etapas    []Etapa `json:"stages"`
+	Missao    string  `json:"missao"`
 }
 
 type Gate struct {

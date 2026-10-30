@@ -7,7 +7,7 @@ import (
 
 func TestTSV(t *testing.T) {
 	got := TSV("a\tb\tc\td\te\n\n x\n")
-	want := []Linha{{"a", "b", "c", "d", "e"}, {" x", "?", "", "", ""}}
+	want := []Linha{{"a", "b", "c", "d", "e", ""}, {" x", "?", "", "", "", ""}}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("got %#v want %#v", got, want)
 	}

@@ -153,9 +153,15 @@ func (c *Coletor) Coletar(ctx context.Context) Estado {
 		if os.Getenv("FANTASMAS_MURAL") == "off" {
 			e.Mural = nil
 		}
+		e.MissoesLigado, e.Principal, e.Missoes = true, ddb.Principal, ddb.Missoes
+		PreencherPRsVermelhos(e.Missoes, e.Travados)
 	}
 	e.Caidos = CaidosDe(c.Raiz, vivos, maxCaidos)
 	e.Linhas = LinhasVivas(e, c.Raiz, DirClaude(), time.Now())
+	AtribuirMissoes(&e)
+	if e.MissoesLigado {
+		e.Coordenadores = Coordenadores(e, c.Raiz, DirClaude(), time.Now())
+	}
 	return e
 }
 

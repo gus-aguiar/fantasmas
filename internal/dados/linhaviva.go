@@ -21,6 +21,7 @@ const limiarParado = 10 * time.Minute
 
 type LinhaViva struct {
 	Nome, Pasta, Aba, Etapa, Agora string
+	Workspace, Missao              string
 	Estado                         EstadoLinha
 	CtxPct                         int
 	Hora                           time.Time
@@ -91,18 +92,7 @@ func LinhasVivas(e Estado, raiz, claudeDir string, agora time.Time) []LinhaViva 
 		if !ok {
 			continue
 		}
-		ses, id := sessaoDe(sessoes, nome, ag.Sessao)
-		if ag.Sessao != "" {
-			id = ag.Sessao
-		}
-		var at Atividade
-		if id != "" {
-			cwd := raiz
-			if ses != nil && ses.Cwd != "" {
-				cwd = ses.Cwd
-			}
-			at = AtividadeDe(LerCauda(CaminhoTranscript(claudeDir, cwd, id), maxCauda))
-		}
+		ses, at := atividadeDoAgente(nome, ag, sessoes, raiz, claudeDir)
 		var pend []string
 		for _, p := range e.Esperando {
 			if crewDe(p) == nome {
@@ -114,6 +104,7 @@ func LinhasVivas(e Estado, raiz, claudeDir string, agora time.Time) []LinhaViva 
 		k := ChaveVisto(pasta)
 		l := MontarLinhaViva(nome, ag, ses, at, pend, k != "", k != "" && e.Vistos[k], agora)
 		l.Pasta = pasta
+		l.Workspace = WorkspaceDe(pasta, ag.Aba)
 		out = append(out, l)
 	}
 	sort.Slice(out, func(i, j int) bool {

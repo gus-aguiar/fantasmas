@@ -110,11 +110,14 @@ type Model struct {
 	pipeSel    int
 	armadoPipe string
 	form       *formPipe
+
+	// missao é o slug da missão em foco ("" = todas).
+	missao string
 }
 
 // Novo já nasce coletando: o Init dispara a primeira coleta.
 func Novo(coleta Coleta, acoes Acoes, intervalo time.Duration) Model {
-	return Model{coleta: coleta, acoes: acoes, intervalo: intervalo, coletando: true}
+	return Model{coleta: coleta, acoes: acoes, intervalo: intervalo, coletando: true, gaveta: indiceGaveta("agora")}
 }
 
 // ComEstado devolve o modelo com um estado já coletado (usado pelo --uma-vez).
@@ -362,6 +365,9 @@ func (m Model) enter() Model {
 	case a.antigas:
 		m.antigas = !m.antigas
 		return m
+	case a.missao != "":
+		m.missao = a.missao
+		return m.irGaveta(indiceGaveta("agora"))
 	case a.pipe != 0:
 		return m.abrirPipe(a.pipe)
 	case a.pergunta != "":
@@ -716,7 +722,13 @@ func (m Model) tecla(k string) (tea.Model, tea.Cmd) {
 	case "/":
 		return m.abrirFiltro()
 	case "esc":
+		if m.busca == "" {
+			m.missao = ""
+		}
 		m.busca, m.sel = "", 0
+		return m, nil
+	case "0":
+		m.missao, m.sel = "", 0
 		return m, nil
 	case "r":
 		return m.coletar()
@@ -749,8 +761,10 @@ func (m Model) tecla(k string) (tea.Model, tea.Cmd) {
 
 func (m Model) montarCorpo(largura, altura int) *corpo {
 	c := &corpo{largura: largura, filtro: normaliza(m.busca), antigasAbertas: m.antigas, rascunhos: m.rascunhos}
-	e := m.estado
+	e := m.estadoVisto()
 	switch Gavetas[m.gaveta].ID {
+	case "missoes":
+		gavetaMissoes(c, m.estado, m.missao)
 	case "agora":
 		gavetaAgora(c, e, altura)
 	case "crew":
@@ -845,12 +859,12 @@ func (m Model) ajudaLinhas(largura int) []string {
 	ls := []string{
 		"teclado",
 		k("↑ ↓  j k", "escolhe item ou opção"),
-		k("enter", "abre · responde"),
+		k("enter", "abre · responde · foca a missão"),
 		k("enter 2×", "confirma Liberar merge"),
 		k("", "e Não vou fazer"),
-		k("← → 1-8", "troca de gaveta"),
+		k("← → 1-9 0", "troca de gaveta · 0 volta a todas as missões"),
 		k("/", "filtra a lista"),
-		k("esc", "volta · limpa o filtro"),
+		k("esc", "volta · limpa o filtro (ou a missão)"),
 		k("o", "abre o link (abrir ↗)"),
 		k("g", "vai à aba (ir à aba →)"),
 		k("p", "abre o painel do delegate"),
@@ -921,7 +935,11 @@ func (m Model) linhasTopo(largura int) ([]string, areaImg) {
 	if m.aberto != nil || m.ajuda || m.pipe != 0 || m.form != nil {
 		return []string{TopoCompacto(m.estado, largura, m.quadro, m.coletando, status)}, areaImg{}
 	}
-	return topoArea(m.estado, largura, m.quadro, m.coletando, status, m.img != nil)
+	ls, area := topoArea(m.estado, largura, m.quadro, m.coletando, status, m.img != nil)
+	if m.missao != "" {
+		ls = append(ls, seloMissao(m.estado, m.missao, largura))
+	}
+	return ls, area
 }
 
 // achar devolve a faixa da primeira linha que contém s.

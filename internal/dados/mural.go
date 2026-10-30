@@ -15,6 +15,8 @@ type Aviso struct {
 	Autor string
 	Texto string
 	Ate   time.Time
+	// Missao é o slug da missão do aviso; vazio é global.
+	Missao string
 }
 
 const (
@@ -55,10 +57,11 @@ func MuralDe(caminho string, agora time.Time, max int) []Aviso {
 
 func avisoDe(linha []byte, agora time.Time) (Aviso, bool) {
 	var raw struct {
-		At    string `json:"at"`
-		Autor string `json:"autor"`
-		Texto string `json:"texto"`
-		Ate   string `json:"ate"`
+		At     string `json:"at"`
+		Autor  string `json:"autor"`
+		Texto  string `json:"texto"`
+		Ate    string `json:"ate"`
+		Missao string `json:"missao"`
 	}
 	if json.Unmarshal(linha, &raw) != nil || raw.Texto == "" {
 		return Aviso{}, false
@@ -67,7 +70,7 @@ func avisoDe(linha []byte, agora time.Time) (Aviso, bool) {
 	if err != nil || agora.Sub(at) > janelaMural {
 		return Aviso{}, false
 	}
-	a := Aviso{At: at, Autor: raw.Autor, Texto: raw.Texto}
+	a := Aviso{At: at, Autor: raw.Autor, Texto: raw.Texto, Missao: raw.Missao}
 	if raw.Ate != "" {
 		ate, err := time.Parse(time.RFC3339, raw.Ate)
 		if err != nil {

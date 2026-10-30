@@ -33,7 +33,8 @@ func main() {
 	cor := flag.Bool("cor", false, "força cor de 24 bits (só com --uma-vez)")
 	demo := flag.Bool("demo", false, "usa o estado de demonstração (só com --uma-vez)")
 	demoVerde := flag.Bool("demo-verde", false, "demonstração com todos os PRs de CI verde (só com --uma-vez)")
-	gaveta := flag.String("gaveta", "", "gaveta inicial: agora|crew|pipes|prs|ci|ambiente|maquina|mais (só com --uma-vez)")
+	gaveta := flag.String("gaveta", "", "gaveta inicial: missoes|agora|crew|pipes|prs|ci|ambiente|maquina|mais (só com --uma-vez)")
+	missao := flag.String("missao", "", "foca a missão pelo slug (só com --uma-vez)")
 	pipe := flag.Int("pipe", 0, "abre o detalhe do run N da gaveta pipes (só com --uma-vez)")
 	flag.Parse()
 	if *intervalo <= 0 {
@@ -127,6 +128,9 @@ func main() {
 		m = m.ComEstado(est())
 		if *pipe != 0 {
 			m = m.ComPipe(*pipe)
+		}
+		if *missao != "" {
+			m = m.ComMissao(*missao)
 		}
 		fmt.Println(m.Render(w, h))
 		return

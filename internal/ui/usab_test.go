@@ -88,7 +88,7 @@ func TestFiltroNasGavetasEClique(t *testing.T) {
 	r := &registro{}
 	m := modelo(fixture(), r)
 	m.largura, m.altura = 96, 40
-	m = aperta(t, m, "4")
+	m = aperta(t, m, "5")
 	m = aperta(t, m, "/")
 	m = digita(t, m, "#4")
 	out := render(m, 96, 40)
@@ -300,7 +300,7 @@ func TestIrAbaEAbrirNoFeed(t *testing.T) {
 
 func TestSemAbaNemURLSemBotao(t *testing.T) {
 	m := modelo(fixture(), &registro{})
-	m = aperta(t, m, "7")
+	m = aperta(t, m, "8")
 	out := render(m, 96, 40)
 	if strings.Contains(out, "ir à aba →") || strings.Contains(out, "abrir ↗") {
 		t.Fatalf("máquina não tem aba nem link:\n%s", out)
