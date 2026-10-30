@@ -13,11 +13,11 @@ func TestResponderPeloDdb(t *testing.T) {
 	t.Setenv("FANTASMAS_FONTE", "ddb")
 	t.Setenv("FANTASMAS_DDB_SCRIPT", "/s/ddb.py")
 	f := &respRunner{resp: []respResp{{"python3 /s/ddb.py", "a\tc-a\tPergunta?\tSim\tsim: c-a\n", nil}}}
-	e, err := Responder(context.Background(), f, "/raiz", Recursos{Painel: "/p/painel.py", Herdr: true}, "/raiz/.delegate/a/questions.json#p1", "Sim")
+	e, err := Responder(context.Background(), f, "/raiz", Recursos{Herdr: true}, "/raiz/.delegate/a/questions.json#p1", "-ajustar: x")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got := f.juntas(); len(got) != 1 || got[0] != "python3 /s/ddb.py --raiz /raiz answer a#p1 Sim --via control-panel" {
+	if got := f.juntas(); len(got) != 1 || got[0] != "python3 /s/ddb.py --raiz /raiz answer --via control-panel -- a#p1 -ajustar: x" {
 		t.Fatalf("argv: %v", got)
 	}
 	want := Entrega{Slug: "a", Crew: "c-a", Titulo: "Pergunta?", Resposta: "Sim", Entregue: true}
@@ -133,5 +133,54 @@ func TestCaidosDe(t *testing.T) {
 	}
 	if CaidosDe(raiz, nil, 8) != nil {
 		t.Fatal("sem leitura do herdr ninguém é caído")
+	}
+}
+
+type envRespRunner struct {
+	respRunner
+	envs [][]string
+}
+
+func (f *envRespRunner) RunEnv(ctx context.Context, env []string, argv ...string) (string, error) {
+	f.mu.Lock()
+	f.envs = append(f.envs, env)
+	f.mu.Unlock()
+	return f.Run(ctx, argv...)
+}
+
+func TestResponderComPainelPassaDdbEscritaNoEnv(t *testing.T) {
+	t.Setenv("FANTASMAS_FONTE", "ddb")
+	f := &envRespRunner{respRunner: respRunner{resp: []respResp{{"python3 /p/painel.py", "a\tc-a\tP\tSim\tsim: c-a\t-\n", nil}}}}
+	e, err := Responder(context.Background(), f, "/raiz", Recursos{Painel: "/p/painel.py", Herdr: true}, "/raiz/.delegate/a/questions.json#p1", "Sim")
+	if err != nil || !e.Entregue {
+		t.Fatalf("%+v %v", e, err)
+	}
+	if got := f.juntas(); len(got) != 1 || got[0] != "python3 /p/painel.py responder /raiz /raiz/.delegate/a/questions.json#p1 Sim" {
+		t.Fatalf("argv: %v", got)
+	}
+	if len(f.envs) != 1 || len(f.envs[0]) != 1 || f.envs[0][0] != "DDB_ESCRITA=on" {
+		t.Fatalf("env: %v", f.envs)
+	}
+}
+
+func TestResponderComPainelSemChaveNaoMexeNoEnv(t *testing.T) {
+	t.Setenv("FANTASMAS_FONTE", "")
+	f := &envRespRunner{respRunner: respRunner{resp: []respResp{{"python3", "a\tc-a\tP\tSim\tsim: c-a\n", nil}}}}
+	if _, err := Responder(context.Background(), f, "/raiz", Recursos{Painel: "/p/painel.py"}, "k", "Sim"); err != nil {
+		t.Fatal(err)
+	}
+	if len(f.envs) != 0 {
+		t.Fatalf("env inesperado: %v", f.envs)
+	}
+}
+
+func TestEnvDeFallbackPrefixaEnv(t *testing.T) {
+	t.Setenv("FANTASMAS_FONTE", "ddb")
+	f := &respRunner{resp: []respResp{{"env DDB_ESCRITA=on python3 /p/painel.py", "a\tc-a\tP\tSim\tsim: c-a\n", nil}}}
+	if _, err := Responder(context.Background(), f, "/raiz", Recursos{Painel: "/p/painel.py"}, "k", "Sim"); err != nil {
+		t.Fatal(err)
+	}
+	if got := f.juntas(); len(got) != 1 || !strings.HasPrefix(got[0], "env DDB_ESCRITA=on python3 /p/painel.py responder") {
+		t.Fatalf("argv: %v", got)
 	}
 }

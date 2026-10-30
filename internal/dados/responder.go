@@ -24,7 +24,7 @@ func Responder(ctx context.Context, r Runner, raiz string, rec Recursos, chave, 
 		ctx, cancel = context.WithTimeout(ctx, timeoutResposta)
 		defer cancel()
 	}
-	if fonteDdbLigada() {
+	if fonteDdbLigada() && rec.Painel == "" {
 		return respondePeloDdb(ctx, r, raiz, chave, resposta)
 	}
 	if rec.Painel != "" {
@@ -46,7 +46,7 @@ func respondePeloDdb(ctx context.Context, r Runner, raiz, chave, resposta string
 	if id == "" {
 		return Entrega{}, fmt.Errorf("chave sem id de pergunta: %q", chave)
 	}
-	out, err := r.Run(ctx, "python3", scriptDdbDe(raiz), "--raiz", raiz, "answer", slugDe(arquivo)+"#"+id, resposta, "--via", "control-panel")
+	out, err := r.Run(ctx, "python3", scriptDdbDe(raiz), "--raiz", raiz, "answer", "--via", "control-panel", "--", slugDe(arquivo)+"#"+id, resposta)
 	if err != nil {
 		return Entrega{}, err
 	}
@@ -85,7 +85,13 @@ func Arquivador(r Runner, raiz string) func(string) error {
 }
 
 func respondePeloPainel(ctx context.Context, r Runner, raiz string, rec Recursos, chave, resposta string) (Entrega, error) {
-	out, err := r.Run(ctx, "python3", rec.Painel, "responder", raiz, chave, resposta)
+	var out string
+	var err error
+	if fonteDdbLigada() {
+		out, err = rodaComEnv(ctx, r, []string{"DDB_ESCRITA=on"}, "python3", rec.Painel, "responder", raiz, chave, resposta)
+	} else {
+		out, err = r.Run(ctx, "python3", rec.Painel, "responder", raiz, chave, resposta)
+	}
 	if err != nil {
 		return Entrega{}, err
 	}
