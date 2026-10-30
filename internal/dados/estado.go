@@ -34,6 +34,8 @@ type Estado struct {
 	At                                               time.Time
 	Raiz                                             string
 	Vivos                                            map[string]bool
+	Agentes                                          map[string]Agente
+	Linhas                                           []LinhaViva
 	Vistos                                           map[string]bool
 	Daydreamer                                       Daydreamer
 	MCP                                              ProgressoMCP

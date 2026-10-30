@@ -10,21 +10,13 @@ import (
 
 // VivosDe lê o JSON do `herdr agent list`; nil quando a saída não é legível.
 func VivosDe(saida []byte) map[string]bool {
-	var r struct {
-		Result struct {
-			Agents []struct {
-				Name string `json:"name"`
-			} `json:"agents"`
-		} `json:"result"`
-	}
-	if json.Unmarshal(saida, &r) != nil {
+	ags := AgentesDe(saida)
+	if ags == nil {
 		return nil
 	}
 	v := map[string]bool{}
-	for _, a := range r.Result.Agents {
-		if a.Name != "" {
-			v[a.Name] = true
-		}
+	for n := range ags {
+		v[n] = true
 	}
 	return v
 }

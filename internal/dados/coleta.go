@@ -104,10 +104,12 @@ func (c *Coletor) Coletar(ctx context.Context) Estado {
 		ci = c.coletarCI(ctx, travados)
 	}
 	var vivos map[string]bool
+	var ags map[string]Agente
 	if agentes != "" {
 		vivos = VivosDe([]byte(agentes))
+		ags = AgentesDe([]byte(agentes))
 	}
-	return Estado{
+	e := Estado{
 		Tasks:      TSV(tasks),
 		Esperando:  TSV(esperando),
 		Opcoes:     TSV(opcoes),
@@ -123,7 +125,10 @@ func (c *Coletor) Coletar(ctx context.Context) Estado {
 		Vistos:     CarregarVistos(),
 		Daydreamer: dd,
 		MCP:        LerProgressoMCP(c.Raiz, time.Now()),
+		Agentes:    ags,
 	}
+	e.Linhas = LinhasVivas(e, c.Raiz, DirClaude(), time.Now())
+	return e
 }
 
 func FaltaDe(r Recursos) []string {
