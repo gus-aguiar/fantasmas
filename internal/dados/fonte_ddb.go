@@ -126,13 +126,33 @@ func (c *Coletor) lerDdb(ctx context.Context) (ParteDdb, error) {
 	return DeDdb([]byte(out), time.Now())
 }
 
+type chaveTickForcado struct{}
+
+// ComTickForcado marca a coleta para ignorar o cache do tick (r na gaveta pipes).
+func ComTickForcado(ctx context.Context) context.Context {
+	return context.WithValue(ctx, chaveTickForcado{}, true)
+}
+
 // lerTick roda o tick em dry-run só para o "próximo passo" do detalhe; nunca executa.
+// Reaproveita o último resultado por validadeTick, salvo coleta forçada.
 func (c *Coletor) lerTick(ctx context.Context) map[string]string {
-	out, ok := c.rodar(ctx, timeoutColetor, "python3", c.scriptDdb(), "--raiz", c.Raiz, "tick", "--dry-run")
-	if !ok {
-		return nil
+	forcado, _ := ctx.Value(chaveTickForcado{}).(bool)
+	c.tickMu.Lock()
+	if !forcado && !c.tickEm.IsZero() && time.Since(c.tickEm) < validadeTick {
+		p := c.tickUltimo
+		c.tickMu.Unlock()
+		return p
 	}
-	return ProximoDoTick(out)
+	c.tickMu.Unlock()
+	out, ok := c.rodar(ctx, timeoutTick, "python3", c.scriptDdb(), "--raiz", c.Raiz, "tick", "--dry-run")
+	var p map[string]string
+	if ok {
+		p = ProximoDoTick(out)
+	}
+	c.tickMu.Lock()
+	c.tickUltimo, c.tickEm = p, time.Now()
+	c.tickMu.Unlock()
+	return p
 }
 
 func faltaDdb(r Recursos) []string {

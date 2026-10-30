@@ -132,3 +132,87 @@ func TestSemVariavelUsaAntigo(t *testing.T) {
 		t.Errorf("estado=%+v", e.Tasks)
 	}
 }
+
+const sufixoTick = "tick --dry-run"
+
+func tiquesDe(f *fakeRunner) int {
+	n := 0
+	for _, c := range f.calls {
+		if strings.HasSuffix(c, sufixoTick) {
+			n++
+		}
+	}
+	return n
+}
+
+func coletorDdb(t *testing.T, f *fakeRunner) *Coletor {
+	t.Setenv("FANTASMAS_FONTE", "ddb")
+	f.saida[" state --json"] = estadoDdb
+	return &Coletor{Raiz: raizDdb(t), R: f}
+}
+
+func TestTickNaoRodaEmToda(t *testing.T) {
+	f := novoFake()
+	c := coletorDdb(t, f)
+	for i := 0; i < 3; i++ {
+		c.Coletar(context.Background())
+	}
+	if n := tiquesDe(f); n != 1 {
+		t.Errorf("tick rodou %d vezes em 3 coletas, esperava 1 (cache)", n)
+	}
+}
+
+func TestTickRodaQuandoCacheExpira(t *testing.T) {
+	f := novoFake()
+	c := coletorDdb(t, f)
+	c.Coletar(context.Background())
+	c.tickMu.Lock()
+	c.tickEm = time.Now().Add(-validadeTick - time.Second)
+	c.tickMu.Unlock()
+	c.Coletar(context.Background())
+	if n := tiquesDe(f); n != 2 {
+		t.Errorf("tick rodou %d vezes, esperava 2 (cache expirado)", n)
+	}
+}
+
+func TestTickForcadoIgnoraCache(t *testing.T) {
+	f := novoFake()
+	c := coletorDdb(t, f)
+	c.Coletar(context.Background())
+	c.Coletar(ComTickForcado(context.Background()))
+	if n := tiquesDe(f); n != 2 {
+		t.Errorf("tick rodou %d vezes, esperava 2 (r forçado)", n)
+	}
+}
+
+// lentoRunner atrasa o tick e as coletas locais.
+type lentoRunner struct {
+	*fakeRunner
+	atraso time.Duration
+}
+
+func (l lentoRunner) Run(ctx context.Context, argv ...string) (string, error) {
+	k := strings.Join(argv, " ")
+	if strings.HasSuffix(k, sufixoTick) || strings.HasSuffix(k, "local.sh") ||
+		strings.HasSuffix(k, "worktrees") || strings.HasSuffix(k, "maquina.sh") {
+		time.Sleep(l.atraso)
+	}
+	return l.fakeRunner.Run(ctx, argv...)
+}
+
+func TestColetaNaoEsperaTickEmSerie(t *testing.T) {
+	t.Setenv("FANTASMAS_FONTE", "ddb")
+	f := novoFake()
+	f.saida[" state --json"] = estadoDdb
+	atraso := 300 * time.Millisecond
+	c := &Coletor{Raiz: raizDdb(t), R: lentoRunner{f, atraso}}
+	ini := time.Now()
+	c.Coletar(context.Background())
+	dur := time.Since(ini)
+	if tiquesDe(f) != 1 {
+		t.Fatalf("tick deveria ter rodado uma vez: %v", f.calls)
+	}
+	if dur >= 2*atraso-50*time.Millisecond {
+		t.Errorf("coleta levou %v; tick parece rodar em série (atraso %v)", dur, atraso)
+	}
+}

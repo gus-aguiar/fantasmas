@@ -145,9 +145,11 @@ func (m Model) ComStatus(s string) Model {
 	return m
 }
 
-func (m Model) comecar() tea.Cmd {
+func (m Model) comecar() tea.Cmd { return m.comecarCom(context.Background()) }
+
+func (m Model) comecarCom(ctx context.Context) tea.Cmd {
 	c := m.coleta
-	return func() tea.Msg { return coletouMsg{c(context.Background())} }
+	return func() tea.Msg { return coletouMsg{c(ctx)} }
 }
 
 // passoDe usa o delay do quadro atual do sprite; sem sprite, o passo fixo do mascote nativo.
@@ -169,7 +171,12 @@ func (m Model) coletar() (Model, tea.Cmd) {
 		return m, nil
 	}
 	m.coletando = true
-	return m, m.comecar()
+	ctx := context.Background()
+	if Gavetas[m.gaveta].ID == "pipes" {
+		// r na gaveta pipes pede o tick fresco, ignorando o cache.
+		ctx = dados.ComTickForcado(ctx)
+	}
+	return m, m.comecarCom(ctx)
 }
 
 // GavetaValida diz se id é uma gaveta conhecida.

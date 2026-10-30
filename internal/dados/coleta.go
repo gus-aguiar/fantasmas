@@ -16,12 +16,18 @@ type Coletor struct {
 	autor      string
 	recursos   Recursos
 	descoberto bool
+
+	tickMu     sync.Mutex
+	tickEm     time.Time
+	tickUltimo map[string]string
 }
 
 const (
 	timeoutColetor = 60 * time.Second
 	timeoutPRs     = 25 * time.Second
 	timeoutProbe   = 10 * time.Second
+	timeoutTick    = 20 * time.Second
+	validadeTick   = 2 * time.Minute
 )
 
 func (c *Coletor) rodar(ctx context.Context, limite time.Duration, argv ...string) (string, bool) {
@@ -65,12 +71,13 @@ func (c *Coletor) Coletar(ctx context.Context) Estado {
 
 	var tasks, esperando, opcoes, local, worktrees, maquina, prs, agentes string
 	var ddb *ParteDdb
+	var tickPendente bool
 	var proximo map[string]string
 	c.recursos.FalhaDdb = ""
 	if fonteDdbLigada() {
 		if p, err := c.lerDdb(ctx); err == nil {
 			ddb = &p
-			proximo = c.lerTick(ctx)
+			tickPendente = true
 		} else {
 			c.recursos.FalhaDdb = err.Error()
 		}
@@ -84,6 +91,10 @@ func (c *Coletor) Coletar(ctx context.Context) Estado {
 				*dst = out
 			}
 		}()
+	}
+	if tickPendente {
+		wg.Add(1)
+		go func() { defer wg.Done(); proximo = c.lerTick(ctx) }()
 	}
 	if ddb == nil {
 		roda(&tasks, timeoutColetor, "python3", py, "tasks")
