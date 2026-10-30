@@ -41,4 +41,5 @@ type Estado struct {
 	Vistos                                       map[string]bool
 	Daydreamer                                   Daydreamer
 	MCP                                          ProgressoMCP
+	Mural                                        []Aviso
 }

@@ -121,6 +121,7 @@ func (c *Coletor) Coletar(ctx context.Context) Estado {
 		Daydreamer: dd,
 		MCP:        LerProgressoMCP(c.Raiz, time.Now()),
 		Agentes:    ags,
+		Mural:      MuralDe(filepath.Join(c.Raiz, ".delegate", "_mural.jsonl"), time.Now(), 3),
 	}
 	e.Linhas = LinhasVivas(e, c.Raiz, DirClaude(), time.Now())
 	return e

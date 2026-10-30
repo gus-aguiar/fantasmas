@@ -20,8 +20,12 @@ func EstadoDemoVerde(agora time.Time) dados.Estado {
 // EstadoDemo é um estado determinístico para a olhada renderizada (--demo).
 func EstadoDemo(agora time.Time) dados.Estado {
 	return dados.Estado{
-		At:       agora,
-		Raiz:     "/demo/spark",
+		At:   agora,
+		Raiz: "/demo/spark",
+		Mural: []dados.Aviso{
+			{At: agora.Add(-8 * time.Minute), Autor: "gengar-1030-0900", Texto: "vou mexer no delegate-spawn até 12h"},
+			{At: agora.Add(-95 * time.Minute), Autor: "gustavo", Texto: "HML fora até 15h, sem homologação por enquanto"},
+		},
 		Vivos:    map[string]bool{"c-pl-1": true, "c-pl-2": true, "c-pl-3": true, "c-pl-4": true},
 		Recursos: dados.Recursos{GH: true, Herdr: true, Delegate: true, Painel: "/demo/spark/scripts/delegate/painel.py", Autor: "demo"},
 		Tasks: []dados.Linha{

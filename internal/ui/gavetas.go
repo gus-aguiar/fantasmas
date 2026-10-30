@@ -142,6 +142,15 @@ func gavetaAgora(c *corpo, e dados.Estado, altura int) {
 	}
 
 	usados := 0
+	if len(e.Mural) > 0 && c.filtro == "" {
+		c.secao("mural", contagem(len(e.Mural)))
+		for _, a := range e.Mural {
+			a := a
+			w := c.largura
+			c.texto(func(bg lipgloss.Color) string { return renderAviso(a, w, bg) })
+		}
+		c.branco()
+	}
 	if len(praVoce) > 0 || c.filtro == "" {
 		c.secao("precisa de você", contagem(len(praVoce)))
 		if len(praVoce) == 0 {
