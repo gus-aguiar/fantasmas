@@ -99,10 +99,6 @@ func (c *Coletor) Coletar(ctx context.Context) Estado {
 	if prs != "" {
 		travados = PRsDe([]byte(prs))
 	}
-	var ci []Linha
-	if c.recursos.GH {
-		ci = c.coletarCI(ctx, travados)
-	}
 	var vivos map[string]bool
 	var ags map[string]Agente
 	if agentes != "" {
@@ -113,7 +109,6 @@ func (c *Coletor) Coletar(ctx context.Context) Estado {
 		Tasks:      TSV(tasks),
 		Esperando:  TSV(esperando),
 		Opcoes:     TSV(opcoes),
-		CI:         ci,
 		Worktrees:  TSV(worktrees),
 		Maquina:    TSV(maquina),
 		Servicos:   TSV(local),

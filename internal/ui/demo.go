@@ -6,6 +6,17 @@ import (
 	"fantasmas/internal/dados"
 )
 
+// EstadoDemoVerde é a demo com o CI de todos os PRs verde, para a olhada do "tudo verde".
+func EstadoDemoVerde(agora time.Time) dados.Estado {
+	e := EstadoDemo(agora)
+	prs := append([]dados.Travado(nil), e.Travados...)
+	for i := range prs {
+		prs[i].CI, prs[i].Falhos = "SUCCESS", nil
+	}
+	e.Travados = prs
+	return e
+}
+
 // EstadoDemo é um estado determinístico para a olhada renderizada (--demo).
 func EstadoDemo(agora time.Time) dados.Estado {
 	return dados.Estado{
@@ -30,20 +41,13 @@ func EstadoDemo(agora time.Time) dados.Estado {
 			{Chave: "t-espera/q1", Rotulo: "c-pl-2 · plano", Detalhe: "Aprovar o plano de migração da tela de frota?"},
 		},
 		Travados: []dados.Travado{
-			{Repo: "PrologWebReact", Number: 3101, Motivo: "CI vermelho", Title: "[PL-1003] Filtro de frota", URL: "https://github.com/prologapp/PrologWebReact/pull/3101", Branch: "feature/filtro-frota-PL-1003"},
-			{Repo: "PrologWebService", Number: 4202, Motivo: "aguardando revisão", Title: "[PL-1001] Endpoint de pneus", URL: "https://github.com/prologapp/PrologWebService/pull/4202", Branch: "feature/pneus-PL-1001"},
-			{Repo: "PrologFlutter", Number: 1303, Motivo: "aprovado · mergear", Title: "[PL-1005] Ajuste de tema", URL: "https://github.com/prologapp/PrologFlutter/pull/1303", Branch: "feature/tema-PL-1005"},
-			{Repo: "PrologE2E", Number: 504, Motivo: "aprovado · mergear", Title: "[PL-1006] Spec de checklist", URL: "https://github.com/prologapp/PrologE2E/pull/504", Branch: "feature/e2e-PL-1006"},
-			{Repo: "GlorpDesignSystem", Number: 605, Motivo: "aprovado · mergear", Title: "[PL-1007] Token de borda", URL: "https://github.com/prologapp/GlorpDesignSystem/pull/605", Branch: "feature/borda-PL-1007"},
-			{Repo: "PrologMessaging", Number: 706, Motivo: "aguardando revisão", Title: "[PL-1008] Evento de notificação", URL: "https://github.com/prologapp/PrologMessaging/pull/706", Branch: "feature/evento-PL-1008"},
+			{Repo: "PrologWebReact", Number: 3101, Motivo: "CI vermelho", Title: "[PL-1003] Filtro de frota", URL: "https://github.com/prologapp/PrologWebReact/pull/3101", Branch: "feature/filtro-frota-PL-1003", CI: "FAILURE", Falhos: []string{"lint", "vitest"}},
+			{Repo: "PrologWebService", Number: 4202, Motivo: "aguardando revisão", Title: "[PL-1001] Endpoint de pneus", URL: "https://github.com/prologapp/PrologWebService/pull/4202", Branch: "feature/pneus-PL-1001", CI: "PENDING"},
+			{Repo: "PrologFlutter", Number: 1303, Motivo: "aprovado · mergear", Title: "[PL-1005] Ajuste de tema", URL: "https://github.com/prologapp/PrologFlutter/pull/1303", Branch: "feature/tema-PL-1005", CI: "SUCCESS"},
+			{Repo: "PrologE2E", Number: 504, Motivo: "aprovado · mergear", Title: "[PL-1006] Spec de checklist", URL: "https://github.com/prologapp/PrologE2E/pull/504", Branch: "feature/e2e-PL-1006", CI: "SUCCESS"},
+			{Repo: "GlorpDesignSystem", Number: 605, Motivo: "aprovado · mergear", Title: "[PL-1007] Token de borda", URL: "https://github.com/prologapp/GlorpDesignSystem/pull/605", Branch: "feature/borda-PL-1007", CI: "SUCCESS"},
+			{Repo: "PrologMessaging", Number: 706, Motivo: "aguardando revisão", Title: "[PL-1008] Evento de notificação", URL: "https://github.com/prologapp/PrologMessaging/pull/706", Branch: "feature/evento-PL-1008", CI: "SUCCESS"},
 			{Repo: "PrologExportService", Number: 807, Motivo: "aguardando revisão", Title: "[PL-1009] Exportação sem CI", URL: "https://github.com/prologapp/PrologExportService/pull/807", Branch: "feature/export-PL-1009"},
-		},
-		CI: []dados.Linha{
-			{Chave: "https://github.com/prologapp/PrologWebReact/actions/runs/1", Rotulo: "PrologWebReact · CI", Detalhe: "completed/failure · lint e testes"},
-			{Chave: "https://github.com/prologapp/PrologWebService/actions/runs/2", Rotulo: "PrologWebService · CI", Detalhe: "in_progress/- · build e testes"},
-			{Chave: "https://github.com/prologapp/PrologFlutter/actions/runs/3", Rotulo: "PrologFlutter · CI", Detalhe: "completed/success · analyze"},
-			{Chave: "https://github.com/prologapp/PrologE2E/actions/runs/4", Rotulo: "PrologE2E · CI", Detalhe: "completed/success · smoke"},
-			{Chave: "https://github.com/prologapp/GlorpDesignSystem/actions/runs/5", Rotulo: "GlorpDesignSystem · CI", Detalhe: "completed/success · build"},
 		},
 		Servicos: []dados.Linha{
 			{Chave: "PrologWebReact", Rotulo: "no ar", Detalhe: ":3000"},

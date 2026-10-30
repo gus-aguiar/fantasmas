@@ -9,7 +9,19 @@ import (
 )
 
 type Rollup struct {
-	State string `json:"state"`
+	State    string `json:"state"`
+	Contexts struct {
+		Nodes []NoCheck `json:"nodes"`
+	} `json:"contexts"`
+}
+
+// NoCheck é um CheckRun (name, conclusion) ou um StatusContext (context, state).
+type NoCheck struct {
+	Typename   string `json:"__typename"`
+	Name       string `json:"name"`
+	Conclusion string `json:"conclusion"`
+	Context    string `json:"context"`
+	State      string `json:"state"`
 }
 
 type NoCommit struct {
@@ -42,17 +54,47 @@ query {
     nodes { ... on PullRequest {
       number title url isDraft mergeable reviewDecision headRefName
       repository { name }
-      commits(last: 1) { nodes { commit { statusCheckRollup { state } } } }
+      commits(last: 1) { nodes { commit { statusCheckRollup { state contexts(first: 30) { nodes { __typename ... on CheckRun { name conclusion } ... on StatusContext { context state } } } } } } }
     } }
   }
 }`, autor)
 }
 
-func MotivoDe(n No) string {
-	ci := ""
-	if len(n.Commits.Nodes) > 0 && n.Commits.Nodes[0].Commit.StatusCheckRollup != nil {
-		ci = n.Commits.Nodes[0].Commit.StatusCheckRollup.State
+func rollupDe(n No) *Rollup {
+	if len(n.Commits.Nodes) > 0 {
+		return n.Commits.Nodes[0].Commit.StatusCheckRollup
 	}
+	return nil
+}
+
+func ciDe(n No) string {
+	if r := rollupDe(n); r != nil {
+		return r.State
+	}
+	return ""
+}
+
+var conclusoesFalhas = map[string]bool{"FAILURE": true, "TIMED_OUT": true, "CANCELLED": true, "STARTUP_FAILURE": true}
+
+func falhosDe(n No) []string {
+	r := rollupDe(n)
+	if r == nil {
+		return nil
+	}
+	var out []string
+	for _, c := range r.Contexts.Nodes {
+		switch {
+		case c.Typename == "CheckRun" && conclusoesFalhas[c.Conclusion] && c.Name != "":
+			out = append(out, c.Name)
+		case c.Typename == "StatusContext" && (c.State == "FAILURE" || c.State == "ERROR") && c.Context != "":
+			out = append(out, c.Context)
+		}
+	}
+	return out
+}
+
+func MotivoDe(n No) string {
+	ci := ciDe(n)
 	rascunho := ""
 	if n.IsDraft {
 		rascunho = " · rascunho"
@@ -107,7 +149,7 @@ func PRsDe(jsonGraphQL []byte) []Travado {
 		if repo == "" {
 			repo = "?"
 		}
-		out = append(out, Travado{Repo: repo, Number: n.Number, Motivo: MotivoDe(n), Title: n.Title, URL: n.URL, Draft: n.IsDraft, Branch: n.HeadRefName})
+		out = append(out, Travado{Repo: repo, Number: n.Number, Motivo: MotivoDe(n), Title: n.Title, URL: n.URL, Draft: n.IsDraft, Branch: n.HeadRefName, CI: ciDe(n), Falhos: falhosDe(n)})
 	}
 	sort.SliceStable(out, func(i, j int) bool {
 		return ordemTom[TomDoPR(out[i].Motivo)] < ordemTom[TomDoPR(out[j].Motivo)]

@@ -358,21 +358,51 @@ func gavetaPRs(c *corpo, e dados.Estado) {
 
 func gavetaCI(c *corpo, e dados.Estado) {
 	c.secao("CI", "")
-	if len(e.CI) == 0 {
-		c.vazio("sem execuções recentes")
+	if len(e.Travados) == 0 {
+		c.vazio("sem PR aberto")
+		return
 	}
-	for _, l := range e.CI {
-		falhou := strings.Contains(l.Detalhe, "failure")
-		rodando := strings.Contains(l.Detalhe, "in_progress")
-		cor, glifo := T.Ok, "✓"
-		if falhou {
-			cor, glifo = T.Erro, "✗"
-		} else if rodando {
-			cor, glifo = T.Andamento, "◐"
+	r := dados.ResumoDoCI(e.Travados, c.rascunhos)
+	nome := func(x dados.Travado) string {
+		return fmt.Sprintf("%s #%d", strings.Replace(x.Repo, "Prolog", "", 1), x.Number)
+	}
+	for _, x := range r.Falhos {
+		estado := "vermelho"
+		if len(x.Falhos) > 0 {
+			estado += " · " + strings.Join(x.Falhos, ", ")
 		}
-		estado, resto, _ := strings.Cut(l.Detalhe, " · ")
-		c.linhaLista(alvo{url: l.Chave}, glifo, cor, strings.TrimPrefix(l.Rotulo, "Prolog"), strings.Replace(estado, "completed/", "", 1), cor, resto)
+		c.linhaCI(alvo{url: x.URL + "/checks"}, "✗", T.Erro, nome(x), estado)
 	}
+	for _, x := range r.Rodando {
+		c.linhaCI(alvo{url: x.URL + "/checks"}, "◐", T.Andamento, nome(x), "rodando")
+	}
+	if len(r.Falhos) == 0 && len(r.Rodando) == 0 {
+		if r.Verdes > 0 {
+			c.texto(func(bg lipgloss.Color) string { return st(bg, T.Ok).Render("✓ CI: tudo verde") })
+		}
+	} else if r.Verdes > 0 {
+		msg := fmt.Sprintf("✓ %d PRs verdes", r.Verdes)
+		if r.Verdes == 1 {
+			msg = "✓ 1 PR verde"
+		}
+		c.texto(func(bg lipgloss.Color) string { return st(bg, T.Ok).Render(msg) })
+	}
+	if r.SemCI > 0 {
+		msg := fmt.Sprintf("%d sem CI", r.SemCI)
+		c.texto(func(bg lipgloss.Color) string { return st(bg, T.Dim).Render(msg) })
+	}
+}
+
+// linhaCI: glifo, PR e estado numa linha só, cortada na largura.
+func (c *corpo) linhaCI(a alvo, glifo string, cor lipgloss.Color, nome, estado string) {
+	if !c.passa(nome, estado, a.url) {
+		return
+	}
+	w := c.largura
+	c.item(a, func(bg lipgloss.Color) string {
+		resto := max(w-2-lipgloss.Width(nome)-2, 0)
+		return st(bg, cor).Render(glifo+" ") + st(bg, T.Texto).Render(nome) + st(bg, cor).Render("  "+Corte(estado, resto))
+	})
 }
 
 var rePorta = regexp.MustCompile(`:(\d{4})`)

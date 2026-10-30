@@ -1,7 +1,6 @@
 package dados
 
 import (
-	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -33,7 +32,6 @@ func TestFeedSoDeVivosEAntigasDosMortos(t *testing.T) {
 			L("/d/v2", "c-vivo", "done · 0/0 · 1h · done"),
 		},
 		Travados: []Travado{PR(2, "aprovado · mergear"), PR(3, "CI vermelho")},
-		CI:       []Linha{L("https://gh/run/1", "PrologWebService · build", "failure")},
 	}
 	f := MontarFeed(e)
 	if g := tipos(f); !reflect.DeepEqual(g, []TipoFeed{TipoDecidir, TipoLer}) {
@@ -133,33 +131,6 @@ func TestCacheQuebradoNaoQuebra(t *testing.T) {
 	os.WriteFile(filepath.Join(pasta, "report.md"), []byte("x"), 0o644)
 	if k, err := MarcarVisto(pasta); k == "" || err == nil {
 		t.Errorf("k=%q err=%v", k, err)
-	}
-}
-
-func TestCISoDasSuasBranches(t *testing.T) {
-	f := &fakeRunner{erro: map[string]bool{}, saida: map[string]string{
-		"--user gus": `[{"databaseId":1,"displayTitle":"meu","status":"completed","conclusion":"success","workflowName":"w","createdAt":"2026-10-19T09:00:00Z","headBranch":"outra"}]`,
-		"--json " + camposRun: `[
-			{"databaseId":2,"displayTitle":"pr","status":"in_progress","conclusion":"","workflowName":"w","createdAt":"2026-10-19T10:00:00Z","headBranch":"feat/minha"},
-			{"databaseId":3,"displayTitle":"alheio","status":"completed","conclusion":"failure","workflowName":"w","createdAt":"2026-10-19T11:00:00Z","headBranch":"feat/alheia"},
-			{"databaseId":1,"displayTitle":"meu","status":"completed","conclusion":"success","workflowName":"w","createdAt":"2026-10-19T09:00:00Z","headBranch":"outra"}]`,
-	}}
-	c := &Coletor{R: f, autor: "gus"}
-	ci := c.coletarCI(context.Background(), []Travado{{Repo: "PrologWebService", Branch: "feat/minha"}, {Repo: "PrologFlutter", Branch: "feat/f"}})
-	var ws []string
-	for _, l := range ci {
-		if strings.Contains(l.Chave, "PrologWebService") {
-			ws = append(ws, l.Detalhe)
-		}
-		if strings.Contains(l.Detalhe, "alheio") {
-			t.Errorf("run alheio no CI: %v", l)
-		}
-	}
-	if !reflect.DeepEqual(ws, []string{"in_progress/- · pr", "completed/success · meu"}) {
-		t.Errorf("ws=%v", ws)
-	}
-	if f.vezes("gh run list --repo prologapp/PrologFlutter") != 2 {
-		t.Errorf("repo do PR deveria entrar: %v", f.calls)
 	}
 }
 

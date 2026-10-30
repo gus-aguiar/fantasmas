@@ -37,10 +37,6 @@ func fixture() dados.Estado {
 			{Chave: "t-d", Rotulo: "c-pl-d", Detalhe: "done"},
 			{Chave: "t-e", Rotulo: "c-pl-e", Detalhe: "done"},
 		},
-		CI: []dados.Linha{
-			{Chave: "https://ci/1", Rotulo: "PrologFlutter · ci", Detalhe: "completed/failure · dev"},
-			{Chave: "https://ci/2", Rotulo: "PrologWebReact · build", Detalhe: "completed/success · dev"},
-		},
 		Maquina:   []dados.Linha{{Chave: "trava", Rotulo: "pesados", Detalhe: "livre", Extra: "ok"}, {Chave: "ram", Rotulo: "RAM", Detalhe: "3 GB livres", Extra: "aviso"}},
 		Servicos:  []dados.Linha{{Chave: "React", Rotulo: "no ar", Detalhe: "http://localhost:3000"}, {Chave: "WS", Rotulo: "parado", Detalhe: ":8081"}},
 		Worktrees: []dados.Linha{{Chave: "/tmp/wt", Rotulo: "PrologWebReact · feature/x-PL-1", Detalhe: "/tmp/wt"}},

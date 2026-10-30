@@ -31,6 +31,7 @@ func main() {
 	sprite := flag.String("sprite", os.Getenv("FANTASMAS_SPRITE"), "GIF do topo no lugar do Gengar embutido (ou FANTASMAS_SPRITE)")
 	cor := flag.Bool("cor", false, "força cor de 24 bits (só com --uma-vez)")
 	demo := flag.Bool("demo", false, "usa o estado de demonstração (só com --uma-vez)")
+	demoVerde := flag.Bool("demo-verde", false, "demonstração com todos os PRs de CI verde (só com --uma-vez)")
 	gaveta := flag.String("gaveta", "", "gaveta inicial: agora|crew|prs|ci|ambiente|maquina|mais (só com --uma-vez)")
 	flag.Parse()
 	if *intervalo <= 0 {
@@ -95,6 +96,9 @@ func main() {
 		est := func() dados.Estado { return coleta(context.Background()) }
 		if *demo {
 			est = func() dados.Estado { return ui.EstadoDemo(time.Now()) }
+		}
+		if *demoVerde {
+			est = func() dados.Estado { return ui.EstadoDemoVerde(time.Now()) }
 		}
 		fmt.Println(m.ComEstado(est()).Render(w, h))
 		return

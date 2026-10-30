@@ -102,9 +102,6 @@ func TestColetaPreencheTudo(t *testing.T) {
 			t.Errorf("%s: len=%d", k, n)
 		}
 	}
-	if len(e.CI) != len(reposCI) || e.CI[0].Detalhe != "completed/failure · t" {
-		t.Errorf("CI=%v", e.CI)
-	}
 	if !e.Vivos["crew1"] {
 		t.Errorf("vivos=%v", e.Vivos)
 	}
@@ -119,12 +116,12 @@ func TestColetaPreencheTudo(t *testing.T) {
 
 func TestColetorQueFalhaDeixaCampoVazio(t *testing.T) {
 	f := novoFake()
-	f.erro["gh run list"] = true
+	f.erro[" tasks"] = true
 	e := (&Coletor{Raiz: raizFake(t), R: f}).Coletar(context.Background())
-	if len(e.CI) != 0 {
-		t.Errorf("CI=%v", e.CI)
+	if len(e.Tasks) != 0 {
+		t.Errorf("Tasks=%v", e.Tasks)
 	}
-	if len(e.Tasks) != 1 || len(e.Maquina) != 1 || len(e.Travados) != 1 || e.At.IsZero() {
+	if len(e.Maquina) != 1 || len(e.Travados) != 1 || e.At.IsZero() {
 		t.Errorf("resto deveria estar cheio: %+v", e)
 	}
 }

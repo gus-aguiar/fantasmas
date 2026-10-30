@@ -10,6 +10,8 @@ type Travado struct {
 	URL    string
 	Draft  bool
 	Branch string
+	CI     string
+	Falhos []string
 }
 
 type Merge struct {
@@ -27,16 +29,16 @@ type Recursos struct {
 }
 
 type Estado struct {
-	Tasks, Esperando, Opcoes, CI, Worktrees, Maquina []Linha
-	Servicos                                         []Linha
-	Travados                                         []Travado
-	Recursos                                         Recursos
-	At                                               time.Time
-	Raiz                                             string
-	Vivos                                            map[string]bool
-	Agentes                                          map[string]Agente
-	Linhas                                           []LinhaViva
-	Vistos                                           map[string]bool
-	Daydreamer                                       Daydreamer
-	MCP                                              ProgressoMCP
+	Tasks, Esperando, Opcoes, Worktrees, Maquina []Linha
+	Servicos                                     []Linha
+	Travados                                     []Travado
+	Recursos                                     Recursos
+	At                                           time.Time
+	Raiz                                         string
+	Vivos                                        map[string]bool
+	Agentes                                      map[string]Agente
+	Linhas                                       []LinhaViva
+	Vistos                                       map[string]bool
+	Daydreamer                                   Daydreamer
+	MCP                                          ProgressoMCP
 }
