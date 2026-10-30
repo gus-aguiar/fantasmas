@@ -69,7 +69,9 @@ func main() {
 		LerArquivo: os.ReadFile,
 		Arquivar:   dados.Arquivador(runner, *raiz),
 		Retomar: func(c dados.Caido) error {
-			return dados.Retomar(context.Background(), runner, c)
+			ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+			defer cancel()
+			return dados.Retomar(ctx, runner, c)
 		},
 		MarcarVisto: dados.MarcarVisto,
 		Daydreaming: func() (string, error) {

@@ -108,6 +108,9 @@ func TestRetomarRecusaSemSessionOuValorInseguro(t *testing.T) {
 	if err := Retomar(context.Background(), f, Caido{Nome: "c; rm -rf /", Pane: "p", SessionID: "s"}); err == nil {
 		t.Fatal("nome inseguro deveria falhar")
 	}
+	if err := Retomar(context.Background(), f, Caido{Nome: "c", Pane: "p", SessionID: "-x"}); err == nil {
+		t.Fatal("session_id começando com - deveria falhar")
+	}
 	if len(f.calls) != 0 {
 		t.Fatalf("nada deveria rodar: %v", f.juntas())
 	}

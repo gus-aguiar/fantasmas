@@ -15,7 +15,7 @@ const maxCaidos = 8
 // Caido é um fantasminha que tem meta mas não está vivo no Herdr.
 type Caido struct{ Nome, Pane, SessionID, Pasta string }
 
-var reSeguro = regexp.MustCompile(`^[A-Za-z0-9._:-]+$`)
+var reSeguro = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._:-]*$`)
 
 // CaidosDe lista os metas fora do Herdr que têm session_id e pane; sem leitura do Herdr, ninguém é dado como caído.
 func CaidosDe(raiz string, vivos map[string]bool, limite int) []Caido {
