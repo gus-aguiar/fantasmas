@@ -29,20 +29,21 @@ func TestContrasteLegivel(t *testing.T) {
 		checa(n, c, 4.5, dois)
 	}
 	checa("ChipTexto", T.ChipTexto, 4.5, map[string]lipgloss.Color{"Chip": T.Chip})
-}
-
-func todosTokens() map[string]lipgloss.Color {
-	return map[string]lipgloss.Color{
-		"Base": T.Base, "Mantle": T.Mantle, "Surface": T.Surface, "Sel": T.Sel, "Borda": T.Borda,
-		"Texto": T.Texto, "Sub": T.Sub, "Dim": T.Dim, "Acao": T.Acao, "Ok": T.Ok, "Espera": T.Espera,
-		"Andamento": T.Andamento, "Erro": T.Erro, "Info": T.Info, "Chip": T.Chip, "ChipTexto": T.ChipTexto,
-		"BarraCheia": T.BarraCheia, "BarraVazia": T.BarraVazia,
-		"MascoteCorpo": T.MascoteCorpo, "MascoteOlho": T.MascoteOlho, "MascoteBoca": T.MascoteBoca,
+	checa("ChipVerdeTexto", T.ChipVerdeTexto, 4.5, map[string]lipgloss.Color{"ChipVerde": T.ChipVerde})
+	for n, c := range map[string]lipgloss.Color{"CtxBaixo": T.CtxBaixo, "CtxMedio": T.CtxMedio, "CtxAlto": T.CtxAlto} {
+		checa(n, c, 4.5, dois)
 	}
 }
 
-func TestTudoRoxo(t *testing.T) {
-	for n, c := range todosTokens() {
+func neutros() map[string]lipgloss.Color {
+	return map[string]lipgloss.Color{
+		"Base": T.Base, "Mantle": T.Mantle, "Surface": T.Surface, "Sel": T.Sel, "Borda": T.Borda,
+		"Texto": T.Texto, "Sub": T.Sub, "Dim": T.Dim,
+	}
+}
+
+func TestFundosENeutrosRoxos(t *testing.T) {
+	for n, c := range neutros() {
 		h, s := matiz(c)
 		if s >= 0.08 && (h < 220 || h > 340) {
 			t.Errorf("%s %s: matiz %.0f fora de [220,340]", n, c, h)

@@ -16,5 +16,5 @@ if [ ! -x "$bin" ] || [ -n "$(find "$app" -path "$app/bin" -prune -o -path "$app
 fi
 
 "$bin" --uma-vez --cor --demo --gaveta "$tela" --largura "$largura" --altura "$altura" > "$app/shots/$tela.ansi"
-python3 -I "$app/ferramentas/ansi2html.py" --fundo '#1a1326' < "$app/shots/$tela.ansi" > "$app/shots/$tela.html"
+python3 -I "$app/ferramentas/ansi2html.py" --fundo '#2c2244' < "$app/shots/$tela.ansi" > "$app/shots/$tela.html"
 echo "$app/shots/$tela.html"

@@ -22,7 +22,7 @@ def estilo(fg, bg, neg, dim):
     return ";".join(partes)
 
 
-def converte(texto, fundo="#1a1326"):
+def converte(texto, fundo="#2c2244"):
     texto = OUTRO.sub("", texto)
     out, pos = [], 0
     fg = bg = None
@@ -83,6 +83,6 @@ def converte(texto, fundo="#1a1326"):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--fundo", default="#1a1326")
+    ap.add_argument("--fundo", default="#2c2244")
     a = ap.parse_args()
     sys.stdout.write(converte(sys.stdin.read(), a.fundo))

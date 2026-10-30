@@ -28,12 +28,9 @@ func barraCtxEm(pct int, bg lipgloss.Color) string {
 	}
 	pct = min(pct, 100)
 	cheios := min(3, int(math.Round(float64(pct)/33.4)))
-	corPct := T.Sub
-	if pct >= 80 {
-		corPct = T.Espera
-	}
-	return st(bg, corPct).Render(fmt.Sprintf("%d%%", pct)) +
-		st(bg, T.BarraCheia).Render(strings.Repeat("▪", cheios)) +
+	cor := corCtx(pct)
+	return st(bg, cor).Render(fmt.Sprintf("%d%%", pct)) +
+		st(bg, cor).Render(strings.Repeat("▪", cheios)) +
 		st(bg, T.BarraVazia).Render(strings.Repeat("▫", 3-cheios))
 }
 
@@ -81,7 +78,8 @@ func renderLinhaViva(l dados.LinhaViva, largura int, bg lipgloss.Color) string {
 		if etapa == "" {
 			etapa = "—"
 		}
-		s += st(T.Chip, T.ChipTexto).Render(" "+Col(etapa, wEtapaViva)+" ") + espacos(1, bg)
+		chipBg, chipFg := corChipEtapa(l.Etapa)
+		s += st(chipBg, chipFg).Render(" "+Col(etapa, wEtapaViva)+" ") + espacos(1, bg)
 		resto -= wEtapaViva + 3
 	}
 	if largura >= 30 {

@@ -13,18 +13,41 @@ type Tokens struct {
 	Texto, Sub, Dim                         lipgloss.Color
 	Acao, Ok, Espera, Andamento, Erro, Info lipgloss.Color
 	Chip, ChipTexto                         lipgloss.Color
+	ChipVerde, ChipVerdeTexto               lipgloss.Color
 	BarraCheia, BarraVazia                  lipgloss.Color
+	CtxBaixo, CtxMedio, CtxAlto             lipgloss.Color
 	MascoteCorpo, MascoteOlho, MascoteBoca  lipgloss.Color
 }
 
 var T = Tokens{
-	Base: "#1a1326", Mantle: "#140e1e", Surface: "#251a37", Sel: "#3a2a55",
-	Borda: "#4b3670",
-	Texto: "#f4eeff", Sub: "#cfc2ea", Dim: "#9c88c4",
-	Acao: "#b996ff", Ok: "#d4c4ff", Espera: "#ec86ff", Andamento: "#a57cf2", Erro: "#ff6fbf", Info: "#93a8ff",
-	Chip: "#2e2045", ChipTexto: "#e3d8ff",
-	BarraCheia: "#b996ff", BarraVazia: "#4b3670",
+	Base: "#2c2244", Mantle: "#241b39", Surface: "#372a54", Sel: "#47366a",
+	Borda: "#5f4890",
+	Texto: "#f7f2ff", Sub: "#d8ccf0", Dim: "#a99ad2",
+	Acao: "#c4a6ff", Ok: "#7ee7a8", Espera: "#ff8a5c", Andamento: "#ffd166", Erro: "#ff6fbf", Info: "#93b4ff",
+	Chip: "#4c3580", ChipTexto: "#ede4ff",
+	ChipVerde: "#1d5a4c", ChipVerdeTexto: "#b9f6dd",
+	BarraCheia: "#c4a6ff", BarraVazia: "#5f4890",
+	CtxBaixo: "#7ee7a8", CtxMedio: "#ffd166", CtxAlto: "#ff6fbf",
 	MascoteCorpo: "#a66bff", MascoteOlho: "#ff3388", MascoteBoca: "#4b2a8a",
+}
+
+// corCtx escolhe a cor da barra de contexto: verde, amarelo e rosa conforme o uso sobe.
+func corCtx(pct int) lipgloss.Color {
+	switch {
+	case pct >= 80:
+		return T.CtxAlto
+	case pct >= 50:
+		return T.CtxMedio
+	}
+	return T.CtxBaixo
+}
+
+// corChipEtapa devolve fundo e texto do chip de cada etapa.
+func corChipEtapa(etapa string) (lipgloss.Color, lipgloss.Color) {
+	if etapa == "homologar" {
+		return T.ChipVerde, T.ChipVerdeTexto
+	}
+	return T.Chip, T.ChipTexto
 }
 
 func rgb(c lipgloss.Color) (r, g, b float64) {
