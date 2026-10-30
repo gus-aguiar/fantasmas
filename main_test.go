@@ -1,6 +1,12 @@
 package main
 
 import (
+	"fmt"
+	"io/fs"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"sort"
 	"reflect"
 	"strings"
 	"testing"
@@ -91,5 +97,61 @@ func TestValidarGaveta(t *testing.T) {
 	err := validarGaveta("fantasminhas")
 	if err == nil || !strings.Contains(err.Error(), "crew") || !strings.Contains(err.Error(), "agora") {
 		t.Fatalf("erro sem lista de válidas: %v", err)
+	}
+}
+
+// instantaneo lista arquivos e diretórios com tamanho, modo e mtime.
+func instantaneo(t *testing.T, raiz string) []string {
+	t.Helper()
+	var out []string
+	err := filepath.WalkDir(raiz, func(p string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		info, err := d.Info()
+		if err != nil {
+			return err
+		}
+		rel, _ := filepath.Rel(raiz, p)
+		out = append(out, fmt.Sprintf("%s|%d|%o|%d", rel, info.Size(), info.Mode(), info.ModTime().UnixNano()))
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	sort.Strings(out)
+	return out
+}
+
+func TestUmaVezNaoEscreve(t *testing.T) {
+	bin := filepath.Join(t.TempDir(), "fantasmas-teste")
+	if out, err := exec.Command("go", "build", "-o", bin, ".").CombinedOutput(); err != nil {
+		t.Fatalf("build: %v\n%s", err, out)
+	}
+	raiz := t.TempDir()
+	cache := t.TempDir()
+	d := filepath.Join(raiz, ".delegate", "slug-x")
+	if err := os.MkdirAll(d, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(d, "meta"), []byte("slug=slug-x\nname=c-x\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	q := `[{"id":"q1","title":"Pergunta","question":"Segue?","options":[{"label":"Sim"}]}]`
+	if err := os.WriteFile(filepath.Join(d, "questions.json"), []byte(q), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	antesRaiz, antesCache := instantaneo(t, raiz), instantaneo(t, cache)
+	cmd := exec.Command(bin, "--uma-vez", "--raiz", raiz)
+	cmd.Env = append(os.Environ(), "FANTASMAS_CACHE_DIR="+cache)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("--uma-vez: %v\n%s", err, out)
+	}
+	if got := instantaneo(t, raiz); !reflect.DeepEqual(antesRaiz, got) {
+		t.Errorf("raiz mudou:\nantes=%v\ndepois=%v", antesRaiz, got)
+	}
+	if got := instantaneo(t, cache); !reflect.DeepEqual(antesCache, got) {
+		t.Errorf("cache mudou:\nantes=%v\ndepois=%v", antesCache, got)
 	}
 }
