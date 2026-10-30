@@ -90,6 +90,21 @@ func gavetaAgora(c *corpo, e dados.Estado, altura int) {
 			trab = append(trab, r)
 		}
 	}
+	var vivas, parados []dados.LinhaViva
+	for _, l := range e.Linhas {
+		if !c.casa(l.Nome, l.Etapa, l.Agora) {
+			continue
+		}
+		switch l.Estado {
+		case dados.Trabalhando:
+			vivas = append(vivas, l)
+		case dados.Parado:
+			parados = append(parados, l)
+		}
+	}
+	if len(e.Linhas) > 0 {
+		trab = nil
+	}
 	grupos := envolve(trab, c.largura)
 	porItem := 1
 	if c.largura < 70 {
@@ -104,6 +119,12 @@ func gavetaAgora(c *corpo, e dados.Estado, altura int) {
 	}
 	if len(acomp) > 0 {
 		reservadas += 3
+	}
+	if len(vivas) > 0 {
+		reservadas += 2 + len(vivas)
+	}
+	if len(parados) > 0 {
+		reservadas += 2 + len(parados)
 	}
 	cabem := max(2, (altura-reservadas)/porItem)
 
@@ -122,7 +143,7 @@ func gavetaAgora(c *corpo, e dados.Estado, altura int) {
 
 	usados := 0
 	if len(praVoce) > 0 || c.filtro == "" {
-		c.secao("pra você", contagem(len(praVoce)))
+		c.secao("precisa de você", contagem(len(praVoce)))
 		if len(praVoce) == 0 {
 			c.vazio("nada pedindo você agora ✓")
 		} else {
@@ -154,6 +175,22 @@ func gavetaAgora(c *corpo, e dados.Estado, altura int) {
 			})
 		}
 	}
+
+	raia := func(titulo string, ls []dados.LinhaViva) {
+		if len(ls) == 0 {
+			return
+		}
+		if len(c.linhas) > 0 {
+			c.branco()
+		}
+		c.secao(titulo, fmt.Sprint(len(ls)))
+		for _, l := range ls {
+			c.passa(l.Nome)
+			c.linhaViva(l)
+		}
+	}
+	raia("agora", vivas)
+	raia("parados", parados)
 
 	if len(acomp) > 0 {
 		if len(c.linhas) > 0 {
@@ -237,6 +274,10 @@ func estadoTask(d string) string {
 }
 
 func gavetaCrew(c *corpo, e dados.Estado) {
+	if len(e.Linhas) > 0 {
+		gavetaCrewViva(c, e)
+		return
+	}
 	ativos := 0
 	for _, t := range e.Tasks {
 		if strings.Contains(t.Detalhe, "working") {
@@ -471,4 +512,27 @@ func corTomMCP(tom string) (lipgloss.Color, string) {
 		return T.Erro, "✗"
 	}
 	return T.Dim, "○"
+}
+
+func gavetaCrewViva(c *corpo, e dados.Estado) {
+	ativos := 0
+	for _, l := range e.Linhas {
+		if l.Estado == dados.Trabalhando {
+			ativos++
+		}
+	}
+	c.secao("fantasminhas", fmt.Sprintf("%d ativos", ativos))
+	n := len(e.Esperando)
+	c.texto(func(bg lipgloss.Color) string {
+		return st(bg, T.Dim).Render(fmt.Sprintf("%d pendente(s) no painel", n))
+	})
+	c.branco()
+	if w := c.largura - 2; w >= 56 {
+		c.texto(func(bg lipgloss.Color) string { return cabecalhoViva(w, bg) })
+	}
+	for _, l := range linhasPorEstado(e.Linhas) {
+		if c.passa(l.Nome, l.Etapa, l.Agora) {
+			c.linhaViva(l)
+		}
+	}
 }

@@ -19,6 +19,13 @@ func EstadoDemo(agora time.Time) dados.Estado {
 			{Chave: "t-blocked", Rotulo: "c-pl-3", Detalhe: "blocked · PL-1003 · CI falhou", Extra: "aba-3"},
 			{Chave: "t-done", Rotulo: "c-pl-4", Detalhe: "done · PL-1004 · relatório pronto", Extra: "aba-4"},
 		},
+		Linhas: []dados.LinhaViva{
+			{Nome: "c-pl-2", Pasta: "/demo/spark/.delegate/c-pl-2", Aba: "aba-2", Etapa: "implementar", Agora: "1 sua(s): plano", Estado: dados.EsperaVoce, CtxPct: 41, Hora: agora.Add(-3 * time.Minute)},
+			{Nome: "c-pl-1", Pasta: "/demo/spark/.delegate/c-pl-1", Aba: "aba-1", Etapa: "implementar", Agora: "rodando a suíte de integração do módulo de pneus com Testcontainers e conferindo a migração de índices — ação válida até o fim da conferência", Estado: dados.Trabalhando, CtxPct: 55, Hora: agora.Add(-1 * time.Minute)},
+			{Nome: "h-pl-5", Pasta: "/demo/spark/.delegate/h-pl-5", Aba: "aba-5", Etapa: "homologar", Agora: "Playwright: navegando em /frota/pneus", Estado: dados.Trabalhando, CtxPct: 86, Hora: agora.Add(-2 * time.Minute)},
+			{Nome: "c-pl-3", Pasta: "/demo/spark/.delegate/c-pl-3", Aba: "aba-3", Etapa: "implementar", Agora: "parado com tarefa há 14 min", Estado: dados.Parado, CtxPct: -1, Hora: agora.Add(-14 * time.Minute)},
+			{Nome: "c-pl-4", Pasta: "/demo/spark/.delegate/c-pl-4", Aba: "aba-4", Etapa: "implementar", Agora: "entregou relatório", Estado: dados.Terminou, CtxPct: 100, Hora: agora.Add(-20 * time.Minute)},
+		},
 		Esperando: []dados.Linha{
 			{Chave: "t-espera/q1", Rotulo: "c-pl-2 · plano", Detalhe: "Aprovar o plano de migração da tela de frota?"},
 		},

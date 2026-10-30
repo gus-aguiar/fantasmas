@@ -100,7 +100,7 @@ func TestTodasAsGavetasCabem(t *testing.T) {
 func TestEsqueletoAntesDaColeta(t *testing.T) {
 	m := Novo(func(context.Context) dados.Estado { return dados.Estado{} }, Acoes{}, time.Second)
 	out := m.Render(96, 30)
-	if !strings.Contains(out, "░") || strings.Contains(out, "pra você") {
+	if !strings.Contains(out, "░") || strings.Contains(out, "precisa de você") {
 		t.Fatalf("esqueleto ausente:\n%s", out)
 	}
 }

@@ -78,7 +78,7 @@ func TestTopoESecaoContamIgual(t *testing.T) {
 		}
 		return g[1]
 	}
-	if a, b := num(`(\d+) pra você`), num(`› pra você\s+(\d+)`); a != b {
+	if a, b := num(`(\d+) pra você`), num(`› precisa de você\s+(\d+)`); a != b {
 		t.Fatalf("topo diz %s pra você, seção diz %s", a, b)
 	}
 	if a, b := num(`(\d+) travados?`), num(`› travados\s+(\d+)`); a != b {
