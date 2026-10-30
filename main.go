@@ -38,6 +38,10 @@ func main() {
 		fmt.Fprintln(os.Stderr, "fantasmas: --intervalo deve ser positivo")
 		os.Exit(2)
 	}
+	if err := validarGaveta(*gaveta); err != nil {
+		fmt.Fprintln(os.Stderr, "fantasmas:", err)
+		os.Exit(2)
+	}
 	if *raiz == "" {
 		*raiz, _ = os.Getwd()
 	}
@@ -226,4 +230,12 @@ func comandoAbrir(goos, editor, alvo string) []string {
 		return []string{"xdg-open", alvo}
 	}
 	return []string{"cmd", "/c", "start", "", alvo}
+}
+
+// validarGaveta recusa nome desconhecido em vez de cair calado na primeira gaveta.
+func validarGaveta(id string) error {
+	if id == "" || ui.GavetaValida(id) {
+		return nil
+	}
+	return fmt.Errorf("--gaveta %q desconhecida; válidas: %s", id, strings.Join(ui.IDsGavetas(), ", "))
 }

@@ -86,6 +86,30 @@ func TestTopoESecaoContamIgual(t *testing.T) {
 	}
 }
 
+func TestTopoELinhasVivasContamIgual(t *testing.T) {
+	e := fixture()
+	e.Linhas = linhasEx()
+	m := modelo(e, &registro{})
+	m.largura, m.altura = 140, 60
+	out := render(m, 140, 60)
+	num := func(re string) string {
+		g := regexp.MustCompile(re).FindStringSubmatch(out)
+		if g == nil {
+			t.Fatalf("sem %s em: %s", re, out)
+		}
+		return g[1]
+	}
+	if a, b := num(`([0-9]+) trabalhando`), num(`› agora +([0-9]+)`); a != b {
+		t.Fatalf("topo diz %s trabalhando, raia diz %s", a, b)
+	}
+	if a, b := num(`([0-9]+) parados?`), num(`› parados +([0-9]+)`); a != b {
+		t.Fatalf("topo diz %s parados, raia diz %s", a, b)
+	}
+	if a, b := num(`([0-9]+) precisa de você`), num(`› precisa de você +([0-9]+)`); a != b {
+		t.Fatalf("topo diz %s precisa de você, seção diz %s", a, b)
+	}
+}
+
 func TestEnvioNaoDuplica(t *testing.T) {
 	c := novaCena(t)
 	m := abrir(t, c, "plano")

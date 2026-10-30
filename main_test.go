@@ -83,3 +83,13 @@ func TestEscolherModoImagem(t *testing.T) {
 		}
 	}
 }
+
+func TestValidarGaveta(t *testing.T) {
+	if validarGaveta("") != nil || validarGaveta("crew") != nil || validarGaveta("ci") != nil {
+		t.Fatal("gaveta válida recusada")
+	}
+	err := validarGaveta("fantasminhas")
+	if err == nil || !strings.Contains(err.Error(), "crew") || !strings.Contains(err.Error(), "agora") {
+		t.Fatalf("erro sem lista de válidas: %v", err)
+	}
+}

@@ -152,6 +152,25 @@ func (m Model) coletar() (Model, tea.Cmd) {
 	return m, m.comecar()
 }
 
+// GavetaValida diz se id é uma gaveta conhecida.
+func GavetaValida(id string) bool {
+	for _, g := range Gavetas {
+		if g.ID == id {
+			return true
+		}
+	}
+	return false
+}
+
+// IDsGavetas lista os ids válidos, na ordem das gavetas.
+func IDsGavetas() []string {
+	ids := make([]string, len(Gavetas))
+	for i, g := range Gavetas {
+		ids[i] = g.ID
+	}
+	return ids
+}
+
 func indiceGaveta(id string) int {
 	for i, g := range Gavetas {
 		if g.ID == id {

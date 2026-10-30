@@ -98,7 +98,7 @@ func MontarAntigas(e Estado) []ItemFeed {
 }
 
 func Resumo(e Estado) string {
-	var praVoce, travado, ativos int
+	var praVoce, travado, ativos, parados int
 	for _, i := range MontarFeed(e) {
 		switch i.Tipo {
 		case TipoDecidir, TipoJuntar:
@@ -107,9 +107,21 @@ func Resumo(e Estado) string {
 			travado++
 		}
 	}
-	for _, t := range e.Tasks {
-		if strings.Contains(t.Detalhe, "working") {
-			ativos++
+	// com linhas vivas o topo conta as mesmas linhas que as raias mostram
+	if len(e.Linhas) > 0 {
+		for _, l := range e.Linhas {
+			switch l.Estado {
+			case Trabalhando:
+				ativos++
+			case Parado:
+				parados++
+			}
+		}
+	} else {
+		for _, t := range e.Tasks {
+			if strings.Contains(t.Detalhe, "working") {
+				ativos++
+			}
 		}
 	}
 	var partes []string
@@ -125,6 +137,13 @@ func Resumo(e Estado) string {
 	}
 	if ativos > 0 {
 		partes = append(partes, fmt.Sprintf("%d trabalhando", ativos))
+	}
+	if parados > 0 {
+		s := ""
+		if parados > 1 {
+			s = "s"
+		}
+		partes = append(partes, fmt.Sprintf("%d parado%s", parados, s))
 	}
 	if len(partes) == 0 {
 		return "tudo calmo por aqui"
