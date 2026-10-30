@@ -48,11 +48,14 @@ type blocoConteudo struct {
 // AtividadeDe devolve a última ação e o último usage; linhas ilegíveis são ignoradas.
 func AtividadeDe(cauda []byte) Atividade {
 	var a Atividade
-	sc := bufio.NewScanner(bytes.NewReader(cauda))
-	sc.Buffer(make([]byte, 0, 64<<10), 1<<20)
-	for sc.Scan() {
+	r := bufio.NewReader(bytes.NewReader(cauda))
+	for {
+		linha, err := r.ReadBytes(10)
+		if len(linha) == 0 && err != nil {
+			break
+		}
 		var l linhaTranscript
-		if json.Unmarshal(sc.Bytes(), &l) != nil || l.Type != "assistant" {
+		if json.Unmarshal(linha, &l) != nil || l.Type != "assistant" {
 			continue
 		}
 		quando, _ := time.Parse(time.RFC3339Nano, l.Timestamp)
@@ -109,18 +112,27 @@ func LerCauda(caminho string, max int64) []byte {
 	if inicio < 0 {
 		inicio = 0
 	}
-	if _, err := f.Seek(inicio, io.SeekStart); err != nil {
+	// com inicio > 0 lê 1 byte a mais para saber se o corte caiu no começo de uma linha
+	leitura := inicio
+	if inicio > 0 {
+		leitura--
+	}
+	if _, err := f.Seek(leitura, io.SeekStart); err != nil {
 		return nil
 	}
 	b, err := io.ReadAll(f)
 	if err != nil {
 		return nil
 	}
-	if inicio > 0 {
-		if i := bytes.IndexByte(b, '\n'); i >= 0 {
+	if inicio > 0 && len(b) > 0 {
+		anterior := b[0]
+		b = b[1:]
+		if anterior != '\n' {
+			i := bytes.IndexByte(b, '\n')
+			if i < 0 {
+				return nil
+			}
 			b = b[i+1:]
-		} else {
-			return nil
 		}
 	}
 	return b

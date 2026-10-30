@@ -1,6 +1,7 @@
 package dados
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
 	"testing"
@@ -44,6 +45,8 @@ func TestAtividadeFallbacks(t *testing.T) {
 		{"Skill", `{"skill":"writing-plans"}`, "skill writing-plans"},
 		{"Agent", `{"description":"Map X"}`, "agente: Map X"},
 		{"SendMessage", `{}`, "SendMessage"},
+		{"Agent", `{}`, "Agent"},
+		{"Edit", `{}`, "Edit"},
 	}
 	for _, c := range casos {
 		if a := AtividadeDe(linhaTool(c.nome, c.input)); a.Acao != c.esperado {
@@ -62,6 +65,15 @@ func TestAtividadeSoTexto(t *testing.T) {
 	}
 }
 
+func TestAtividadeLinhaGigante(t *testing.T) {
+	gigante := append([]byte(`{"type":"user","x":"`), bytes.Repeat([]byte("a"), 2<<20)...)
+	gigante = append(gigante, []byte("\"}\n")...)
+	cauda := append(gigante, linhaTool("Bash", `{"description":"depois da linha gigante"}`)...)
+	if a := AtividadeDe(cauda); a.Acao != "depois da linha gigante" {
+		t.Errorf("Acao = %q", a.Acao)
+	}
+}
+
 func TestAtividadeLixo(t *testing.T) {
 	if a := AtividadeDe([]byte("{lixo\n\n")); a != (Atividade{}) {
 		t.Errorf("esperado Atividade{}, veio %+v", a)
@@ -70,7 +82,12 @@ func TestAtividadeLixo(t *testing.T) {
 
 func TestLerCaudaLinhaParcial(t *testing.T) {
 	caminho := filepath.Join(t.TempDir(), "t.jsonl")
-	os.WriteFile(caminho, []byte("aaaaaaaaaa\nbbbb\ncccc\n"), 0o644)
+	if err := os.WriteFile(caminho, []byte("aaaaaaaaaa\nbbbb\ncccc\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if got := string(LerCauda(caminho, 10)); got != "bbbb\ncccc\n" {
+		t.Errorf("corte logo após quebra de linha descartou linha íntegra: %q", got)
+	}
 	got := string(LerCauda(caminho, 14))
 	if got != "bbbb\ncccc\n" {
 		t.Errorf("cauda = %q", got)
