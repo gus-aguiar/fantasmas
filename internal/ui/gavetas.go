@@ -92,7 +92,7 @@ func gavetaAgora(c *corpo, e dados.Estado, altura int) {
 	}
 	var vivas, parados []dados.LinhaViva
 	for _, l := range e.Linhas {
-		if !c.casa(l.Nome, l.Etapa, l.Agora) {
+		if l.Estado != dados.Trabalhando && l.Estado != dados.Parado || !c.passa(l.Nome, l.Etapa, l.Agora) {
 			continue
 		}
 		switch l.Estado {
@@ -185,7 +185,6 @@ func gavetaAgora(c *corpo, e dados.Estado, altura int) {
 		}
 		c.secao(titulo, fmt.Sprint(len(ls)))
 		for _, l := range ls {
-			c.passa(l.Nome)
 			c.linhaViva(l)
 		}
 	}

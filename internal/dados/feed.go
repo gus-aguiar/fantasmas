@@ -114,7 +114,7 @@ func Resumo(e Estado) string {
 	}
 	var partes []string
 	if praVoce > 0 {
-		partes = append(partes, fmt.Sprintf("%d pra você", praVoce))
+		partes = append(partes, fmt.Sprintf("%d precisa de você", praVoce))
 	}
 	if travado > 0 {
 		s := ""

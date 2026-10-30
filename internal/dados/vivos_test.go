@@ -43,7 +43,7 @@ func TestFeedSoDeVivosEAntigasDosMortos(t *testing.T) {
 	if len(a) != 1 || a[0].Sujeito != "c-morto" || a[0].Pergunta.Chave != "/d/m/questions.json#2" {
 		t.Errorf("antigas=%+v", a)
 	}
-	if Resumo(e) != "1 pra você" {
+	if Resumo(e) != "1 precisa de você" {
 		t.Error(Resumo(e))
 	}
 }

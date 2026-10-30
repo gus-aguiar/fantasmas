@@ -107,7 +107,7 @@ func TestResumo(t *testing.T) {
 		Travados:  []Travado{PR(1, "conflito"), PR(2, "CI vermelho")},
 		Tasks:     []Linha{L("/d/w", "c", "sem report · 0/0 · 1min · working")},
 	}
-	if g := Resumo(e); g != "1 pra você · 1 trabalhando" {
+	if g := Resumo(e); g != "1 precisa de você · 1 trabalhando" {
 		t.Error(g)
 	}
 }
