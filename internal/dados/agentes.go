@@ -46,6 +46,8 @@ func AgentesDe(saida []byte) map[string]Agente {
 type SessaoClaude struct {
 	Nome, Status, Cwd string
 	Atualizado        time.Time
+	// StatusEm é quando o status mudou (statusUpdatedAt; sem ele, updatedAt).
+	StatusEm time.Time
 }
 
 // DirClaude é FANTASMAS_CLAUDE_DIR ou ~/.claude.
@@ -74,11 +76,16 @@ func SessoesClaude(dir string) map[string]SessaoClaude {
 			Status string `json:"status"`
 			Cwd    string `json:"cwd"`
 			Upd    int64  `json:"updatedAt"`
+			StUpd  int64  `json:"statusUpdatedAt"`
 		}
 		if json.Unmarshal(b, &s) != nil || s.ID == "" {
 			continue
 		}
-		m[s.ID] = SessaoClaude{Nome: s.Name, Status: s.Status, Cwd: s.Cwd, Atualizado: time.UnixMilli(s.Upd)}
+		st := s.StUpd
+		if st == 0 {
+			st = s.Upd
+		}
+		m[s.ID] = SessaoClaude{Nome: s.Name, Status: s.Status, Cwd: s.Cwd, Atualizado: time.UnixMilli(s.Upd), StatusEm: time.UnixMilli(st)}
 	}
 	return m
 }

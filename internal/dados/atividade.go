@@ -42,6 +42,8 @@ type blocoConteudo struct {
 		Description string `json:"description"`
 		FilePath    string `json:"file_path"`
 		Skill       string `json:"skill"`
+		To          string `json:"to"`
+		Pattern     string `json:"pattern"`
 	} `json:"input"`
 }
 
@@ -93,6 +95,14 @@ func descreverFerramenta(b blocoConteudo) string {
 		return "lê " + filepath.Base(in.FilePath)
 	case b.Name == "Skill" && in.Skill != "":
 		return "skill " + in.Skill
+	case b.Name == "SendMessage" && in.To != "":
+		return "mensagem para " + in.To
+	case b.Name == "Write" && in.FilePath != "":
+		return "escreve " + filepath.Base(in.FilePath)
+	case b.Name == "Grep" && in.Pattern != "":
+		return `procura "` + in.Pattern + `"`
+	case b.Name == "TaskCreate" || b.Name == "TaskUpdate":
+		return "atualiza tarefas"
 	}
 	return b.Name
 }

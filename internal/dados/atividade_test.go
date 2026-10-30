@@ -45,6 +45,11 @@ func TestAtividadeFallbacks(t *testing.T) {
 		{"Skill", `{"skill":"writing-plans"}`, "skill writing-plans"},
 		{"Agent", `{"description":"Map X"}`, "agente: Map X"},
 		{"SendMessage", `{}`, "SendMessage"},
+		{"SendMessage", `{"to":"gengar-1030","message":"done: x"}`, "mensagem para gengar-1030"},
+		{"Write", `{"file_path":"/a/report.md","content":"x"}`, "escreve report.md"},
+		{"Grep", `{"pattern":"func Montar"}`, `procura "func Montar"`},
+		{"TaskCreate", `{"subject":"x"}`, "atualiza tarefas"},
+		{"TaskUpdate", `{"taskId":"1"}`, "atualiza tarefas"},
 		{"Agent", `{}`, "Agent"},
 		{"Edit", `{}`, "Edit"},
 	}

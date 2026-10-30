@@ -5,6 +5,7 @@ import (
 	"math"
 	"sort"
 	"strings"
+	"time"
 
 	"fantasmas/internal/dados"
 
@@ -97,7 +98,7 @@ func renderLinhaViva(l dados.LinhaViva, largura int, bg lipgloss.Color) string {
 	if largo {
 		hora := "—"
 		if !l.Hora.IsZero() {
-			hora = l.Hora.Format("15:04")
+			hora = l.Hora.In(time.Local).Format("15:04")
 		}
 		s += st(bg, T.Dim).Render(fmt.Sprintf("%*s", wHoraViva, hora))
 	}

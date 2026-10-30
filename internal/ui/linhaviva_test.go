@@ -73,3 +73,18 @@ func TestRaiasOrdem(t *testing.T) {
 		t.Fatalf("ordem errada (%d, %d, %d):\n%s", a, b, c, s)
 	}
 }
+
+func TestHoraVivaEmHoraLocal(t *testing.T) {
+	sp, err := time.LoadLocation("America/Sao_Paulo")
+	if err != nil {
+		t.Skip(err)
+	}
+	antes := time.Local
+	time.Local = sp
+	defer func() { time.Local = antes }()
+	l := dados.LinhaViva{Nome: "c-a", Agora: "x", Estado: dados.Trabalhando, CtxPct: -1, Hora: time.Date(2026, 10, 30, 9, 0, 0, 0, time.UTC)}
+	got := ansi.Strip(renderLinhaViva(l, 100, T.Base))
+	if !strings.HasSuffix(strings.TrimRight(got, " "), "06:00") {
+		t.Errorf("hora não local: %q", got)
+	}
+}

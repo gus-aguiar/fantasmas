@@ -31,6 +31,11 @@ func TestMontarLinhaVivaRegras(t *testing.T) {
 		{"regra3 visto cai na 5", Agente{Status: "done"}, nil, recente, nil, true, true, Trabalhando, "roda testes"},
 		{"regra4", Agente{Status: "idle"}, nil, antiga, nil, false, false, Parado, "parado com tarefa há 25 min"},
 		{"regra5", Agente{Status: "idle"}, nil, recente, nil, false, false, Trabalhando, "roda testes"},
+		{"shell velho nao conta", Agente{Status: "done"}, &SessaoClaude{Status: "shell", StatusEm: agora.Add(-28 * time.Minute)}, antiga, nil, false, false, Parado, "parado com tarefa há 25 min"},
+		{"shell recente conta", Agente{Status: "done"}, &SessaoClaude{Status: "shell", StatusEm: agora.Add(-2 * time.Minute)}, antiga, nil, false, false, Trabalhando, "lê x.go"},
+		{"real 19814: done+shell velho", Agente{Status: "done"}, &SessaoClaude{Status: "shell", StatusEm: agora.Add(-28 * time.Minute)}, Atividade{Acao: "mensagem para g", Quando: agora.Add(-40 * time.Minute)}, nil, false, false, Parado, "parado com tarefa há 40 min"},
+		{"real 19597: done+idle+report visto", Agente{Status: "done"}, &SessaoClaude{Status: "idle", StatusEm: agora.Add(-50 * time.Minute)}, Atividade{Acao: "mensagem para g", Quando: agora.Add(-60 * time.Minute)}, nil, true, true, Parado, "relatório visto, parado há 60 min"},
+		{"real monitoramento: shell velho+report visto", Agente{Status: "done"}, &SessaoClaude{Status: "shell", StatusEm: agora.Add(-16 * time.Minute)}, antiga, nil, true, true, Parado, "relatório visto, parado há 25 min"},
 		{"sem acao", Agente{Status: "idle"}, nil, Atividade{}, nil, false, false, Trabalhando, "—"},
 	}
 	for _, c := range casos {
@@ -47,6 +52,16 @@ func TestMontarLinhaVivaRegras(t *testing.T) {
 		if e := MontarLinhaViva(nome, Agente{}, nil, Atividade{}, nil, false, false, agora).Etapa; e != etapa {
 			t.Error(nome, e)
 		}
+	}
+}
+
+func TestSessoesClaudeStatusUpdatedAt(t *testing.T) {
+	d := t.TempDir()
+	escreve(t, filepath.Join(d, "a.json"), `{"sessionId":"a","status":"shell","updatedAt":2000,"statusUpdatedAt":1000}`)
+	escreve(t, filepath.Join(d, "b.json"), `{"sessionId":"b","status":"shell","updatedAt":2000}`)
+	m := SessoesClaude(d)
+	if m["a"].StatusEm.UnixMilli() != 1000 || m["b"].StatusEm.UnixMilli() != 2000 {
+		t.Error(m)
 	}
 }
 
