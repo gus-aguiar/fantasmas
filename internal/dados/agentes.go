@@ -84,23 +84,28 @@ func SessoesClaude(dir string) map[string]SessaoClaude {
 }
 
 // sessaoDe: o id do Herdr vence; sem ele, a sessão mais recente com o mesmo nome.
-func sessaoDe(m map[string]SessaoClaude, nome, id string) *SessaoClaude {
+func sessaoDe(m map[string]SessaoClaude, nome, id string) (*SessaoClaude, string) {
 	if s, ok := m[id]; ok && id != "" {
-		return &s
+		return &s, id
 	}
 	var melhor *SessaoClaude
-	for _, s := range m {
+	melhorID := ""
+	for k, s := range m {
 		if s.Nome == nome && (melhor == nil || s.Atualizado.After(melhor.Atualizado)) {
 			s := s
-			melhor = &s
+			melhor, melhorID = &s, k
 		}
 	}
-	return melhor
+	return melhor, melhorID
 }
 
-// MetasDe: nome do agente -> pasta, lido de .delegate/*/meta.
-func MetasDe(raiz string) map[string]string {
+// MetasDe: nome do agente -> pasta, lido de .delegate/*/meta só para os nomes pedidos;
+// para de varrer quando acha todos.
+func MetasDe(raiz string, nomes map[string]Agente) map[string]string {
 	m := map[string]string{}
+	if len(nomes) == 0 {
+		return m
+	}
 	metas, _ := filepath.Glob(filepath.Join(raiz, ".delegate", "*", "meta"))
 	for _, p := range metas {
 		b, err := os.ReadFile(p)
@@ -109,9 +114,14 @@ func MetasDe(raiz string) map[string]string {
 		}
 		for _, l := range strings.Split(string(b), "\n") {
 			if v, ok := strings.CutPrefix(strings.TrimSpace(l), "name="); ok && v != "" {
-				m[v] = filepath.Dir(p)
+				if _, quer := nomes[v]; quer {
+					m[v] = filepath.Dir(p)
+				}
 				break
 			}
+		}
+		if len(m) == len(nomes) {
+			break
 		}
 	}
 	return m

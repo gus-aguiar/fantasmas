@@ -92,3 +92,15 @@ func TestLinhasVivasLeTranscriptEPendentes(t *testing.T) {
 		t.Error(ls)
 	}
 }
+
+func TestLinhasVivasTranscriptSemSessionsCaiNaRaiz(t *testing.T) {
+	raiz, claude := fixtureViva(t)
+	agora := time.Date(2026, 10, 30, 12, 0, 0, 0, time.UTC)
+	linha := `{"type":"assistant","timestamp":"` + agora.Add(-time.Minute).Format(time.RFC3339Nano) + `","message":{"model":"m","usage":{"input_tokens":200000},"content":[{"type":"tool_use","name":"Bash","input":{"description":"compila"}}]}}` + "\n"
+	escreve(t, CaminhoTranscript(claude, raiz, "s9"), linha)
+	e := Estado{Agentes: map[string]Agente{"c-a": {Status: "idle", Sessao: "s9"}}}
+	ls := LinhasVivas(e, raiz, claude, agora)
+	if len(ls) != 1 || ls[0].Agora != "compila" || ls[0].CtxPct != 20 {
+		t.Error(ls)
+	}
+}

@@ -64,7 +64,7 @@ func MontarLinhaViva(nome string, ag Agente, ses *SessaoClaude, at Atividade, pe
 
 // LinhasVivas junta agentes do Herdr com meta, sessão e transcript; agente sem meta fica de fora.
 func LinhasVivas(e Estado, raiz, claudeDir string, agora time.Time) []LinhaViva {
-	metas := MetasDe(raiz)
+	metas := MetasDe(raiz, e.Agentes)
 	sessoes := SessoesClaude(filepath.Join(claudeDir, "sessions"))
 	var out []LinhaViva
 	for nome, ag := range e.Agentes {
@@ -72,14 +72,17 @@ func LinhasVivas(e Estado, raiz, claudeDir string, agora time.Time) []LinhaViva 
 		if !ok {
 			continue
 		}
-		ses := sessaoDe(sessoes, nome, ag.Sessao)
+		ses, id := sessaoDe(sessoes, nome, ag.Sessao)
+		if id == "" {
+			id = ag.Sessao
+		}
 		var at Atividade
-		if ses != nil {
-			id := ag.Sessao
-			if id == "" {
-				id = idDe(sessoes, ses)
+		if id != "" {
+			cwd := raiz
+			if ses != nil && ses.Cwd != "" {
+				cwd = ses.Cwd
 			}
-			at = AtividadeDe(LerCauda(CaminhoTranscript(claudeDir, ses.Cwd, id), maxCauda))
+			at = AtividadeDe(LerCauda(CaminhoTranscript(claudeDir, cwd, id), maxCauda))
 		}
 		var pend []string
 		for _, p := range e.Esperando {
@@ -101,13 +104,4 @@ func LinhasVivas(e Estado, raiz, claudeDir string, agora time.Time) []LinhaViva 
 		return out[i].Nome < out[j].Nome
 	})
 	return out
-}
-
-func idDe(m map[string]SessaoClaude, s *SessaoClaude) string {
-	for id, x := range m {
-		if x == *s {
-			return id
-		}
-	}
-	return ""
 }

@@ -47,13 +47,13 @@ func TestSessaoPorIdVenceNome(t *testing.T) {
 	if len(m) != 2 {
 		t.Fatal(m)
 	}
-	if s := sessaoDe(m, "c-x", "id-velho"); s == nil || s.Cwd != "/a" {
+	if s, id := sessaoDe(m, "c-x", "id-velho"); s == nil || s.Cwd != "/a" || id != "id-velho" {
 		t.Error(s)
 	}
-	if s := sessaoDe(m, "c-x", ""); s == nil || s.Cwd != "/b" || s.Status != "busy" {
+	if s, id := sessaoDe(m, "c-x", ""); s == nil || s.Cwd != "/b" || s.Status != "busy" || id != "id-novo" {
 		t.Error("sem id, vence a mais recente pelo nome", s)
 	}
-	if sessaoDe(m, "outro", "") != nil {
+	if s, _ := sessaoDe(m, "outro", ""); s != nil {
 		t.Error("nome sem sessão")
 	}
 }
@@ -65,8 +65,19 @@ func TestMetasDe(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(raiz, ".delegate", "s3"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	m := MetasDe(raiz)
+	todos := map[string]Agente{"c-um": {}, "c-dois": {}, "c-fora": {}}
+	m := MetasDe(raiz, todos)
 	if len(m) != 2 || m["c-um"] != filepath.Join(raiz, ".delegate", "s1") {
+		t.Error(m)
+	}
+}
+
+func TestMetasDeSoOsPedidos(t *testing.T) {
+	raiz := t.TempDir()
+	escreve(t, filepath.Join(raiz, ".delegate", "s1", "meta"), "name=c-um\n")
+	escreve(t, filepath.Join(raiz, ".delegate", "s2", "meta"), "name=c-dois\n")
+	m := MetasDe(raiz, map[string]Agente{"c-dois": {}})
+	if len(m) != 1 || m["c-dois"] == "" {
 		t.Error(m)
 	}
 }
