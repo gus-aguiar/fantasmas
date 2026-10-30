@@ -29,6 +29,8 @@ type Acoes struct {
 	Daydreaming    func() (string, error)
 	ReconectarMCPs func() error
 	ProgressoMCP   func() dados.ProgressoMCP
+	// gaveta mais: git pull + build + troca do binário
+	Atualizar func() (dados.Resultado, error)
 	// gaveta pipes
 	Pipes  OpsPipes
 	Editar func(arquivo string) *exec.Cmd
@@ -41,6 +43,10 @@ type daydreamingMsg struct {
 	err   error
 }
 type tickMCPMsg struct{}
+type atualizouMsg struct {
+	dados.Resultado
+	err error
+}
 type progressoMCPMsg struct{ dados.ProgressoMCP }
 type tickQuadroMsg struct{}
 type toastFimMsg struct{ gen int }
@@ -61,40 +67,43 @@ type Model struct {
 	acoes     Acoes
 	intervalo time.Duration
 
-	estado    dados.Estado
-	coletando bool
-	genColeta int
-	quadro    int
-	gaveta    int
-	sel       int
-	status    string
-	largura   int
-	altura    int
-	aberto    *dados.Aberto
-	rascunho  *textinput.Model
-	opcao     int
-	rolagem   int
-	diagrama  bool
-	enviando  string
-	ajuda     bool
-	toast     string
-	toastCor  lipgloss.Color
-	genToast  int
-	filtro    *textinput.Model
-	busca     string
-	armado    int
-	focoTexto bool
-	img       *Grafico
-	imgPos    areaImg
-	imgQuadro int
-	modoImg   string
-	antigas   bool
-	rascunhos bool
-	armadoArq string
-	armadoRet string
-	vistos    map[string]bool
-	pedindoDD bool
-	vigiaMCP  bool
+	estado      dados.Estado
+	coletando   bool
+	genColeta   int
+	quadro      int
+	gaveta      int
+	sel         int
+	status      string
+	largura     int
+	altura      int
+	aberto      *dados.Aberto
+	rascunho    *textinput.Model
+	opcao       int
+	rolagem     int
+	diagrama    bool
+	enviando    string
+	ajuda       bool
+	toast       string
+	toastCor    lipgloss.Color
+	genToast    int
+	filtro      *textinput.Model
+	busca       string
+	armado      int
+	focoTexto   bool
+	img         *Grafico
+	imgPos      areaImg
+	imgQuadro   int
+	modoImg     string
+	antigas     bool
+	rascunhos   bool
+	armadoArq   string
+	armadoRet   string
+	vistos      map[string]bool
+	pedindoDD   bool
+	vigiaMCP    bool
+	armadoAtu   bool
+	atualizando bool
+	reiniciar   string
 
 	pipe       int
 	pipeSel    int
@@ -363,6 +372,8 @@ func (m Model) enterCmd() (tea.Model, tea.Cmd) {
 			return m.daydreaming()
 		case acaoMCP:
 			return m.reconectarMCPs()
+		case acaoAtualizar:
+			return m.atualizarApp()
 		}
 	}
 	return m.enter(), nil
@@ -371,7 +382,28 @@ func (m Model) enterCmd() (tea.Model, tea.Cmd) {
 const (
 	acaoDaydreaming = "daydreaming"
 	acaoMCP         = "mcp"
+	acaoAtualizar   = "atualizar"
 )
+
+// Reiniciar devolve o binário novo a executar depois que o Run() termina ("" = nada).
+func (m Model) Reiniciar() string { return m.reiniciar }
+
+// atualizarApp pede confirmação: o primeiro U (ou enter) arma, o segundo roda.
+func (m Model) atualizarApp() (tea.Model, tea.Cmd) {
+	if m.atualizando || m.acoes.Atualizar == nil {
+		return m, nil
+	}
+	if !m.armadoAtu {
+		m.armadoAtu = true
+		m.status = "U de novo confirma atualizar fantasmas"
+		return m, nil
+	}
+	m.armadoAtu, m.atualizando = false, true
+	m.status = "atualizando…"
+	f := m.acoes.Atualizar
+	m2, toast := m.mostrarToast("atualizando…", T.Andamento)
+	return m2, tea.Batch(toast, func() tea.Msg { r, err := f(); return atualizouMsg{r, err} })
+}
 
 // daydreaming roda fora do loop da UI: o spawn pode levar ~2 min.
 func (m Model) daydreaming() (tea.Model, tea.Cmd) {
@@ -481,6 +513,18 @@ func (m Model) atualizar(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.vigiaMCP = false
 		return m.mostrarToast("MCPs: "+resumoMCP(msg.ProgressoMCP), T.Ok)
+	case atualizouMsg:
+		m.atualizando = false
+		if msg.err != nil {
+			m.status = "não atualizei: " + msg.err.Error()
+			return m.mostrarToast(m.status, T.Erro)
+		}
+		m.status = msg.Mensagem
+		if msg.Trocou {
+			m.reiniciar = msg.Binario
+			return m, tea.Quit
+		}
+		return m.mostrarToast(msg.Mensagem, T.Ok)
 	case toastFimMsg:
 		if msg.gen == m.genToast {
 			m.toast = ""
@@ -616,9 +660,17 @@ func (m Model) mouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) tecla(k string) (tea.Model, tea.Cmd) {
-	armadoArq, armadoRet := m.armadoArq, m.armadoRet
-	m.armadoArq, m.armadoRet = "", ""
+	armadoArq, armadoRet, armadoAtu := m.armadoArq, m.armadoRet, m.armadoAtu
+	m.armadoArq, m.armadoRet, m.armadoAtu = "", "", false
 	switch k {
+	case "U":
+		m.armadoAtu = armadoAtu
+		return m.atualizarApp()
+	case "enter":
+		if a, ok := m.selecionado(); ok && a.acao == acaoAtualizar {
+			m.armadoAtu = armadoAtu
+		}
+		return m.enterCmd()
 	case "R":
 		m.armadoRet = armadoRet
 		return m.retomar()
@@ -663,8 +715,6 @@ func (m Model) tecla(k string) (tea.Model, tea.Cmd) {
 		return m.mover(-1), nil
 	case "down", "j":
 		return m.mover(1), nil
-	case "enter":
-		return m.enterCmd()
 	case "D":
 		return m.daydreaming()
 	case "M":
@@ -703,7 +753,7 @@ func (m Model) montarCorpo(largura, altura int) *corpo {
 	case "maquina":
 		gavetaMaquina(c, e, m.pedindoDD)
 	case "mais":
-		gavetaMais(c, e)
+		gavetaMais(c, e, m.atualizando, m.armadoAtu)
 	}
 	if c.filtro != "" && c.vis == 0 {
 		c.branco()
@@ -798,6 +848,7 @@ func (m Model) ajudaLinhas(largura int) []string {
 		k("n e · A S T 2×", "pipes: lança · edita o YAML · avança, pula, retry"),
 		k("D", "pede rodada do DayDreaming"),
 		k("M", "reconecta os MCPs de todas as sessões"),
+		k("U 2×", "atualiza o fantasmas (pull, build, reabre)"),
 		k("r", "atualiza agora"),
 		k("q", "sai"),
 		"",

@@ -485,7 +485,17 @@ func gavetaMaquina(c *corpo, e dados.Estado, pedindoDD bool) {
 	}
 }
 
-func gavetaMais(c *corpo, e dados.Estado) {
+func gavetaMais(c *corpo, e dados.Estado, atualizando, armado bool) {
+	c.secao("app", "enter aciona")
+	g, cor, est := "⟳", T.Texto, "U 2×"
+	switch {
+	case atualizando:
+		g, cor, est = "◐", T.Andamento, "atualizando…"
+	case armado:
+		cor, est = T.Espera, "de novo confirma"
+	}
+	c.linhaLista(alvo{acao: acaoAtualizar}, g, cor, "atualizar fantasmas", est, cor, "")
+	c.branco()
 	c.secao("worktrees", "")
 	if len(e.Worktrees) == 0 {
 		c.vazio("nenhum worktree")

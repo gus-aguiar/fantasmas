@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"fantasmas/internal/dados"
@@ -81,8 +82,19 @@ func main() {
 		},
 		ReconectarMCPs: func() error { return dados.ReconectarMCPs(*raiz) },
 		ProgressoMCP:   func() dados.ProgressoMCP { return dados.LerProgressoMCP(*raiz, time.Now()) },
-		Pipes:          &dados.Pipes{R: runner, Raiz: *raiz, Script: dados.ScriptDdb(*raiz)},
-		Editar:         func(arq string) *exec.Cmd { return ui.ComandoEditor(os.Getenv("FANTASMAS_EDITOR"), arq) },
+		Atualizar: func() (dados.Resultado, error) {
+			exe, err := os.Executable()
+			if err != nil {
+				return dados.Resultado{}, fmt.Errorf("repo não encontrado: %w", err)
+			}
+			repo, err := dados.AcharRepo(context.Background(), runner, exe)
+			if err != nil {
+				return dados.Resultado{}, err
+			}
+			return dados.Atualizar(context.Background(), runner, repo)
+		},
+		Pipes:  &dados.Pipes{R: runner, Raiz: *raiz, Script: dados.ScriptDdb(*raiz)},
+		Editar: func(arq string) *exec.Cmd { return ui.ComandoEditor(os.Getenv("FANTASMAS_EDITOR"), arq) },
 	}
 	m := ui.Novo(coleta, acoes, *intervalo)
 	if *sprite != "" {
@@ -150,13 +162,18 @@ func main() {
 	}
 	logf("modo %s (%s)", rotulo, motivo)
 	m = m.ComModoImagem(rotulo)
-	_, err := tea.NewProgram(m, tea.WithAltScreen(), tea.WithMouseCellMotion(), tea.WithOutput(saida)).Run()
+	final, err := tea.NewProgram(m, tea.WithAltScreen(), tea.WithMouseCellMotion(), tea.WithOutput(saida)).Run()
 	if g != nil {
 		g.Encerrar()
 	}
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "fantasmas:", err)
 		os.Exit(1)
+	}
+	if fm, ok := final.(ui.Model); ok && fm.Reiniciar() != "" {
+		// o tea já saiu do alt-screen e restaurou o terminal; troca o processo pelo binário novo.
+		err := syscall.Exec(fm.Reiniciar(), os.Args, os.Environ())
+		fmt.Fprintln(os.Stderr, "fantasmas: atualizado; feche e abra de novo:", err)
 	}
 }
 

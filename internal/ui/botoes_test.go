@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"errors"
 	"strings"
 	"testing"
 	"time"
@@ -21,5 +22,39 @@ func TestGavetaMaquinaTemBotoes(t *testing.T) {
 		if !strings.Contains(tela, s) {
 			t.Errorf("falta %q", s)
 		}
+	}
+}
+
+func TestAtualizarPedeSegundoU(t *testing.T) {
+	chamou := 0
+	ac := Acoes{Atualizar: func() (dados.Resultado, error) {
+		chamou++
+		return dados.Resultado{Novos: 2, Trocou: true, Binario: "/x/bin/fantasmas"}, nil
+	}}
+	m := Novo(nil, ac, time.Minute).ComEstado(dados.Estado{At: time.Now()}).irGaveta(indiceGaveta("mais"))
+	if !strings.Contains(ansi.Strip(m.Render(110, 30)), "atualizar fantasmas") {
+		t.Fatal("falta o item na gaveta mais")
+	}
+	n, cmd := m.tecla("U")
+	m = n.(Model)
+	if cmd != nil || !m.armadoAtu || chamou != 0 {
+		t.Fatalf("primeiro U devia só armar")
+	}
+	n, _ = m.tecla("j")
+	if n.(Model).armadoAtu {
+		t.Fatal("outra tecla devia desarmar")
+	}
+	n, _ = m.tecla("U")
+	m = n.(Model)
+	if !m.atualizando {
+		t.Fatal("segundo U devia rodar")
+	}
+	n, _ = m.Update(atualizouMsg{Resultado: dados.Resultado{Novos: 2, Trocou: true, Binario: "/x/bin/fantasmas"}})
+	if n.(Model).Reiniciar() != "/x/bin/fantasmas" {
+		t.Fatal("devia pedir reinício com o binário novo")
+	}
+	n, _ = m.Update(atualizouMsg{err: errors.New("mudanças locais, não atualizei")})
+	if got := n.(Model).toast; !strings.Contains(got, "mudanças locais") {
+		t.Fatalf("toast = %q", got)
 	}
 }
