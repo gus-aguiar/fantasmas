@@ -73,7 +73,7 @@ func LinhasVivas(e Estado, raiz, claudeDir string, agora time.Time) []LinhaViva 
 			continue
 		}
 		ses, id := sessaoDe(sessoes, nome, ag.Sessao)
-		if id == "" {
+		if ag.Sessao != "" {
 			id = ag.Sessao
 		}
 		var at Atividade

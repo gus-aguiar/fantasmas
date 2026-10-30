@@ -104,3 +104,19 @@ func TestLinhasVivasTranscriptSemSessionsCaiNaRaiz(t *testing.T) {
 		t.Error(ls)
 	}
 }
+
+func TestLinhasVivasIdDoHerdrVenceFallbackPorNome(t *testing.T) {
+	raiz, claude := fixtureViva(t)
+	agora := time.Date(2026, 10, 30, 12, 0, 0, 0, time.UTC)
+	mk := func(acao string) string {
+		return `{"type":"assistant","timestamp":"` + agora.Add(-time.Minute).Format(time.RFC3339Nano) + `","message":{"content":[{"type":"tool_use","name":"Bash","input":{"description":"` + acao + `"}}]}}` + "\n"
+	}
+	escreve(t, filepath.Join(claude, "sessions", "1.json"), `{"sessionId":"antigo","name":"c-a","cwd":"/w/x","status":"idle","updatedAt":1}`)
+	escreve(t, CaminhoTranscript(claude, "/w/x", "antigo"), mk("da sessão antiga"))
+	escreve(t, CaminhoTranscript(claude, "/w/x", "do-herdr"), mk("da sessão do herdr"))
+	e := Estado{Agentes: map[string]Agente{"c-a": {Status: "idle", Sessao: "do-herdr"}}}
+	ls := LinhasVivas(e, raiz, claude, agora)
+	if len(ls) != 1 || ls[0].Agora != "da sessão do herdr" {
+		t.Error(ls)
+	}
+}

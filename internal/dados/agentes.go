@@ -99,8 +99,8 @@ func sessaoDe(m map[string]SessaoClaude, nome, id string) (*SessaoClaude, string
 	return melhor, melhorID
 }
 
-// MetasDe: nome do agente -> pasta, lido de .delegate/*/meta só para os nomes pedidos;
-// para de varrer quando acha todos.
+// MetasDe: nome do agente -> pasta, lido de .delegate/*/meta só para os nomes pedidos.
+// Lê cada meta até achar o nome; a parada antecipada só vale se todos os nomes tiverem meta.
 func MetasDe(raiz string, nomes map[string]Agente) map[string]string {
 	m := map[string]string{}
 	if len(nomes) == 0 {
