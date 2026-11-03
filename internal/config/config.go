@@ -12,6 +12,8 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
+	"strings"
 )
 
 // Opcao é um ajuste da aba settings.
@@ -23,7 +25,7 @@ type Opcao struct {
 	Valores []string
 	// Reabrir indica que o valor só é lido na abertura do fantasmas.
 	Reabrir bool
-	// Padrao é o valor que vale sem nada salvo, quando é um dos Valores (tema roxo, figura gengar).
+	// Padrao é o valor que vale sem nada definido, como aparece na tela (pode ser um dos Valores).
 	Padrao string
 }
 
@@ -36,21 +38,42 @@ const ChaveTema = "FANTASMAS_TEMA"
 // ChaveFigura escolhe a figura do topo; as escolhas vêm do catálogo (DefinirValores).
 const ChaveFigura = "FANTASMAS_FIGURA"
 
-// Opcoes, na ordem da aba.
+// Opcoes, na ordem da aba. Padrao é o valor que vale sem nada definido, como aparece na tela.
 var Opcoes = []Opcao{
 	{ChaveTema, "aparência", "cores do app", []string{"roxo", "orca", "terminal"}, false, "roxo"},
 	{ChaveFigura, "aparência", "figura do topo; GIF ou PNG na pasta figuras", []string{"gengar"}, false, "gengar"},
-	{"FANTASMAS_IMAGEM", "imagem", "desenho da figura; o padrão detecta pelo terminal", []string{"kitty", "celulas"}, true, ""},
-	{"FANTASMAS_IMAGEM_MODO", "imagem", "envio da imagem kitty; o padrão é T no herdr e no Orca", []string{"T", "quadros", "animacao"}, true, ""},
-	{"FANTASMAS_SPRITE", "imagem", "caminho de GIF ou PNG; manda sobre a figura", nil, true, ""},
-	{"FANTASMAS_FONTE", "dados", "ddb liga as gavetas missões e pipes", []string{"ddb"}, false, ""},
-	{"FANTASMAS_DDB_SCRIPT", "dados", "caminho do ddb.py", nil, true, ""},
-	{"FANTASMAS_MURAL", "dados", "off esconde o mural", []string{"off"}, false, ""},
-	{"FANTASMAS_CLAUDE_DIR", "dados", "pasta do Claude; o padrão é ~/.claude", nil, false, ""},
-	{"FANTASMAS_CACHE_DIR", "dados", "pasta de cache do fantasmas", nil, false, ""},
-	{"FANTASMAS_EDITOR", "comportamento", "editor de arquivos e pastas", nil, false, ""},
-	{"FANTASMAS_CTX_JANELA", "comportamento", "janela de contexto do %; o padrão é 1000000", nil, false, ""},
-	{"FANTASMAS_DEBUG", "diagnóstico", "arquivo de log do terminal e da imagem", nil, true, ""},
+	{"FANTASMAS_FONTE", "variáveis de ambiente", "ddb liga as gavetas missões e pipes", []string{"ddb"}, false, "delegate.py"},
+	{"FANTASMAS_DDB_SCRIPT", "variáveis de ambiente", "caminho do ddb.py, relativo à raiz do Spark", nil, true, "scripts/delegate/ddb.py"},
+	{"FANTASMAS_MURAL", "variáveis de ambiente", "off esconde o mural", []string{"off"}, false, "ligado"},
+	{"FANTASMAS_CLAUDE_DIR", "variáveis de ambiente", "pasta do Claude (transcripts)", nil, false, "~/.claude"},
+	{"FANTASMAS_CACHE_DIR", "variáveis de ambiente", "pasta de cache do fantasmas", nil, false, padraoCache()},
+	{"FANTASMAS_EDITOR", "variáveis de ambiente", "editor de arquivos e pastas", nil, false, padraoEditor()},
+	{"FANTASMAS_CTX_JANELA", "variáveis de ambiente", "janela de contexto usada no %", nil, false, "1000000"},
+	{"FANTASMAS_DEBUG", "variáveis de ambiente", "arquivo de log do terminal e da imagem", nil, true, "desligado"},
+}
+
+// padraoCache é a pasta que dados.dirCache usa sem FANTASMAS_CACHE_DIR, com ~ no lugar da home.
+func padraoCache() string {
+	d, err := os.UserCacheDir()
+	if err != nil {
+		return "nenhuma"
+	}
+	d = filepath.Join(d, "fantasmas")
+	if h, err := os.UserHomeDir(); err == nil && strings.HasPrefix(d, h+string(os.PathSeparator)) {
+		d = "~" + d[len(h):]
+	}
+	return d
+}
+
+// padraoEditor é o abridor do sistema que main.comandoAbrir usa sem FANTASMAS_EDITOR.
+func padraoEditor() string {
+	switch runtime.GOOS {
+	case "darwin":
+		return "open"
+	case "linux":
+		return "xdg-open"
+	}
+	return "start"
 }
 
 // DefinirValores troca as escolhas de uma opção (o catálogo de figuras é lido na abertura).

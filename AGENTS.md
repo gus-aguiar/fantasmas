@@ -91,14 +91,14 @@ As saídas em TSV passam por `dados.TSV`, e a do ddb passa por `dados.DeDdb`. As
 
 ### Aba settings e variáveis de ambiente
 
-A gaveta **settings** (`,`) lista todas as variáveis `FANTASMAS_*` do catálogo `config.Opcoes` (`internal/config/config.go`) e as salva em `~/.config/fantasmas/ajustes.json`:
+A gaveta **settings** (`,`) lista as variáveis `FANTASMAS_*` do catálogo `config.Opcoes` (`internal/config/config.go`) pelo nome real, cada uma com o valor que vale agora (o padrão, quando nada foi definido), e as salva em `~/.config/fantasmas/ajustes.json`. `FANTASMAS_IMAGEM`, `FANTASMAS_IMAGEM_MODO` e `FANTASMAS_SPRITE` ficam fora da aba, só pelo shell.
 - o arquivo tem permissão 0600, numa pasta 0700, e fica fora do repo; `FANTASMAS_AJUSTES` muda o caminho;
 - `main` aplica o arquivo ao ambiente **antes de qualquer `os.Getenv`**, então o resto do código continua só lendo variáveis;
 - **o shell manda:** uma variável já definida no shell não é sobrescrita nem editável pela aba.
 
 Regras para quem mexer:
-- **Opção nova:** acrescente em `config.Opcoes`, com grupo, descrição, `Valores` (escolhas fixas; vazio = texto livre) e `Reabrir` se ela só for lida na abertura.
-- **Texto livre nunca vai para a tela:** a lista, a barra de edição (eco `•`), os toasts e as mensagens de erro mostram só a máscara. Não escreva o valor de uma opção `Livre()` em lugar nenhum visível.
+- **Opção nova:** acrescente em `config.Opcoes`, com grupo, descrição, `Valores` (escolhas fixas; vazio = texto livre), `Reabrir` se ela só for lida na abertura e `Padrao` com o valor que vale sem nada definido, como deve aparecer na tela.
+- **Texto livre definido nunca vai para a tela:** a lista, a barra de edição (eco `•`), os toasts e as mensagens de erro mostram só a máscara. O padrão da opção aparece, porque é do app e não do usuário. Não escreva o valor definido de uma opção `Livre()` em lugar nenhum visível.
 
 | Variável | Efeito |
 |---|---|
@@ -120,7 +120,7 @@ Regras para quem mexer:
 ### Figuras do topo
 
 Cada GIF ou PNG de duas pastas vira uma figura, com o nome do arquivo sem extensão (`ui.NomesFiguras`):
-- `assets/figuras/`: embutida no binário, exige recompilar;
+- `assets/figuras/`: embutida no binário, exige recompilar (hoje: `gengar`, `lapras`, `entei`);
 - `~/.config/fantasmas/figuras/`: sem recompilar; vence a embutida de mesmo nome.
 
 O PNG estático vira um GIF de um quadro (`ui.paraGIF`). Trocar a figura com o app aberto remonta a imagem kitty (`Grafico.Recarregado`). Veja `assets/figuras/LEIA.md`.

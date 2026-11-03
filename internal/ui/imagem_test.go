@@ -217,8 +217,9 @@ func TestQuadrosPNGResolucaoOriginalRGBA(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if img.Bounds().Dx() != w*FatorAmpliacao || img.Bounds().Dy() != h*FatorAmpliacao {
-			t.Fatalf("quadro %d: %v, quer %dx%d", i, img.Bounds(), w*FatorAmpliacao, h*FatorAmpliacao)
+		f := fatorAmpliacao(w, h)
+		if f != FatorAmpliacao || img.Bounds().Dx() != w*f || img.Bounds().Dy() != h*f {
+			t.Fatalf("quadro %d: %v, quer %dx%d (gengar ampliado %d×)", i, img.Bounds(), w*f, h*f, FatorAmpliacao)
 		}
 		if _, ok := img.(*image.NRGBA); !ok {
 			if _, ok := img.(*image.RGBA); !ok {
@@ -293,5 +294,14 @@ func TestAjudaMostraModoImagem(t *testing.T) {
 	m := modelo(fixture(), &registro{}).ComModoImagem("kitty-animação")
 	if !strings.Contains(strings.Join(m.ajudaLinhas(80), "\n"), "kitty-animação") {
 		t.Fatal("ajuda sem o modo")
+	}
+}
+
+func TestFatorAmpliacao(t *testing.T) {
+	casos := []struct{ w, h, quer int }{{70, 60, 4}, {100, 80, 3}, {160, 40, 2}, {324, 300, 1}, {900, 900, 1}, {0, 0, 4}}
+	for _, c := range casos {
+		if got := fatorAmpliacao(c.w, c.h); got != c.quer {
+			t.Errorf("%dx%d: %d, quer %d", c.w, c.h, got, c.quer)
+		}
 	}
 }

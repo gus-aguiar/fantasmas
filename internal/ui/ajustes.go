@@ -32,9 +32,8 @@ type editaAjuste struct {
 	campo textinput.Model
 }
 
-func nomeAjuste(chave string) string {
-	return strings.ToLower(strings.TrimPrefix(chave, "FANTASMAS_"))
-}
+// nomeAjuste é o nome que aparece na aba: a própria variável de ambiente.
+func nomeAjuste(chave string) string { return chave }
 
 // mostravel devolve o valor que pode ir à tela: escolhas fixas aparecem, texto livre vira a máscara.
 func mostravel(o config.Opcao, valor string) string {
@@ -63,9 +62,9 @@ func gavetaSettings(c *corpo, ops OpsAjustes) {
 			grupo = o.Grupo
 			c.secao(grupo, extra)
 		}
-		glifo, cor, estado, det := "○", T.Dim, "padrão", o.Descricao
-		if o.Padrao != "" {
-			estado = o.Padrao
+		glifo, cor, estado, det := "○", T.Dim, o.Padrao, o.Descricao
+		if estado == "" {
+			estado = "padrão"
 		}
 		if o.Chave == config.ChaveFigura && len(o.Valores) > 1 {
 			det += fmt.Sprintf(" · %d figuras", len(o.Valores))
@@ -80,7 +79,7 @@ func gavetaSettings(c *corpo, ops OpsAjustes) {
 		if o.Reabrir {
 			det += " · vale ao reabrir"
 		}
-		c.linhaLista(alvo{ajuste: o.Chave}, glifo, cor, nomeAjuste(o.Chave), estado, cor, det)
+		c.linhaAjuste(alvo{ajuste: o.Chave}, glifo, cor, nomeAjuste(o.Chave), estado, det)
 	}
 	c.branco()
 	caminho := ops.Caminho()
@@ -89,6 +88,25 @@ func gavetaSettings(c *corpo, ops OpsAjustes) {
 	}
 	c.texto(func(bg lipgloss.Color) string {
 		return st(bg, T.Dim).Render("  ● salvo aqui · ◆ vem do shell e manda · " + Corte(caminho, max(8, c.largura-46)))
+	})
+}
+
+// linhaAjuste: variável, valor e descrição, com colunas largas o bastante para os caminhos padrão.
+func (c *corpo) linhaAjuste(a alvo, glifo string, cor lipgloss.Color, nome, valor, det string) {
+	wNome, wValor := 24, 26
+	if c.largura < 90 {
+		wNome, wValor = 22, 18
+	}
+	wDet := c.largura - 4 - wNome - wValor
+	if !c.passa(nome, valor, det) {
+		return
+	}
+	c.item(a, func(bg lipgloss.Color) string {
+		s := st(bg, cor).Render(glifo+" ") + st(bg, T.Texto).Render(Col(nome, wNome)) + st(bg, cor).Render(Col(valor, wValor))
+		if wDet > 6 {
+			s += st(bg, T.Dim).Render(Corte(det, wDet))
+		}
+		return s
 	})
 }
 
@@ -105,7 +123,7 @@ func (m Model) acionarAjuste(chave string) (tea.Model, tea.Cmd) {
 	if o.Livre() {
 		ti := textinput.New()
 		ti.Prompt = ""
-		ti.Placeholder = "novo valor · vazio volta ao padrão"
+		ti.Placeholder = "novo valor · vazio volta ao padrão (" + o.Padrao + ")"
 		ti.EchoMode = textinput.EchoPassword
 		ti.EchoCharacter = '•'
 		ti.TextStyle = st(T.Surface, T.Texto)
@@ -115,6 +133,9 @@ func (m Model) acionarAjuste(chave string) (tea.Model, tea.Cmd) {
 		ti.Focus()
 		m.ajuste = &editaAjuste{chave: chave, campo: ti}
 		return m, textinput.Blink
+	}
+	if o.Chave == config.ChaveFigura && len(o.Valores) <= 1 {
+		return m.mostrarToast("só há o gengar; ponha GIF ou PNG em "+m.acoes.DirFiguras+" e reabra", T.Espera)
 	}
 	return m.salvarAjuste(o, proximoValor(o, ops))
 }

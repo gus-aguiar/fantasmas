@@ -52,9 +52,15 @@ func TestVirgulaAbreSettings(t *testing.T) {
 		t.Fatalf("gaveta %s", Gavetas[m.gaveta].ID)
 	}
 	out := render(m, 110, 50)
-	for _, s := range []string{"aparência", "imagem", "dados", "comportamento", "diagnóstico", "tema", "editor", "vale ao reabrir"} {
+	for _, s := range []string{"aparência", "variáveis de ambiente", "FANTASMAS_TEMA", "FANTASMAS_EDITOR", "FANTASMAS_CTX_JANELA",
+		"1000000", "~/.claude", "delegate.py", "vale ao reabrir"} {
 		if !strings.Contains(out, s) {
 			t.Fatalf("settings sem %q:\n%s", s, out)
+		}
+	}
+	for _, s := range []string{"FANTASMAS_IMAGEM", "FANTASMAS_SPRITE", "padrão "} {
+		if strings.Contains(out, s) {
+			t.Fatalf("settings não deveria ter %q:\n%s", s, out)
 		}
 	}
 }
@@ -77,7 +83,7 @@ func TestEnterTrocaOTemaESalva(t *testing.T) {
 	if T.Base != temaRoxo.Base || l.Origem(config.ChaveTema) != config.Padrao {
 		t.Fatalf("terceiro enter deveria voltar ao roxo padrão: base %q", T.Base)
 	}
-	if !strings.Contains(render(m, 110, 50), "tema: roxo") {
+	if !strings.Contains(render(m, 110, 50), "FANTASMAS_TEMA: roxo") {
 		t.Fatal("toast sem o tema")
 	}
 }

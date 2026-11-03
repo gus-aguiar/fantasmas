@@ -68,17 +68,24 @@ func TestParaGIFDePNG(t *testing.T) {
 func TestCatalogoDeFiguras(t *testing.T) {
 	defer usarBytes(nil, "")
 	dir := t.TempDir()
-	os.WriteFile(filepath.Join(dir, "Entei.png"), pngTeste(t, 3), 0o644)
+	os.WriteFile(filepath.Join(dir, "Teste.png"), pngTeste(t, 3), 0o644)
+	os.WriteFile(filepath.Join(dir, "lapras.png"), pngTeste(t, 3), 0o644)
 	os.WriteFile(filepath.Join(dir, "leia.txt"), []byte("x"), 0o644)
 	os.WriteFile(filepath.Join(dir, ".oculta.gif"), []byte("x"), 0o644)
-	if got := strings.Join(NomesFiguras(dir), ","); got != "gengar,entei" {
+	if got := strings.Join(NomesFiguras(dir), ","); got != "gengar,entei,lapras,teste" {
 		t.Fatalf("figuras=%s", got)
 	}
-	if got := strings.Join(NomesFiguras(""), ","); got != "gengar" {
-		t.Fatalf("sem pasta=%s", got)
+	if got := strings.Join(NomesFiguras(""), ","); got != "gengar,entei,lapras" {
+		t.Fatalf("embutidas=%s", got)
 	}
-	if err := UsarFigura("entei", dir); err != nil || gifTopo == nil {
-		t.Fatalf("entei: %v", err)
+	for _, n := range []string{"teste", "entei", "lapras"} {
+		if err := UsarFigura(n, dir); err != nil || gifTopo == nil {
+			t.Fatalf("%s: %v", n, err)
+		}
+	}
+	embutido, _ := figurasDe("")["lapras"]()
+	if UsarFigura("lapras", dir); bytes.Equal(gifTopo, embutido) {
+		t.Fatal("lapras do usuário deveria vencer o embutido")
 	}
 	if err := UsarFigura("", dir); err != nil || !bytes.Equal(gifTopo, gifEmbutido) {
 		t.Fatalf("vazio deveria ser o gengar: %v", err)
@@ -91,7 +98,7 @@ func TestCatalogoDeFiguras(t *testing.T) {
 func TestSettingsTrocaFigura(t *testing.T) {
 	defer usarBytes(nil, "")
 	dir := t.TempDir()
-	os.WriteFile(filepath.Join(dir, "entei.png"), pngTeste(t, 3), 0o644)
+	os.WriteFile(filepath.Join(dir, "teste.png"), pngTeste(t, 3), 0o644)
 	antes, _ := config.Achar(config.ChaveFigura)
 	defer config.DefinirValores(config.ChaveFigura, antes.Valores)
 	config.DefinirValores(config.ChaveFigura, NomesFiguras(dir))
@@ -99,18 +106,20 @@ func TestSettingsTrocaFigura(t *testing.T) {
 	m, l, _ := modeloAjustes(t, nil)
 	m.acoes.DirFiguras = dir
 	m.sel = indiceAjuste(t, config.ChaveFigura)
-	if out := render(m, 110, 50); !strings.Contains(out, "2 figuras") {
+	if out := render(m, 110, 50); !strings.Contains(out, "4 figuras") {
 		t.Fatalf("sem a contagem de figuras:\n%s", out)
 	}
-	m = tecla(m, "enter")
-	if l.Valor(config.ChaveFigura) != "entei" || gifTopo == nil {
-		t.Fatalf("enter deveria escolher o entei: %q", l.Valor(config.ChaveFigura))
+	for _, quer := range []string{"entei", "lapras", "teste"} {
+		m = tecla(m, "enter")
+		if l.Valor(config.ChaveFigura) != quer || gifTopo == nil {
+			t.Fatalf("enter deveria escolher %s: %q", quer, l.Valor(config.ChaveFigura))
+		}
 	}
 	m = tecla(m, "enter")
 	if l.Origem(config.ChaveFigura) != config.Padrao || !bytes.Equal(gifTopo, gifEmbutido) {
 		t.Fatal("segundo enter deveria voltar ao gengar")
 	}
-	if !strings.Contains(render(m, 110, 50), "figura: gengar") {
+	if !strings.Contains(render(m, 110, 50), "FANTASMAS_FIGURA: gengar") {
 		t.Fatal("toast sem a figura")
 	}
 }
