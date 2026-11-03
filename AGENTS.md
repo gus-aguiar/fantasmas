@@ -82,7 +82,7 @@ A coleta é `dados.Coletor.Coletar` (`internal/dados/coleta.go`), e tudo nela ro
 |---|---|
 | `shared/mods/control-panel/scripts/delegate.py` (`tasks`, `esperando`, `opcoes-todas`) | tasks e perguntas do delegate (modo padrão) |
 | `scripts/delegate/ddb.py` (`import`, `state --json`, `tick --dry-run`) | substitui o delegate.py quando `FANTASMAS_FONTE=ddb`; liga as missões e os pipes |
-| `shared/mods/control-panel/scripts/{local.sh,coleta.sh worktrees,maquina.sh}` | serviços, worktrees e máquina |
+| `shared/mods/control-panel/scripts/{local.sh,coleta.sh worktrees,maquina.sh}` | serviços, worktrees e máquina. Sem o `maquina.sh` na raiz, roda a cópia embutida `assets/maquina.sh` (memória, carga, sessões); a trava de pesados só entra com `.delegate/` na raiz. Mantenha a cópia em dia com a do Spark |
 | `shared/skills/delegate-painel/painel.py` | entrega das respostas (sem ele, a resposta só é gravada) |
 | `.delegate/` (incluindo `_mural.jsonl`) | tasks, mural e daydreamer |
 | `herdr agent list` | agentes vivos e focar aba |

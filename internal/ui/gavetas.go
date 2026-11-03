@@ -471,7 +471,7 @@ func gavetaMaquina(c *corpo, e dados.Estado, pedindoDD bool) {
 	c.branco()
 	c.secao("máquina", "")
 	if len(e.Maquina) == 0 {
-		c.vazio("sem leitura da máquina · confira FANTASMAS_RAIZ em settings (,)")
+		c.vazio("sem leitura da máquina: o maquina.sh não respondeu")
 	}
 	for _, l := range e.Maquina {
 		cor, glifo := T.Ok, "●"

@@ -143,3 +143,15 @@ func TestTopoSemEmoji(t *testing.T) {
 		}
 	}
 }
+
+func TestTopoSemTravaForaDoSpark(t *testing.T) {
+	e := estadoEx()
+	e.Maquina = []dados.Linha{{Chave: "memoria", Rotulo: "memória", Detalhe: "13 de 31 GB", Extra: "ok"}}
+	if out := ansi.Strip(Topo(e, 96, 0, false, "")); !strings.Contains(out, "sem fila de pesados fora do Spark") {
+		t.Fatalf("sem trava deveria dizer que está fora do Spark:\n%s", out)
+	}
+	e.Maquina = nil
+	if out := ansi.Strip(Topo(e, 96, 0, false, "")); !strings.Contains(out, "fila de pesados livre") {
+		t.Fatalf("antes da primeira leitura segue o livre:\n%s", out)
+	}
+}
