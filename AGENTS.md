@@ -39,7 +39,9 @@ gengar --raiz ~/spark        # aponta para o workspace Spark
 gengar --intervalo 1m
 ```
 
-O `--raiz` precisa ser a raiz do workspace Spark, não este repositório. É lá que ficam `.delegate/`, `shared/` e `scripts/`.
+A raiz precisa ser a do workspace Spark, não este repositório. É lá que ficam `.delegate/`, `shared/` e `scripts/`.
+- **Ordem:** `--raiz` manda; sem ela vale `FANTASMAS_RAIZ` (definível na aba settings, aceita `~/`); sem as duas, a pasta atual (`resolverRaiz` em `main.go`).
+- Com a raiz errada, as gavetas que dependem dos scripts do Spark ficam vazias. A máquina, por exemplo, mostra "sem leitura da máquina".
 
 ### Modo quadro único
 
@@ -104,6 +106,7 @@ Regras para quem mexer:
 |---|---|
 | `FANTASMAS_TEMA=roxo\|orca\|terminal` | cores do app (`ui.UsarTema`); padrão roxo; troca na hora |
 | `FANTASMAS_FIGURA=<nome>` | figura do topo, do catálogo de figuras (ver abaixo); padrão gengar; troca na hora |
+| `FANTASMAS_RAIZ` | raiz do workspace Spark quando não há `--raiz`; aceita `~/`; vale ao reabrir |
 | `FANTASMAS_FONTE=ddb` | usa o `ddb.py`, liga as gavetas missões e pipes e abre em `missoes` |
 | `FANTASMAS_DDB_SCRIPT` | caminho alternativo do `ddb.py` |
 | `FANTASMAS_EDITOR` | editor para arquivos e pastas (links continuam no `xdg-open`/`open`) |
