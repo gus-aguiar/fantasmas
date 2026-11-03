@@ -69,6 +69,17 @@ func novoGrafico(w io.Writer, modo string, ps [][]byte, delays []int) *Grafico {
 	return &Grafico{w: w, modo: modo, porQuadro: modo == ModoQuadros, png: ps, delays: delays, agora: time.Now}
 }
 
+// Recarregado tira a imagem do terminal e devolve um Grafico novo com a figura atual, no mesmo modo e saída.
+func (g *Grafico) Recarregado() (*Grafico, error) {
+	n, err := NovoGrafico(g.w, g.modo)
+	if err != nil {
+		return g, err
+	}
+	g.Encerrar()
+	n.Log = g.Log
+	return n, nil
+}
+
 // Modo devolve o modo de envio.
 func (g *Grafico) Modo() string { return g.modo }
 

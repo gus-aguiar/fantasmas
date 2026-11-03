@@ -5,6 +5,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"strings"
 	"testing"
@@ -12,7 +13,22 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-func TestContrasteLegivel(t *testing.T) {
+// comTemas roda f em cada tema de cores fixas (o terminal usa a paleta do próprio terminal).
+func comTemas(t *testing.T, f func(t *testing.T)) {
+	for _, nome := range []string{"roxo", "orca"} {
+		t.Run(nome, func(t *testing.T) {
+			defer UsarTema("roxo")
+			if err := UsarTema(nome); err != nil {
+				t.Fatal(err)
+			}
+			f(t)
+		})
+	}
+}
+
+func TestContrasteLegivel(t *testing.T) { comTemas(t, checaContraste) }
+
+func checaContraste(t *testing.T) {
 	checa := func(nome string, fg lipgloss.Color, min float64, fundos map[string]lipgloss.Color) {
 		for fn, bg := range fundos {
 			if c := contraste(fg, bg); c < min {
@@ -56,7 +72,9 @@ func TestFundosENeutrosRoxos(t *testing.T) {
 	}
 }
 
-func TestEstadosDistinguiveis(t *testing.T) {
+func TestEstadosDistinguiveis(t *testing.T) { comTemas(t, checaEstados) }
+
+func checaEstados(t *testing.T) {
 	est := []struct {
 		n string
 		c lipgloss.Color
@@ -73,7 +91,9 @@ func TestEstadosDistinguiveis(t *testing.T) {
 	}
 }
 
-func TestAcentosDistintosEntreSi(t *testing.T) {
+func TestAcentosDistintosEntreSi(t *testing.T) { comTemas(t, checaAcentos) }
+
+func checaAcentos(t *testing.T) {
 	for i := range T.Acentos {
 		for j := i + 1; j < len(T.Acentos); j++ {
 			h1, _ := matiz(T.Acentos[i])
@@ -85,6 +105,41 @@ func TestAcentosDistintosEntreSi(t *testing.T) {
 			if d < 25 {
 				t.Errorf("acentos %d e %d: matiz a %.0f°", i, j, d)
 			}
+		}
+	}
+}
+
+func TestUsarTema(t *testing.T) {
+	defer UsarTema("roxo")
+	if err := UsarTema("verde"); err == nil || !strings.Contains(err.Error(), "orca") {
+		t.Fatalf("tema desconhecido: %v", err)
+	}
+	if err := UsarTema("terminal"); err != nil || T.Base != "" || T.Mantle != "" {
+		t.Fatalf("terminal deveria não pintar fundo: %v %q %q", err, T.Base, T.Mantle)
+	}
+	if err := UsarTema(""); err != nil || T.Base != temaRoxo.Base {
+		t.Fatalf("vazio deveria ser o roxo: %v %q", err, T.Base)
+	}
+	if temaOrca.Acentos != temaRoxo.Acentos {
+		t.Fatal("orca deveria manter os acentos do painel")
+	}
+}
+
+func TestTemaTerminalSoANSI(t *testing.T) {
+	re := regexp.MustCompile(`^([0-9]|1[0-5]|23[2-9]|24[0-9]|25[0-5])?$`)
+	v := reflect.ValueOf(temaTerminal)
+	for i := 0; i < v.NumField(); i++ {
+		f := v.Field(i)
+		if f.Kind() == reflect.Array {
+			for j := 0; j < f.Len(); j++ {
+				if c := f.Index(j).String(); !re.MatchString(c) {
+					t.Errorf("%s[%d] = %q fora da paleta ANSI e dos cinzas", v.Type().Field(i).Name, j, c)
+				}
+			}
+			continue
+		}
+		if c := f.String(); !re.MatchString(c) {
+			t.Errorf("%s = %q fora da paleta ANSI e dos cinzas", v.Type().Field(i).Name, c)
 		}
 	}
 }

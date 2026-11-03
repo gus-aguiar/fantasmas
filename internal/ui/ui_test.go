@@ -80,9 +80,16 @@ func TestRodape56SoTeclaNasInativas(t *testing.T) {
 	}
 }
 
-func TestRodape96TeclaENome(t *testing.T) {
-	if !strings.Contains(ansi.Strip(Rodape("agora", 96)), "3 fantasminhas") {
+func TestRodape110TeclaENome(t *testing.T) {
+	if !strings.Contains(ansi.Strip(Rodape("agora", 110)), "3 fantasminhas") {
 		t.Fatal("sem 3 fantasminhas")
+	}
+}
+
+func TestRodape96SoNomes(t *testing.T) {
+	r := ansi.Strip(Rodape("agora", 96))
+	if !strings.Contains(r, "fantasminhas") || !strings.Contains(r, "settings") {
+		t.Fatalf("%q", r)
 	}
 }
 
