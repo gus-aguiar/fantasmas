@@ -143,7 +143,6 @@ func larguraChips(es []dados.Etapa) int {
 func gavetaPipes(c *corpo, e dados.Estado) {
 	if !e.PipesLigado {
 		c.secao("pipes", "")
-		c.branco()
 		c.vazioIcone("◆", T.Espera, MsgPipesDesligado)
 		return
 	}
@@ -160,11 +159,9 @@ func gavetaPipes(c *corpo, e dados.Estado) {
 	}
 	c.secaoN("pipes", len(e.Runs), extra)
 	if len(e.Runs) == 0 {
-		c.branco()
 		c.vazio("nenhum run · n lança um pipeline")
 		return
 	}
-	c.branco()
 	for _, r := range e.Runs {
 		if !c.passa(r.Pipeline, nomeRun(r), r.SlugBase, r.Status) {
 			continue

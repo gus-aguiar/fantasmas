@@ -57,14 +57,14 @@ bin/fantasmas --uma-vez --demo --gaveta pipes --pipe 13
 
 - `--demo` e `--demo-verde` usam um estado fixo (`ui.EstadoDemo`) e não precisam de workspace.
 - Sem `--demo`, o comando faz uma coleta real.
-- Gavetas válidas: `missoes agora crew pipes prs ci ambiente maquina worktrees settings`. Um nome inválido sai com código 2.
+- Gavetas válidas: `missoes agora crew pipes prs ambiente maquina worktrees settings`. Um nome inválido sai com código 2.
 - Para ver um tema sem mexer no arquivo do usuário: `FANTASMAS_AJUSTES=/tmp/a.json FANTASMAS_TEMA=orca bin/fantasmas --uma-vez --cor --demo --gaveta settings`.
 
 ### Teclas principais
 
 A lista completa fica no `?` dentro do app, e a fonte é `ajudaLinhas` em `internal/ui/model.go`.
 
-- `← →`/`h l`/`0-9`: troca de gaveta (`0` missões … `8` worktrees, `9` settings); `0` também volta a todas as missões. `↑ ↓`/`j k`: escolhe um item. `enter`: abre ou responde. `esc`: volta.
+- `← →`/`h l`/`0-8`: troca de gaveta (`0` missões, `1` agora, `2` fantasminhas, `3` pipes, `4` PRs com o CI, `5` ambiente, `6` máquina, `7` worktrees, `8` settings); `0` também volta a todas as missões. `↑ ↓`/`j k`: escolhe um item. `enter`: abre ou responde. `esc`: volta.
 - `/`: filtra. `r`: coleta agora. `q`: sai.
 - `o`: abre o link. `g`: foca a aba no herdr. `p`: abre o painel do delegate (`http://127.0.0.1:7480/`).
 - Ações destrutivas exigem a tecla duas vezes (estado "armado"):
@@ -73,7 +73,7 @@ A lista completa fica no `?` dentro do app, e a fonte é `ajudaLinhas` em `inter
   - `U 2×`: atualiza o app (botão "atualizar app fantasmas" nas ações de settings);
   - `A`/`S`/`T 2×`: avança, pula ou faz retry de uma etapa do pipe.
 - Gaveta pipes: `n` lança um run, `e` edita o YAML e `N` abre o gengar dedicado do run.
-- Outras: `D` pede uma rodada do DayDreaming e `M` reconecta os MCPs. Esses dois botões e o "atualizar app fantasmas" ficam na seção "ações" da aba settings; a gaveta máquina é só monitoramento e a gaveta worktrees (`9`) só lista os worktrees.
+- Outras: `D` pede uma rodada do DayDreaming e `M` reconecta os MCPs. Esses dois botões e o "atualizar app fantasmas" ficam na seção "ações" da aba settings; a gaveta máquina é só monitoramento e a gaveta worktrees (`7`) só lista os worktrees.
 
 ## De onde vêm os dados
 
@@ -94,7 +94,7 @@ As saídas em TSV passam por `dados.TSV`, e a do ddb passa por `dados.DeDdb`. As
 
 ### Aba settings e variáveis de ambiente
 
-A gaveta **settings** (`9`) lista as variáveis `FANTASMAS_*` do catálogo `config.Opcoes` (`internal/config/config.go`) pelo nome real, cada uma com o valor que vale agora (o padrão, quando nada foi definido), e as salva em `~/.config/fantasmas/ajustes.json`. `FANTASMAS_IMAGEM`, `FANTASMAS_IMAGEM_MODO` e `FANTASMAS_SPRITE` ficam fora da aba, só pelo shell.
+A gaveta **settings** (`8`) lista as variáveis `FANTASMAS_*` do catálogo `config.Opcoes` (`internal/config/config.go`) pelo nome real, cada uma com o valor que vale agora (o padrão, quando nada foi definido), e as salva em `~/.config/fantasmas/ajustes.json`. `FANTASMAS_IMAGEM`, `FANTASMAS_IMAGEM_MODO` e `FANTASMAS_SPRITE` ficam fora da aba, só pelo shell.
 - o arquivo tem permissão 0600, numa pasta 0700, e fica fora do repo; `FANTASMAS_AJUSTES` muda o caminho;
 - `main` aplica o arquivo ao ambiente **antes de qualquer `os.Getenv`**, então o resto do código continua só lendo variáveis;
 - **o shell manda:** uma variável já definida no shell não é sobrescrita nem editável pela aba.

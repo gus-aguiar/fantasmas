@@ -209,3 +209,21 @@ func TestVazioEmCaixa(t *testing.T) {
 		}
 	}
 }
+
+func TestDescricaoSemItalicoEApagada(t *testing.T) {
+	antes := lipgloss.ColorProfile()
+	lipgloss.SetColorProfile(termenv.TrueColor)
+	defer lipgloss.SetColorProfile(antes)
+	if T.Dim == T.Sub {
+		t.Fatal("Dim e Sub iguais: a descrição não se separa do título")
+	}
+	c := &corpo{largura: 120, desc: "Seus PRs abertos e o que falta"}
+	c.secaoN("PRs", 7, "")
+	l := c.linhas[0].desenha(T.Base)
+	if want := st(T.Base, T.Dim).Render("  Seus PRs abertos e o que falta"); !strings.Contains(l, want) {
+		t.Fatalf("descrição deveria vir só em Dim, sem itálico: %q", l)
+	}
+	if !strings.Contains(l, st(T.Base, T.Sub).Bold(true).Render("PRs (7)")) {
+		t.Fatalf("título fora do estilo: %q", l)
+	}
+}

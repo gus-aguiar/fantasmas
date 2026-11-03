@@ -800,8 +800,6 @@ func (m Model) montarCorpo(largura, altura int) *corpo {
 		gavetaPipes(c, e)
 	case "prs":
 		gavetaPRs(c, e)
-	case "ci":
-		gavetaCI(c, e)
 	case "ambiente":
 		gavetaAmbiente(c, e)
 	case "maquina":
@@ -816,7 +814,7 @@ func (m Model) montarCorpo(largura, altura int) *corpo {
 		desc, nome := c.desc, Gavetas[m.gaveta].Nome
 		c.desc = ""
 		topo := linha{item: -1, desenha: func(bg lipgloss.Color) string {
-			return st(bg, T.Acao).Render("› ") + st(bg, T.Sub).Bold(true).Render(nome) + st(bg, T.Sub).Italic(true).Render("  "+desc)
+			return st(bg, T.Acao).Render("› ") + st(bg, T.Sub).Bold(true).Render(nome) + st(bg, T.Dim).Render("  "+desc)
 		}}
 		branco := linha{item: -1, desenha: func(lipgloss.Color) string { return "" }}
 		c.linhas = append([]linha{topo, branco}, c.linhas...)
@@ -902,7 +900,7 @@ func (m Model) ajudaLinhas(largura int) []string {
 		k("enter", "abre · responde · foca a missão"),
 		k("enter 2×", "confirma Liberar merge"),
 		k("", "e Não vou fazer"),
-		k("← → 0-9", "troca de gaveta · 0 missões (todas) · 9 settings"),
+		k("← → 0-9", "troca de gaveta · 0 missões (todas) · 8 settings"),
 		k("/", "filtra a lista"),
 		k("esc", "volta · limpa o filtro (ou a missão)"),
 		k("o", "abre o link (abrir ↗)"),

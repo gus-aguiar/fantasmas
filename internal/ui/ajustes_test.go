@@ -32,7 +32,7 @@ func modeloAjustes(t *testing.T, shell map[string]string) (Model, *config.Loja, 
 	m := modelo(fixture(), &registro{})
 	m.acoes.Ajustes = l
 	m.largura, m.altura = 110, 50
-	return tecla(m, "9"), l, arq
+	return tecla(m, "8"), l, arq
 }
 
 // selAjuste é a posição do ajuste entre os itens da aba (os botões de ações vêm antes).
@@ -47,7 +47,7 @@ func selAjuste(t *testing.T, m Model, chave string) int {
 	return 0
 }
 
-func TestNoveAbreSettings(t *testing.T) {
+func TestOitoAbreSettings(t *testing.T) {
 	m, _, _ := modeloAjustes(t, nil)
 	if Gavetas[m.gaveta].ID != "settings" {
 		t.Fatalf("gaveta %s", Gavetas[m.gaveta].ID)
@@ -146,7 +146,7 @@ func TestShellNaoEditavel(t *testing.T) {
 }
 
 func TestSettingsSemLoja(t *testing.T) {
-	m := tecla(modelo(dados.Estado{}, &registro{}), "9")
+	m := tecla(modelo(dados.Estado{}, &registro{}), "8")
 	if !strings.Contains(render(m, 96, 40), "settings indisponível") {
 		t.Fatalf("sem aviso de loja ausente:\n%s", render(m, 96, 40))
 	}

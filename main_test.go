@@ -99,7 +99,7 @@ func TestEscolherModoImagem(t *testing.T) {
 }
 
 func TestValidarGaveta(t *testing.T) {
-	if validarGaveta("") != nil || validarGaveta("crew") != nil || validarGaveta("ci") != nil {
+	if validarGaveta("") != nil || validarGaveta("crew") != nil || validarGaveta("prs") != nil || validarGaveta("ci") == nil {
 		t.Fatal("gaveta válida recusada")
 	}
 	err := validarGaveta("fantasminhas")

@@ -300,7 +300,7 @@ func TestIrAbaEAbrirNoFeed(t *testing.T) {
 
 func TestSemAbaNemURLSemBotao(t *testing.T) {
 	m := modelo(fixture(), &registro{})
-	m = aperta(t, m, "7")
+	m = aperta(t, m, "6")
 	out := render(m, 96, 40)
 	if strings.Contains(out, "ir à aba →") || strings.Contains(out, "abrir ↗") {
 		t.Fatalf("máquina não tem aba nem link:\n%s", out)

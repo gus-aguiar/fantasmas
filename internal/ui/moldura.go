@@ -29,12 +29,11 @@ var Gavetas = []Gaveta{
 	{"agora", "1", "agora", "O que está acontecendo agora"},
 	{"crew", "2", "fantasminhas", "Agentes delegados: ativos e caídos"},
 	{"pipes", "3", "pipes", "Runs do ddb e o próximo passo"},
-	{"prs", "4", "PRs", "Seus PRs abertos e o que falta"},
-	{"ci", "5", "CI", "CI dos seus PRs"},
-	{"ambiente", "6", "ambiente", "Serviços locais do Spark"},
-	{"maquina", "7", "máquina", "Saúde do computador"},
-	{"worktrees", "8", "worktrees", "Onde cada branch está aberto"},
-	{"settings", "9", "settings", "Ações, tema, figura e variáveis"},
+	{"prs", "4", "PRs", "Seus PRs, o que falta e o CI"},
+	{"ambiente", "5", "ambiente", "Serviços locais do Spark"},
+	{"maquina", "6", "máquina", "Saúde do computador"},
+	{"worktrees", "7", "worktrees", "Onde cada branch está aberto"},
+	{"settings", "8", "settings", "Ações, tema, figura e variáveis"},
 }
 
 func fundo(c lipgloss.Color) lipgloss.Style { return lipgloss.NewStyle().Background(c) }

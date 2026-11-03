@@ -76,8 +76,8 @@ func (c *corpo) branco() { c.texto(func(lipgloss.Color) string { return "" }) }
 
 func (c *corpo) secao(titulo, extra string) { c.secaoN(titulo, -1, extra) }
 
-// secaoN é o título de seção com a contagem entre parênteses (n < 0 = sem contagem). A primeira seção
-// da gaveta leva também a descrição dela, antes do extra.
+// secaoN é o título de seção com a contagem entre parênteses (n < 0 = sem contagem), seguido de uma
+// linha em branco antes do conteúdo. A primeira seção da gaveta leva também a descrição dela.
 func (c *corpo) secaoN(titulo string, n int, extra string) {
 	if n >= 0 {
 		titulo += fmt.Sprintf(" (%d)", n)
@@ -87,7 +87,7 @@ func (c *corpo) secaoN(titulo string, n int, extra string) {
 	c.texto(func(bg lipgloss.Color) string {
 		s := st(bg, T.Acao).Render("› ") + st(bg, T.Sub).Bold(true).Render(titulo)
 		if desc != "" {
-			s += st(bg, T.Sub).Italic(true).Render("  " + desc)
+			s += st(bg, T.Dim).Render("  " + desc)
 		}
 		if extra != "" {
 			sep := "  "
@@ -96,8 +96,12 @@ func (c *corpo) secaoN(titulo string, n int, extra string) {
 			}
 			s += st(bg, T.Dim).Render(sep + extra)
 		}
+		if w := c.largura; w > 0 && lipgloss.Width(s) > w {
+			s = ansi.Truncate(s, w, "…")
+		}
 		return s
 	})
+	c.branco()
 }
 
 // vazio é o estado vazio neutro (○); vazioIcone escolhe o ícone e a cor.
