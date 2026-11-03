@@ -143,7 +143,7 @@ func gavetaAgora(c *corpo, e dados.Estado, altura int) {
 
 	usados := 0
 	if len(e.Mural) > 0 && c.filtro == "" {
-		c.secao("mural", contagem(len(e.Mural)))
+		c.secaoN("mural", len(e.Mural), "")
 		for _, a := range e.Mural {
 			a := a
 			w := c.largura
@@ -152,7 +152,7 @@ func gavetaAgora(c *corpo, e dados.Estado, altura int) {
 		c.branco()
 	}
 	if len(praVoce) > 0 || c.filtro == "" {
-		c.secao("precisa de você", contagem(len(praVoce)))
+		c.secaoN("precisa de você", len(praVoce), "")
 		if len(praVoce) == 0 {
 			c.vazioIcone("✓", T.Ok, "nada pedindo você agora")
 		} else {
@@ -164,7 +164,7 @@ func gavetaAgora(c *corpo, e dados.Estado, altura int) {
 		if len(c.linhas) > 0 {
 			c.branco()
 		}
-		c.secao("travados", contagem(len(travados)))
+		c.secaoN("travados", len(travados), "")
 		usados += lista(travados, cabem-usados)
 	}
 
@@ -172,7 +172,7 @@ func gavetaAgora(c *corpo, e dados.Estado, altura int) {
 		if len(c.linhas) > 0 {
 			c.branco()
 		}
-		c.secao("trabalhando", fmt.Sprint(len(trab)))
+		c.secaoN("trabalhando", len(trab), "")
 		for _, g := range grupos {
 			g := g
 			c.texto(func(bg lipgloss.Color) string {
@@ -192,7 +192,7 @@ func gavetaAgora(c *corpo, e dados.Estado, altura int) {
 		if len(c.linhas) > 0 {
 			c.branco()
 		}
-		c.secao(titulo, fmt.Sprint(len(ls)))
+		c.secaoN(titulo, len(ls), "")
 		for _, l := range ls {
 			c.linhaViva(l)
 		}
@@ -204,7 +204,7 @@ func gavetaAgora(c *corpo, e dados.Estado, altura int) {
 		if len(c.linhas) > 0 {
 			c.branco()
 		}
-		c.secao("acompanhando", fmt.Sprint(len(acomp)))
+		c.secaoN("acompanhando", len(acomp), "")
 		lista(acomp, cabem-usados)
 	}
 
@@ -287,7 +287,7 @@ func raiaCaidos(c *corpo, e dados.Estado) {
 		return
 	}
 	c.branco()
-	c.secao("caídos · R retoma", fmt.Sprintf("%d fora do Herdr", len(e.Caidos)))
+	c.secaoN("caídos", len(e.Caidos), "fora do Herdr · R retoma")
 	for _, x := range e.Caidos {
 		sid := x.SessionID
 		if len(sid) > 8 {
@@ -313,7 +313,7 @@ func gavetaCrew(c *corpo, e dados.Estado) {
 			ativos++
 		}
 	}
-	c.secao("fantasminhas", fmt.Sprintf("%d ativos", ativos))
+	c.secaoN("fantasminhas", ativos, "")
 	n := len(e.Esperando)
 	c.texto(func(bg lipgloss.Color) string {
 		return st(bg, T.Dim).Render(fmt.Sprintf("%d pendente(s) no painel", n))
@@ -360,7 +360,7 @@ func gavetaPRs(c *corpo, e dados.Estado) {
 		}
 		prs = append(prs, x)
 	}
-	c.secao("PRs", fmt.Sprintf("%d abertos", len(e.Travados)))
+	c.secaoN("PRs", len(e.Travados), "")
 	if n := rascunhosDe(e); n > 0 {
 		msg := fmt.Sprintf("%d rascunhos ocultos · d mostra", ocultos)
 		if c.rascunhos {
@@ -596,7 +596,7 @@ func gavetaCrewViva(c *corpo, e dados.Estado) {
 			ativos++
 		}
 	}
-	c.secao("fantasminhas", fmt.Sprintf("%d ativos", ativos))
+	c.secaoN("fantasminhas", ativos, "")
 	n := len(e.Esperando)
 	c.texto(func(bg lipgloss.Color) string {
 		return st(bg, T.Dim).Render(fmt.Sprintf("%d pendente(s) no painel", n))

@@ -198,11 +198,11 @@ func gavetaMissoes(c *corpo, e dados.Estado, foco string) {
 		}
 		suas += m.Contagem.Pendentes
 	}
-	extra := fmt.Sprintf("%d abertas", abertas)
+	extra := "enter foca · g vai ao gengar"
 	if suas > 0 {
-		extra += fmt.Sprintf(" · %d esperando você", suas)
+		extra = fmt.Sprintf("%d esperando você · ", suas) + extra
 	}
-	c.secao("missões", extra+" · enter foca · g vai ao gengar")
+	c.secaoN("missões", abertas, extra)
 	if len(ms) == 0 {
 		c.vazio("nenhuma missão aberta · scripts/delegate/missao-abrir.sh")
 		return

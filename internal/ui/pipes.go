@@ -151,14 +151,14 @@ func gavetaPipes(c *corpo, e dados.Estado) {
 	for _, r := range e.Runs {
 		espera += r.EsperaVoce
 	}
-	extra := fmt.Sprintf("%d runs", len(e.Runs))
+	extra := ""
 	if espera > 0 {
-		extra += fmt.Sprintf(" · %d esperam você", espera)
+		extra = fmt.Sprintf("%d esperam você", espera)
 	}
 	if c.largura >= 70 {
-		extra += " · n lança · N lança com gengar · e edita"
+		extra = strings.TrimPrefix(extra+" · n lança · N com gengar · e edita", " · ")
 	}
-	c.secao("pipes", extra)
+	c.secaoN("pipes", len(e.Runs), extra)
 	if len(e.Runs) == 0 {
 		c.branco()
 		c.vazio("nenhum run · n lança um pipeline")

@@ -160,14 +160,19 @@ func TestTopoSemTravaForaDoSpark(t *testing.T) {
 func TestTodaGavetaTemDescricao(t *testing.T) {
 	for i, g := range Gavetas {
 		r := []rune(g.Descricao)
-		if len(r) == 0 || !unicode.IsUpper(r[0]) || !strings.HasSuffix(g.Descricao, ".") {
-			t.Errorf("%s: descrição %q deveria começar com maiúscula e terminar com ponto", g.ID, g.Descricao)
+		if len(r) == 0 || !unicode.IsUpper(r[0]) || strings.HasSuffix(g.Descricao, ".") || len(r) > 48 {
+			t.Errorf("%s: descrição %q deveria ser curta, com maiúscula e sem ponto", g.ID, g.Descricao)
 			continue
 		}
 		m := modelo(fixture(), &registro{}).irGaveta(i)
-		inicio := string(r[:min(30, len(r))])
-		if out := render(m, 140, 40); !strings.Contains(out, inicio) {
-			t.Errorf("%s: descrição não aparece:\n%s", g.ID, out)
+		achou := false
+		for _, l := range strings.Split(render(m, 140, 40), "\n") {
+			if strings.Contains(l, "› ") && strings.Contains(l, g.Descricao) {
+				achou = true
+			}
+		}
+		if !achou {
+			t.Errorf("%s: descrição não aparece ao lado de um título de seção:\n%s", g.ID, render(m, 140, 40))
 		}
 	}
 }
@@ -180,11 +185,17 @@ func TestVazioEmCaixa(t *testing.T) {
 		for _, l := range c.linhas {
 			ls = append(ls, ansi.Strip(l.desenha(T.Base)))
 		}
-		if len(ls) != 6 || !strings.HasPrefix(strings.TrimSpace(ls[0]), "╭") || !strings.HasSuffix(strings.TrimSpace(ls[5]), "╯") {
+		// borda, 2 de folga, 2 linhas de texto, 2 de folga, borda
+		if len(ls) != 8 || !strings.HasPrefix(strings.TrimSpace(ls[0]), "╭") || !strings.HasSuffix(strings.TrimSpace(ls[7]), "╯") {
 			t.Fatalf("w=%d: %q", w, ls)
 		}
-		if !strings.Contains(ls[2], "✓  nada pedindo") || strings.TrimSpace(strings.Trim(strings.TrimSpace(ls[1]), "│")) != "" {
+		vazia := func(l string) bool { return strings.TrimSpace(strings.Trim(strings.TrimSpace(l), "│")) == "" }
+		if !strings.Contains(ls[3], "✓  nada pedindo") || !vazia(ls[1]) || !vazia(ls[2]) || !vazia(ls[5]) || !vazia(ls[6]) {
 			t.Fatalf("w=%d: ícone, texto ou folga: %q", w, ls)
+		}
+		// largura toda: 1 coluna de margem de cada lado
+		if lipgloss.Width(ls[0]) != w-1 || !strings.HasPrefix(ls[0], " ╭") {
+			t.Fatalf("w=%d: caixa deveria ocupar a largura toda: %q", w, ls[0])
 		}
 		for i, l := range ls {
 			if lipgloss.Width(l) > w {

@@ -21,20 +21,20 @@ func Faixa(largura int) string {
 	return "minimo"
 }
 
-// Gaveta é uma aba do rodapé; Descricao é a primeira linha do corpo e diz para que ela serve.
+// Gaveta é uma aba do rodapé; Descricao é a frase curta que diz para que ela serve, ao lado da primeira seção.
 type Gaveta struct{ ID, Tecla, Nome, Descricao string }
 
 var Gavetas = []Gaveta{
-	{"missoes", "0", "missões", "Frentes de trabalho abertas, cada uma com o seu gengar, fantasminhas e PRs."},
-	{"agora", "1", "agora", "O que precisa de você agora: perguntas, travados e quem está trabalhando."},
-	{"crew", "2", "fantasminhas", "Os fantasminhas (agentes delegados): quem está ativo e quem caiu e pode ser retomado."},
-	{"pipes", "3", "pipes", "Pipelines do ddb: cada run, as etapas e o próximo passo."},
-	{"prs", "4", "PRs", "Seus PRs abertos no GitHub e o que falta para cada um andar."},
-	{"ci", "5", "CI", "O CI dos seus PRs: o que passou, falhou ou ainda está rodando."},
-	{"ambiente", "6", "ambiente", "Serviços locais do Spark e se cada um está no ar."},
-	{"maquina", "7", "máquina", "Saúde do computador (memória, swap, carga, sessões e disco), para não cair por falta de memória."},
-	{"worktrees", "8", "worktrees", "Onde cada branch está aberto no disco: o Spark e os repos dentro dele."},
-	{"settings", "9", "settings", "Ações do app, tema, figura do topo e variáveis de ambiente do fantasmas."},
+	{"missoes", "0", "missões", "Frentes abertas, com gengar, fantasminhas e PRs"},
+	{"agora", "1", "agora", "O que está acontecendo agora"},
+	{"crew", "2", "fantasminhas", "Agentes delegados: ativos e caídos"},
+	{"pipes", "3", "pipes", "Runs do ddb e o próximo passo"},
+	{"prs", "4", "PRs", "Seus PRs abertos e o que falta"},
+	{"ci", "5", "CI", "CI dos seus PRs"},
+	{"ambiente", "6", "ambiente", "Serviços locais do Spark"},
+	{"maquina", "7", "máquina", "Saúde do computador"},
+	{"worktrees", "8", "worktrees", "Onde cada branch está aberto"},
+	{"settings", "9", "settings", "Ações, tema, figura e variáveis"},
 }
 
 func fundo(c lipgloss.Color) lipgloss.Style { return lipgloss.NewStyle().Background(c) }

@@ -27,7 +27,7 @@ func comCaido(sid string) (Model, *[]dados.Caido) {
 func TestGavetaCrewMostraCaidos(t *testing.T) {
 	m, _ := comCaido("sid-1")
 	out := render(m, 96, 40)
-	if !strings.Contains(out, "caídos · R retoma") || !strings.Contains(out, "c-pl-9") {
+	if !strings.Contains(out, "caídos (1)") || !strings.Contains(out, "R retoma") || !strings.Contains(out, "c-pl-9") {
 		t.Fatalf("raia dos caídos ausente:\n%s", out)
 	}
 }

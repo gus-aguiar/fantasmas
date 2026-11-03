@@ -31,8 +31,8 @@ func TestGavetaCITudoVerde(t *testing.T) {
 
 func TestGavetaCISemPR(t *testing.T) {
 	_, ls := corpoCI(dados.Estado{}, 70)
-	// título + caixa do vazio: borda, folga, texto, folga, borda
-	if len(ls) != 6 || !strings.Contains(ls[1], "╭") || !strings.Contains(ls[3], "○  sem PR aberto") || !strings.Contains(ls[5], "╯") {
+	// título + caixa do vazio: borda, 2 de folga, texto, 2 de folga, borda
+	if len(ls) != 8 || !strings.Contains(ls[1], "╭") || !strings.Contains(ls[4], "○  sem PR aberto") || !strings.Contains(ls[7], "╯") {
 		t.Errorf("%q", ls)
 	}
 }

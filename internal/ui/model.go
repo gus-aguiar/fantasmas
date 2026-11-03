@@ -788,7 +788,7 @@ func (m Model) tecla(k string) (tea.Model, tea.Cmd) {
 func (m Model) montarCorpo(largura, altura int) *corpo {
 	c := &corpo{largura: largura, filtro: normaliza(m.busca), antigasAbertas: m.antigas, rascunhos: m.rascunhos}
 	e := m.estadoVisto()
-	c.descricao(Gavetas[m.gaveta].Descricao)
+	c.desc = Gavetas[m.gaveta].Descricao
 	switch Gavetas[m.gaveta].ID {
 	case "missoes":
 		gavetaMissoes(c, m.estado, m.missao)
@@ -810,6 +810,16 @@ func (m Model) montarCorpo(largura, altura int) *corpo {
 		gavetaWorktrees(c, e)
 	case "settings":
 		gavetaSettings(c, e, m.acoes.Ajustes, m.pedindoDD, m.atualizando, m.armadoAtu)
+	}
+	if c.desc != "" {
+		// gaveta sem seção (ex.: missões desligada): a descrição vira o título do topo
+		desc, nome := c.desc, Gavetas[m.gaveta].Nome
+		c.desc = ""
+		topo := linha{item: -1, desenha: func(bg lipgloss.Color) string {
+			return st(bg, T.Acao).Render("› ") + st(bg, T.Sub).Bold(true).Render(nome) + st(bg, T.Sub).Italic(true).Render("  "+desc)
+		}}
+		branco := linha{item: -1, desenha: func(lipgloss.Color) string { return "" }}
+		c.linhas = append([]linha{topo, branco}, c.linhas...)
 	}
 	if c.filtro != "" && c.vis == 0 {
 		c.branco()

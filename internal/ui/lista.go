@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
@@ -48,6 +49,9 @@ type corpo struct {
 	vis, total int
 
 	antigasAbertas, rascunhos bool
+
+	// desc é a frase curta da gaveta: vai na primeira seção, depois do título (ver secaoN).
+	desc string
 }
 
 func (c *corpo) casa(partes ...string) bool {
@@ -70,21 +74,27 @@ func (c *corpo) texto(f func(bg lipgloss.Color) string) {
 
 func (c *corpo) branco() { c.texto(func(lipgloss.Color) string { return "" }) }
 
-// descricao é a frase do topo de cada gaveta: para que ela serve.
-func (c *corpo) descricao(s string) {
-	if s == "" {
-		return
-	}
-	w := c.largura
-	c.texto(func(bg lipgloss.Color) string { return st(bg, T.Sub).Italic(true).Render(" " + Corte(s, max(4, w-2))) })
-	c.branco()
-}
+func (c *corpo) secao(titulo, extra string) { c.secaoN(titulo, -1, extra) }
 
-func (c *corpo) secao(titulo, extra string) {
+// secaoN é o título de seção com a contagem entre parênteses (n < 0 = sem contagem). A primeira seção
+// da gaveta leva também a descrição dela, antes do extra.
+func (c *corpo) secaoN(titulo string, n int, extra string) {
+	if n >= 0 {
+		titulo += fmt.Sprintf(" (%d)", n)
+	}
+	desc := c.desc
+	c.desc = ""
 	c.texto(func(bg lipgloss.Color) string {
 		s := st(bg, T.Acao).Render("› ") + st(bg, T.Sub).Bold(true).Render(titulo)
+		if desc != "" {
+			s += st(bg, T.Sub).Italic(true).Render("  " + desc)
+		}
 		if extra != "" {
-			s += st(bg, T.Dim).Render("  " + extra)
+			sep := "  "
+			if desc != "" {
+				sep = " · "
+			}
+			s += st(bg, T.Dim).Render(sep + extra)
 		}
 		return s
 	})
@@ -93,15 +103,11 @@ func (c *corpo) secao(titulo, extra string) {
 // vazio é o estado vazio neutro (○); vazioIcone escolhe o ícone e a cor.
 func (c *corpo) vazio(msg string) { c.vazioIcone("○", T.Dim, msg) }
 
-// vazioIcone desenha o estado vazio como uma caixa de borda arredondada, centrada, com uma linha de
-// folga em cima e embaixo e o ícone antes da primeira linha de texto.
+// vazioIcone desenha o estado vazio como uma caixa de borda arredondada na largura toda, com 2 linhas
+// de folga em cima e embaixo, o texto centrado e o ícone antes da primeira linha.
 func (c *corpo) vazioIcone(icone string, cor lipgloss.Color, linhas ...string) {
 	w := c.largura
-	maior := 0
-	for _, l := range linhas {
-		maior = max(maior, lipgloss.Width(l))
-	}
-	caixa := min(max(4, w-2), max(36, maior+10)) // largura total, bordas incluídas
+	caixa := max(4, w-2) // largura toda, com 1 coluna de margem de cada lado
 	dentro := caixa - 2
 	esq := max(0, (w-caixa)/2)
 	borda := func(bg lipgloss.Color, a, b string) string {
@@ -115,6 +121,7 @@ func (c *corpo) vazioIcone(icone string, cor lipgloss.Color, linhas ...string) {
 	}
 	c.texto(func(bg lipgloss.Color) string { return borda(bg, "╭", "╮") })
 	c.texto(func(bg lipgloss.Color) string { return meio(bg, "") })
+	c.texto(func(bg lipgloss.Color) string { return meio(bg, "") })
 	for i, l := range linhas {
 		l, i := l, i
 		c.texto(func(bg lipgloss.Color) string {
@@ -124,6 +131,7 @@ func (c *corpo) vazioIcone(icone string, cor lipgloss.Color, linhas ...string) {
 			return meio(bg, st(bg, T.Dim).Render(Corte(l, max(1, dentro-4))))
 		})
 	}
+	c.texto(func(bg lipgloss.Color) string { return meio(bg, "") })
 	c.texto(func(bg lipgloss.Color) string { return meio(bg, "") })
 	c.texto(func(bg lipgloss.Color) string { return borda(bg, "╰", "╯") })
 }
