@@ -321,6 +321,51 @@ func TestDecisoesComVetar(t *testing.T) {
 	}
 }
 
+func TestDecisaoSemEtapaNaoVeta(t *testing.T) {
+	e := estadoSQ()
+	e.Missoes[1].Decisoes = []dados.Decisao{{Via: "regra", Slug: "A", Item: "pista rápida", Motivo: "pista rápida"}}
+	r := &runnerPipes{}
+	m := comPipes(e, r)
+	if p := telaSQ(m, 140); !strings.Contains(p, "regra aprovou pista rápida") || strings.Contains(p, "vetar") {
+		t.Fatalf("decisão sem etapa não pode oferecer veto:\n%s", p)
+	}
+	idx := -1
+	for i, a := range m.alvos() {
+		if a.decisao {
+			idx = i
+		}
+	}
+	if idx < 0 {
+		t.Fatal("sem alvo da decisão")
+	}
+	m.sel = idx
+	m = tecla(m, "v")
+	if m.form != nil || m.toast != "nada para vetar nesta decisão" || len(r.calls) != 0 {
+		t.Fatalf("form=%v toast=%q calls=%v", m.form, m.toast, r.calls)
+	}
+}
+
+func TestDecisaoUsaRunIDEStageID(t *testing.T) {
+	e := estadoSQ()
+	run := 2
+	e.Missoes[1].Decisoes = []dados.Decisao{{Via: "regra", Slug: "fora", Item: "plano", RunID: &run, StageID: "corrigir"}}
+	m := comPipes(e, &runnerPipes{})
+	if !strings.Contains(telaSQ(m, 140), "v vetar") {
+		t.Fatal("decisão com run_id/stage_id devia ser vetável")
+	}
+	for i, a := range m.alvos() {
+		if a.vetoDe != "" {
+			if a.vetoID != 2 || a.vetoEtapa != "corrigir" {
+				t.Fatalf("alvo=%+v", a)
+			}
+			m.sel = i
+		}
+	}
+	if m = tecla(m, "v"); m.form == nil || m.form.tipo != "veto" {
+		t.Fatal("v não abriu o veto")
+	}
+}
+
 func TestPipesSemChaveMostraMensagem(t *testing.T) {
 	m := tecla(modelo(fixture(), &registro{}).ComGaveta("missoes"), "n")
 	if !strings.Contains(m.toast, "sidequests: ligue FANTASMAS_FONTE=ddb") {

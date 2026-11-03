@@ -93,6 +93,9 @@ func TestPipesMontaComandos(t *testing.T) {
 	if _, err := p.Novo("implementar", [][2]string{{"card", "PL-9"}, {"repos", "WS React"}}, "Meu título", "w15"); err != nil {
 		t.Fatal(err)
 	}
+	if _, err := p.Novo("implementar", [][2]string{{"card", "PL-9"}}, "", ""); err != nil {
+		t.Fatal(err)
+	}
 	if err := p.Etapa(3, "homologar", "retry"); err != nil {
 		t.Fatal(err)
 	}
@@ -102,6 +105,7 @@ func TestPipesMontaComandos(t *testing.T) {
 	quer := []string{
 		"python3 /r/ddb.py --raiz /r sidequest list --json",
 		"python3 /r/ddb.py --raiz /r sidequest new implementar --input card=PL-9 --input repos=WS React --title Meu título --workspace w15",
+		"python3 /r/ddb.py --raiz /r sidequest new implementar --input card=PL-9 --solta",
 		"python3 /r/ddb.py --raiz /r stage 3:homologar retry",
 		"python3 /r/ddb.py --raiz /r sidequest validate /s/implementar.yaml",
 	}

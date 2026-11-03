@@ -739,8 +739,13 @@ func (m Model) tecla(k string) (tea.Model, tea.Cmd) {
 			return m.abrirFormMissao()
 		}
 	case "v":
-		if a, ok := m.selecionado(); ok && Gavetas[m.gaveta].ID == "missoes" && a.vetoDe != "" {
-			return m.abrirVeto(a)
+		if a, ok := m.selecionado(); ok && Gavetas[m.gaveta].ID == "missoes" {
+			if a.vetoDe != "" {
+				return m.abrirVeto(a)
+			}
+			if a.decisao {
+				return m.mostrarToast("nada para vetar nesta decisão", T.Sub)
+			}
 		}
 	case "d":
 		if Gavetas[m.gaveta].ID == "prs" {

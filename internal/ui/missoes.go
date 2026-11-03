@@ -303,8 +303,19 @@ func (c *corpo) linhaGengarSQ(r dados.Sidequest, faixa func(bg lipgloss.Color) s
 	}
 }
 
+// etapaDaDecisao usa run_id/stage_id do evento e, sem eles, acha a etapa dona do slug.
+func etapaDaDecisao(e dados.Estado, d dados.Decisao) (int, string) {
+	if d.RunID != nil && d.StageID != "" {
+		return *d.RunID, d.StageID
+	}
+	return etapaDoSlug(e, d.Slug)
+}
+
 // etapaDoSlug acha a sidequest e a etapa dona do slug da decisão.
 func etapaDoSlug(e dados.Estado, slug string) (int, string) {
+	if slug == "" {
+		return 0, ""
+	}
 	for _, r := range e.Sidequests {
 		for _, et := range r.Etapas {
 			if et.Slug == slug {
@@ -319,10 +330,11 @@ func etapaDoSlug(e dados.Estado, slug string) (int, string) {
 func (c *corpo) decisoes(e dados.Estado, ds []dados.Decisao, faixa func(bg lipgloss.Color) string, w int) {
 	for _, d := range ds {
 		d := d
-		id, etapa := etapaDoSlug(e, d.Slug)
-		a := alvo{pipe: id}
+		id, etapa := etapaDaDecisao(e, d)
+		a := alvo{pipe: id, decisao: true}
 		regra := d.Via == "regra"
-		if regra {
+		vetavel := regra && id != 0 && etapa != ""
+		if vetavel {
 			a.vetoID, a.vetoEtapa, a.vetoDe = id, etapa, d.Item
 		}
 		c.item(a, func(bg lipgloss.Color) string {
@@ -333,10 +345,10 @@ func (c *corpo) decisoes(e dados.Estado, ds []dados.Decisao, faixa func(bg lipgl
 			}
 			s := st(bg, cor).Render("◇ "+quem+" ") + st(bg, T.Texto).Bold(true).Render(d.Item)
 			fim := ""
-			if regra {
+			if vetavel {
 				fim = st(bg, T.Acao).Bold(true).Render("  v vetar")
 			}
-			if lipgloss.Width(f+s+fim) > w {
+			if fim != "" && lipgloss.Width(f+s+fim) > w {
 				fim = st(bg, T.Acao).Bold(true).Render(" v")
 			}
 			resto := w - lipgloss.Width(f) - lipgloss.Width(s) - lipgloss.Width(fim)

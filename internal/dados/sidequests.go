@@ -141,7 +141,7 @@ func (p *Pipes) Listar() ([]Pipeline, error) {
 }
 
 // Novo chama `ddb sidequest new` e devolve a primeira linha da saída (id e slugs).
-// Com workspace, a sidequest nasce na missão daquele workspace; vazio, fica solta.
+// Com workspace, a sidequest nasce na missão daquele workspace; vazio, passa --solta (ignora o workspace do pane).
 func (p *Pipes) Novo(pipeline string, entradas [][2]string, titulo, workspace string) (string, error) {
 	args := []string{"sidequest", "new", pipeline}
 	for _, kv := range entradas {
@@ -152,6 +152,8 @@ func (p *Pipes) Novo(pipeline string, entradas [][2]string, titulo, workspace st
 	}
 	if workspace != "" {
 		args = append(args, "--workspace", workspace)
+	} else {
+		args = append(args, "--solta")
 	}
 	out, err := p.ddb(args...)
 	l, _, _ := strings.Cut(strings.TrimSpace(out), "\n")

@@ -21,6 +21,8 @@ type alvo struct {
 	// decisão vetável: sidequest, etapa e o rótulo ("plano")
 	vetoID            int
 	vetoEtapa, vetoDe string
+	// decisao marca a linha de decisão (vetável ou não), para o v responder mesmo sem etapa
+	decisao bool
 }
 
 // linha do corpo; item é o índice do alvo dono da linha, ou -1.

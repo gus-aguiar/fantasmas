@@ -35,6 +35,9 @@ type Decisao struct {
 	Slug   string `json:"slug"`
 	Item   string `json:"item"`
 	Motivo string `json:"motivo"`
+	// RunID e StageID vêm do evento quando a decisão é de uma etapa; nulos, a decisão não é vetável.
+	RunID   *int   `json:"run_id"`
+	StageID string `json:"stage_id"`
 }
 
 type principalDdb struct {
