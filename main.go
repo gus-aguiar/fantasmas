@@ -193,6 +193,9 @@ func escolherModo(env func(string) string) (modo, motivo string, consultar bool)
 	case "WezTerm", "kitty":
 		return "kitty", "TERM_PROGRAM=" + tp, false
 	}
+	if v := env("ORCA_IMAGE_PROTOCOL"); v == "kitty" {
+		return "kitty", "ORCA_IMAGE_PROTOCOL=" + v, false
+	}
 	for _, k := range []string{"HERDR_PANE_ID", "WEZTERM_EXECUTABLE", "KITTY_WINDOW_ID"} {
 		if env(k) != "" {
 			return "kitty", k + " presente", false
@@ -201,13 +204,15 @@ func escolherModo(env func(string) string) (modo, motivo string, consultar bool)
 	return "", "nenhum indício no ambiente", true
 }
 
-// escolherModoImagem: FANTASMAS_IMAGEM_MODO manda; sem ele, T dentro do Herdr e animação fora.
+// escolherModoImagem: FANTASMAS_IMAGEM_MODO manda; sem ele, T dentro do Herdr e do Orca e animação fora.
+// O terminal do Orca (addon de imagem do xterm.js) só aceita as ações t, T, q, p e d: sem a=f e a=a
+// a animação nativa fica parada no primeiro quadro, então o modo T reenvia cada quadro.
 func escolherModoImagem(env func(string) string) string {
 	switch v := env("FANTASMAS_IMAGEM_MODO"); v {
 	case ui.ModoAnimacao, ui.ModoQuadros, ui.ModoT:
 		return v
 	}
-	if env("HERDR_PANE_ID") != "" {
+	if env("HERDR_PANE_ID") != "" || env("TERM_PROGRAM") == "Orca" || env("ORCA_IMAGE_PROTOCOL") != "" {
 		return ui.ModoT
 	}
 	return ui.ModoAnimacao

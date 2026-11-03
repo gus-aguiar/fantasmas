@@ -6,8 +6,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sort"
 	"reflect"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -61,6 +61,8 @@ func TestEscolherModo(t *testing.T) {
 		{map[string]string{"FANTASMAS_IMAGEM": "0", "TERM_PROGRAM": "WezTerm"}, "celulas", false},
 		{map[string]string{"FANTASMAS_IMAGEM": "kitty"}, "kitty", false},
 		{map[string]string{"FANTASMAS_IMAGEM": "1"}, "kitty", false},
+		{map[string]string{"TERM_PROGRAM": "Orca", "ORCA_IMAGE_PROTOCOL": "kitty"}, "kitty", false},
+		{map[string]string{"FANTASMAS_IMAGEM": "celulas", "ORCA_IMAGE_PROTOCOL": "kitty"}, "celulas", false},
 		{map[string]string{"TERM_PROGRAM": "vscode"}, "", true},
 		{map[string]string{}, "", true},
 	}
@@ -82,6 +84,9 @@ func TestEscolherModoImagem(t *testing.T) {
 		{map[string]string{"HERDR_PANE_ID": "wG:p4", "FANTASMAS_IMAGEM_MODO": "animacao"}, "animacao"},
 		{map[string]string{"HERDR_PANE_ID": "wG:p4", "FANTASMAS_IMAGEM_MODO": "quadros"}, "quadros"},
 		{map[string]string{"FANTASMAS_IMAGEM_MODO": "T"}, "T"},
+		{map[string]string{"TERM_PROGRAM": "Orca", "ORCA_IMAGE_PROTOCOL": "kitty"}, "T"},
+		{map[string]string{"ORCA_IMAGE_PROTOCOL": "kitty"}, "T"},
+		{map[string]string{"TERM_PROGRAM": "Orca", "FANTASMAS_IMAGEM_MODO": "quadros"}, "quadros"},
 	}
 	for _, c := range casos {
 		if got := escolherModoImagem(func(k string) string { return c.env[k] }); got != c.quer {
