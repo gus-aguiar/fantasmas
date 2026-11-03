@@ -54,13 +54,14 @@ bin/fantasmas --uma-vez --demo --gaveta pipes --pipe 13
 
 - `--demo` e `--demo-verde` usam um estado fixo (`ui.EstadoDemo`) e não precisam de workspace.
 - Sem `--demo`, o comando faz uma coleta real.
-- Gavetas válidas: `missoes agora crew pipes prs ci ambiente maquina mais`. Um nome inválido sai com código 2.
+- Gavetas válidas: `missoes agora crew pipes prs ci ambiente maquina mais settings`. Um nome inválido sai com código 2.
+- Para ver um tema sem mexer no arquivo do usuário: `FANTASMAS_AJUSTES=/tmp/a.json FANTASMAS_TEMA=orca bin/fantasmas --uma-vez --cor --demo --gaveta settings`.
 
 ### Teclas principais
 
 A lista completa fica no `?` dentro do app, e a fonte é `ajudaLinhas` em `internal/ui/model.go`.
 
-- `← →`/`h l`/`1-9`: troca de gaveta. `↑ ↓`/`j k`: escolhe um item. `enter`: abre ou responde. `esc`: volta.
+- `← →`/`h l`/`1-9`: troca de gaveta; `,` abre settings. `↑ ↓`/`j k`: escolhe um item. `enter`: abre ou responde. `esc`: volta.
 - `/`: filtra. `0`: volta a todas as missões. `r`: coleta agora. `q`: sai.
 - `o`: abre o link. `g`: foca a aba no herdr. `p`: abre o painel do delegate (`http://127.0.0.1:7480/`).
 - Ações destrutivas exigem a tecla duas vezes (estado "armado"):
@@ -88,28 +89,49 @@ A coleta é `dados.Coletor.Coletar` (`internal/dados/coleta.go`), e tudo nela ro
 
 As saídas em TSV passam por `dados.TSV`, e a do ddb passa por `dados.DeDdb`. As duas viram o mesmo `[]Linha`.
 
-### Variáveis de ambiente
+### Aba settings e variáveis de ambiente
+
+A gaveta **settings** (`,`) lista todas as variáveis `FANTASMAS_*` do catálogo `config.Opcoes` (`internal/config/config.go`) e as salva em `~/.config/fantasmas/ajustes.json`:
+- o arquivo tem permissão 0600, numa pasta 0700, e fica fora do repo; `FANTASMAS_AJUSTES` muda o caminho;
+- `main` aplica o arquivo ao ambiente **antes de qualquer `os.Getenv`**, então o resto do código continua só lendo variáveis;
+- **o shell manda:** uma variável já definida no shell não é sobrescrita nem editável pela aba.
+
+Regras para quem mexer:
+- **Opção nova:** acrescente em `config.Opcoes`, com grupo, descrição, `Valores` (escolhas fixas; vazio = texto livre) e `Reabrir` se ela só for lida na abertura.
+- **Texto livre nunca vai para a tela:** a lista, a barra de edição (eco `•`), os toasts e as mensagens de erro mostram só a máscara. Não escreva o valor de uma opção `Livre()` em lugar nenhum visível.
 
 | Variável | Efeito |
 |---|---|
+| `FANTASMAS_TEMA=roxo\|orca\|terminal` | cores do app (`ui.UsarTema`); padrão roxo; troca na hora |
+| `FANTASMAS_FIGURA=<nome>` | figura do topo, do catálogo de figuras (ver abaixo); padrão gengar; troca na hora |
 | `FANTASMAS_FONTE=ddb` | usa o `ddb.py`, liga as gavetas missões e pipes e abre em `missoes` |
 | `FANTASMAS_DDB_SCRIPT` | caminho alternativo do `ddb.py` |
 | `FANTASMAS_EDITOR` | editor para arquivos e pastas (links continuam no `xdg-open`/`open`) |
-| `FANTASMAS_SPRITE` / `--sprite` | GIF no lugar do Gengar embutido (`assets/gengar.gif`) |
-| `FANTASMAS_IMAGEM=kitty\|celulas` | força o desenho do sprite. Sem ela, o modo é detectado pelo terminal (WezTerm, kitty, herdr ou consulta ao protocolo kitty) |
-| `FANTASMAS_IMAGEM_MODO=animacao\|quadros\|T` | modo do protocolo kitty (padrão: `T` dentro do herdr, `animacao` fora) |
+| `FANTASMAS_SPRITE` / `--sprite` | caminho de GIF ou PNG; manda sobre `FANTASMAS_FIGURA` |
+| `FANTASMAS_IMAGEM=kitty\|celulas` | força o desenho da figura. Sem ela, o modo é detectado pelo terminal (WezTerm, kitty, herdr, Orca via `ORCA_IMAGE_PROTOCOL` ou consulta ao protocolo kitty) |
+| `FANTASMAS_IMAGEM_MODO=animacao\|quadros\|T` | modo do protocolo kitty (padrão: `T` no herdr e no Orca, `animacao` fora). O Orca não aceita `a=f`/`a=a`, então a animação nativa fica parada lá |
 | `FANTASMAS_MURAL=off` | esconde o mural |
 | `FANTASMAS_CTX_JANELA` | tamanho da janela de contexto usada no % (padrão: 1 000 000) |
 | `FANTASMAS_CLAUDE_DIR`, `FANTASMAS_CACHE_DIR` | diretório do Claude e de cache |
 | `FANTASMAS_DEBUG=<arquivo>` | log de detecção do terminal e do envio de imagens |
+| `FANTASMAS_AJUSTES` | caminho do arquivo da aba settings (só pelo shell) |
 | `HERDR_ENV=1` + `HERDR_WORKSPACE_ID` | necessários para criar a aba do daydreamer |
+
+### Figuras do topo
+
+Cada GIF ou PNG de duas pastas vira uma figura, com o nome do arquivo sem extensão (`ui.NomesFiguras`):
+- `assets/figuras/`: embutida no binário, exige recompilar;
+- `~/.config/fantasmas/figuras/`: sem recompilar; vence a embutida de mesmo nome.
+
+O PNG estático vira um GIF de um quadro (`ui.paraGIF`). Trocar a figura com o app aberto remonta a imagem kitty (`Grafico.Recarregado`). Veja `assets/figuras/LEIA.md`.
 
 ## Estrutura
 
 ```
 main.go                 flags, ligação das Acoes, escolha do modo de imagem, re-exec após atualizar
 setup.sh                instalação (Go, build, symlink gengar, PATH)
-assets/                 gengar.gif embutido (go:embed) e o brief do daydreamer
+assets/                 figuras/ embutidas (go:embed; gengar.gif é a padrão) e o brief do daydreamer
+internal/config/        ajustes da aba settings: catálogo de opções, arquivo 0600, aplicação ao ambiente
 internal/dados/         coleta e ações sobre o mundo externo (sem UI)
   runner.go             Runner: interface de execução de comandos; testes usam runners falsos
   coleta.go             Coletor e FaltaDe
@@ -121,6 +143,9 @@ internal/dados/         coleta e ações sobre o mundo externo (sem UI)
 internal/ui/            Model do Bubble Tea, gavetas, detalhe, tema, sprite
   model.go              Model, Update, teclas, ajuda, Render
   moldura.go            lista de Gavetas, topo e rodapé
+  ajustes.go            gaveta settings
+  tema.go               temas (roxo, orca, terminal) e UsarTema
+  figuras.go            catálogo de figuras, UsarFigura, PNG → GIF
   gavetas.go missoes.go pipes.go detalhe.go ...   uma tela por arquivo
   demo.go               EstadoDemo / EstadoDemoVerde
 internal/kitty/         protocolo de gráficos do kitty (detecção e envio)
