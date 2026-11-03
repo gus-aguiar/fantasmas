@@ -283,18 +283,35 @@ func limparSprites() {
 	spriteMu.Unlock()
 }
 
-// UsarSprite troca o GIF do topo pelo arquivo; se não ler ou não decodificar, volta ao embutido e devolve o erro.
+// UsarSprite troca a figura do topo pelo arquivo (GIF ou PNG); se não ler ou não decodificar, volta ao
+// embutido e devolve o erro.
 func UsarSprite(caminho string) error {
-	defer limparSprites()
+	// a mensagem não leva o caminho: o valor pode vir da aba settings, que nunca o mostra.
 	b, err := os.ReadFile(caminho)
+	if err != nil {
+		gifTopo = nil
+		limparSprites()
+		return errors.New("sprite: não consegui ler o arquivo; voltei ao gengar")
+	}
+	return usarBytes(b, "sprite")
+}
+
+// usarBytes põe a figura no topo; nil volta ao gengar embutido.
+func usarBytes(b []byte, rotulo string) error {
+	defer limparSprites()
+	if b == nil {
+		gifTopo = nil
+		return nil
+	}
+	g, err := paraGIF(b)
 	if err == nil {
-		_, err = CarregarSprite(b, 16, 7, T.Mantle)
+		_, err = CarregarSprite(g, 16, 7, T.Mantle)
 	}
 	if err != nil {
 		gifTopo = nil
-		return fmt.Errorf("sprite %s: %w", caminho, err)
+		return fmt.Errorf("%s: %w", rotulo, err)
 	}
-	gifTopo = b
+	gifTopo = g
 	return nil
 }
 

@@ -16,6 +16,7 @@ type alvo struct {
 	acao                          string
 	pipe                          int
 	missao                        string
+	ajuste                        string
 }
 
 // linha do corpo; item é o índice do alvo dono da linha, ou -1.

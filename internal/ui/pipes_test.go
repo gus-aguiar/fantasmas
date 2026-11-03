@@ -62,7 +62,7 @@ func digitaPipe(m Model, s string) Model {
 
 func TestGavetaPipesAntesDePRs(t *testing.T) {
 	ids := strings.Join(IDsGavetas(), ",")
-	if ids != "missoes,agora,crew,pipes,prs,ci,ambiente,maquina,mais" {
+	if ids != "missoes,agora,crew,pipes,prs,ci,ambiente,maquina,mais,settings" {
 		t.Fatalf("ordem=%s", ids)
 	}
 	if Gavetas[indiceGaveta("pipes")].Tecla != "4" || Gavetas[indiceGaveta("mais")].Tecla != "9" {

@@ -1,8 +1,10 @@
 package ui
 
 import (
+	"fmt"
 	"math"
 	"strconv"
+	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 )
@@ -21,7 +23,59 @@ type Tokens struct {
 	Acentos [6]lipgloss.Color
 }
 
-var T = Tokens{
+// T é o tema em uso; UsarTema troca.
+var T = temaRoxo
+
+// NomesTemas na ordem da aba settings; o primeiro é o padrão.
+var NomesTemas = []string{"roxo", "orca", "terminal"}
+
+var temas = map[string]*Tokens{"roxo": &temaRoxo, "orca": &temaOrca, "terminal": &temaTerminal}
+
+// UsarTema troca as cores do app ("" = roxo). O sprite em células guarda o fundo, então o cache é limpo.
+func UsarTema(nome string) error {
+	if nome == "" {
+		nome = NomesTemas[0]
+	}
+	t, ok := temas[nome]
+	if !ok {
+		return fmt.Errorf("tema %q desconhecido; válidos: %s", nome, strings.Join(NomesTemas, ", "))
+	}
+	T = *t
+	limparSprites()
+	return nil
+}
+
+// temaOrca: grafite neutro, para combinar com o terminal do Orca; acentos e mascote iguais aos do roxo.
+var temaOrca = Tokens{
+	Base: "#1f2125", Mantle: "#17181b", Surface: "#2a2d32", Sel: "#363a41",
+	Borda: "#4b5059",
+	Texto: "#eceef2", Sub: "#c4c8d0", Dim: "#8d939d",
+	Acao: "#8fb4ff", Ok: "#7ee7a8", Espera: "#ff8a5c", Andamento: "#ffd166", Erro: "#ff7a9e", Info: "#7fd0f0",
+	Chip: "#30384a", ChipTexto: "#e3e8f2",
+	ChipVerde: "#1d4a3f", ChipVerdeTexto: "#b9f6dd",
+	BarraCheia: "#8fb4ff", BarraVazia: "#4b5059",
+	CtxBaixo: "#7ee7a8", CtxMedio: "#ffd166", CtxAlto: "#ff7a9e",
+	MascoteCorpo: "#a66bff", MascoteOlho: "#ff3388", MascoteBoca: "#4b2a8a",
+	Acentos: temaRoxo.Acentos,
+}
+
+// temaTerminal não pinta fundo ("" = cor padrão do terminal) e usa a paleta ANSI do próprio terminal.
+// Seleção e chips usam cinzas escuros do 256 (232–255), que quase todo terminal mantém fixos:
+// sobre o ANSI 8 (cinza médio) o texto colorido some.
+var temaTerminal = Tokens{
+	Base: "", Mantle: "", Surface: "", Sel: "237",
+	Borda: "8",
+	Texto: "", Sub: "", Dim: "7",
+	Acao: "5", Ok: "2", Espera: "3", Andamento: "4", Erro: "1", Info: "6",
+	Chip: "238", ChipTexto: "",
+	ChipVerde: "2", ChipVerdeTexto: "0",
+	BarraCheia: "5", BarraVazia: "8",
+	CtxBaixo: "2", CtxMedio: "3", CtxAlto: "1",
+	MascoteCorpo: "5", MascoteOlho: "1", MascoteBoca: "0",
+	Acentos: [6]lipgloss.Color{"13", "10", "11", "9", "14", "12"},
+}
+
+var temaRoxo = Tokens{
 	Base: "#2c2244", Mantle: "#241b39", Surface: "#372a54", Sel: "#47366a",
 	Borda: "#5f4890",
 	Texto: "#f7f2ff", Sub: "#d8ccf0", Dim: "#a99ad2",
