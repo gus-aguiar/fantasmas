@@ -487,7 +487,7 @@ func gavetaAmbiente(c *corpo, e dados.Estado) {
 	}
 }
 
-// secaoAcoes: os botões do topo da aba settings. As teclas U (2×), D e M valem de qualquer gaveta.
+// secaoAcoes: os botões do topo da aba configurações. As teclas U (2×), D e M valem de qualquer gaveta.
 func secaoAcoes(c *corpo, e dados.Estado, pedindoDD, atualizando, armadoAtu bool) {
 	c.secao("ações", "enter aciona")
 	g0, cor0, est0 := "⟳", T.Texto, "U 2×"

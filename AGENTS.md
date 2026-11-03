@@ -23,7 +23,7 @@ O script é idempotente. Ele faz cinco coisas:
 1. **Go:** garante Go >= a versão do `go.mod`. Usa o Go do PATH; se não houver, instala pelo `mise`; sem mise, baixa o tarball oficial para `~/.local/share/go`, sem sudo.
 2. **Build:** compila `bin/fantasmas` com `GOTOOLCHAIN=local`.
 3. **Comando:** cria `~/.local/bin/gengar` como **symlink** para `bin/fantasmas`.
-4. **Raiz do Spark:** roda `bin/fantasmas --achar-raiz`, que procura até 5 níveis abaixo da home uma pasta com `shared/mods/control-panel/scripts/delegate.py` (sem entrar em pastas ocultas, `.worktrees` nem `node_modules`) e a salva como `FANTASMAS_RAIZ` em settings. Não mexe se o shell já define a variável ou se a salva ainda serve; com várias, pergunta no terminal (sem terminal, fica com a de `.delegate/` mais recente).
+4. **Raiz do Spark:** roda `bin/fantasmas --achar-raiz`, que procura até 5 níveis abaixo da home uma pasta com `shared/mods/control-panel/scripts/delegate.py` (sem entrar em pastas ocultas, `.worktrees` nem `node_modules`) e a salva como `FANTASMAS_RAIZ` em configurações. Não mexe se o shell já define a variável ou se a salva ainda serve; com várias, pergunta no terminal (sem terminal, fica com a de `.delegate/` mais recente).
 5. **PATH:** põe `~/.local/bin` no PATH via `~/.zshrc` ou `~/.bashrc`, se faltar.
 
 `GENGAR_BIN_DIR` e `GENGAR_GO_DIR` mudam os diretórios.
@@ -41,7 +41,7 @@ gengar --intervalo 1m
 ```
 
 A raiz precisa ser a do workspace Spark, não este repositório. É lá que ficam `.delegate/`, `shared/` e `scripts/`.
-- **Ordem:** `--raiz` manda; sem ela vale `FANTASMAS_RAIZ` (definível na aba settings, aceita `~/`); sem as duas, a pasta atual (`resolverRaiz` em `main.go`).
+- **Ordem:** `--raiz` manda; sem ela vale `FANTASMAS_RAIZ` (definível na aba configurações, aceita `~/`); sem as duas, a pasta atual (`resolverRaiz` em `main.go`).
 - Com a raiz errada, as gavetas que dependem dos scripts do Spark ficam vazias. A máquina, por exemplo, mostra "sem leitura da máquina".
 
 ### Modo quadro único
@@ -57,23 +57,23 @@ bin/fantasmas --uma-vez --demo --gaveta pipes --pipe 13
 
 - `--demo` e `--demo-verde` usam um estado fixo (`ui.EstadoDemo`) e não precisam de workspace.
 - Sem `--demo`, o comando faz uma coleta real.
-- Gavetas válidas: `missoes agora crew pipes prs ambiente maquina worktrees settings`. Um nome inválido sai com código 2.
-- Para ver um tema sem mexer no arquivo do usuário: `FANTASMAS_AJUSTES=/tmp/a.json FANTASMAS_TEMA=orca bin/fantasmas --uma-vez --cor --demo --gaveta settings`.
+- Gavetas válidas: `missoes agora crew pipes prs ambiente maquina worktrees configuracoes`. Um nome inválido sai com código 2.
+- Para ver um tema sem mexer no arquivo do usuário: `FANTASMAS_AJUSTES=/tmp/a.json FANTASMAS_TEMA=orca bin/fantasmas --uma-vez --cor --demo --gaveta configuracoes`.
 
 ### Teclas principais
 
 A lista completa fica no `?` dentro do app, e a fonte é `ajudaLinhas` em `internal/ui/model.go`.
 
-- `← →`/`h l`/`0-8`: troca de gaveta (`0` missões, `1` agora, `2` fantasminhas, `3` pipes, `4` PRs com o CI, `5` ambiente, `6` máquina, `7` worktrees, `8` settings); `0` também volta a todas as missões. `↑ ↓`/`j k`: escolhe um item. `enter`: abre ou responde. `esc`: volta.
+- `← →`/`h l`/`0-8`: troca de gaveta (`0` missões, `1` agora, `2` fantasminhas, `3` pipes, `4` PRs com o CI, `5` ambiente, `6` máquina, `7` worktrees, `8` configurações); `0` também volta a todas as missões. `↑ ↓`/`j k`: escolhe um item. `enter`: abre ou responde. `esc`: volta.
 - `/`: filtra. `r`: coleta agora. `q`: sai.
 - `o`: abre o link. `g`: foca a aba no herdr. `p`: abre o painel do delegate (`http://127.0.0.1:7480/`).
 - Ações destrutivas exigem a tecla duas vezes (estado "armado"):
   - `x 2×`: arquiva a pergunta;
   - `R 2×`: retoma um fantasminha caído;
-  - `U 2×`: atualiza o app (botão "atualizar app fantasmas" nas ações de settings);
+  - `U 2×`: atualiza o app (botão "atualizar app fantasmas" nas ações de configurações);
   - `A`/`S`/`T 2×`: avança, pula ou faz retry de uma etapa do pipe.
 - Gaveta pipes: `n` lança um run, `e` edita o YAML e `N` abre o gengar dedicado do run.
-- Outras: `D` pede uma rodada do DayDreaming e `M` reconecta os MCPs. Esses dois botões e o "atualizar app fantasmas" ficam na seção "ações" da aba settings; a gaveta máquina é só monitoramento e a gaveta worktrees (`7`) só lista os worktrees.
+- Outras: `D` pede uma rodada do DayDreaming e `M` reconecta os MCPs. Esses dois botões e o "atualizar app fantasmas" ficam na seção "ações" da aba configurações; a gaveta máquina é só monitoramento e a gaveta worktrees (`7`) só lista os worktrees.
 
 ## De onde vêm os dados
 
@@ -92,9 +92,9 @@ A coleta é `dados.Coletor.Coletar` (`internal/dados/coleta.go`), e tudo nela ro
 
 As saídas em TSV passam por `dados.TSV`, e a do ddb passa por `dados.DeDdb`. As duas viram o mesmo `[]Linha`.
 
-### Aba settings e variáveis de ambiente
+### Aba configurações e variáveis de ambiente
 
-A gaveta **settings** (`8`) lista as variáveis `FANTASMAS_*` do catálogo `config.Opcoes` (`internal/config/config.go`) pelo nome real, cada uma com o valor que vale agora (o padrão, quando nada foi definido), e as salva em `~/.config/fantasmas/ajustes.json`. `FANTASMAS_IMAGEM`, `FANTASMAS_IMAGEM_MODO` e `FANTASMAS_SPRITE` ficam fora da aba, só pelo shell.
+A gaveta **configurações** (`8`) lista as variáveis `FANTASMAS_*` do catálogo `config.Opcoes` (`internal/config/config.go`) pelo nome real, cada uma com o valor que vale agora (o padrão, quando nada foi definido), e as salva em `~/.config/fantasmas/ajustes.json`. `FANTASMAS_IMAGEM`, `FANTASMAS_IMAGEM_MODO` e `FANTASMAS_SPRITE` ficam fora da aba, só pelo shell.
 - o arquivo tem permissão 0600, numa pasta 0700, e fica fora do repo; `FANTASMAS_AJUSTES` muda o caminho;
 - `main` aplica o arquivo ao ambiente **antes de qualquer `os.Getenv`**, então o resto do código continua só lendo variáveis;
 - **o shell manda:** uma variável já definida no shell não é sobrescrita nem editável pela aba.
@@ -118,7 +118,7 @@ Regras para quem mexer:
 | `FANTASMAS_CTX_JANELA` | tamanho da janela de contexto usada no % (padrão: 1 000 000) |
 | `FANTASMAS_CLAUDE_DIR`, `FANTASMAS_CACHE_DIR` | diretório do Claude e de cache |
 | `FANTASMAS_DEBUG=<arquivo>` | log de detecção do terminal e do envio de imagens |
-| `FANTASMAS_AJUSTES` | caminho do arquivo da aba settings (só pelo shell) |
+| `FANTASMAS_AJUSTES` | caminho do arquivo da aba configurações (só pelo shell) |
 | `HERDR_ENV=1` + `HERDR_WORKSPACE_ID` | necessários para criar a aba do daydreamer |
 
 ### Figuras do topo
@@ -135,7 +135,7 @@ O PNG estático vira um GIF de um quadro (`ui.paraGIF`). Trocar a figura com o a
 main.go                 flags, ligação das Acoes, escolha do modo de imagem, re-exec após atualizar
 setup.sh                instalação (Go, build, symlink gengar, PATH)
 assets/                 figuras/ embutidas (go:embed; gengar.gif é a padrão) e o brief do daydreamer
-internal/config/        ajustes da aba settings: catálogo de opções, arquivo 0600, aplicação ao ambiente
+internal/config/        ajustes da aba configurações: catálogo de opções, arquivo 0600, aplicação ao ambiente
 internal/dados/         coleta e ações sobre o mundo externo (sem UI)
   runner.go             Runner: interface de execução de comandos; testes usam runners falsos
   coleta.go             Coletor e FaltaDe
@@ -147,7 +147,7 @@ internal/dados/         coleta e ações sobre o mundo externo (sem UI)
 internal/ui/            Model do Bubble Tea, gavetas, detalhe, tema, sprite
   model.go              Model, Update, teclas, ajuda, Render
   moldura.go            lista de Gavetas, topo e rodapé
-  ajustes.go            gaveta settings
+  ajustes.go            gaveta configurações
   tema.go               temas (roxo, orca, terminal) e UsarTema
   figuras.go            catálogo de figuras, UsarFigura, PNG → GIF
   gavetas.go missoes.go pipes.go detalhe.go ...   uma tela por arquivo

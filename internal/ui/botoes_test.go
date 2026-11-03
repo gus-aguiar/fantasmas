@@ -16,7 +16,7 @@ func TestSettingsTemBotoes(t *testing.T) {
 		Daydreamer: dados.Daydreamer{Nome: "c-sonho", Status: "working", Ultima: time.Date(2026, 10, 23, 9, 5, 0, 0, time.Local)},
 		MCP:        dados.ProgressoMCP{Inicio: time.Now(), Total: 4, Rodando: true, Sessoes: []dados.SessaoMCP{{Pane: "p", Nome: "g", Detalhe: "ok", Tom: "ok"}}},
 	}
-	m := Novo(nil, Acoes{}, time.Minute).ComEstado(e).irGaveta(indiceGaveta("settings"))
+	m := Novo(nil, Acoes{}, time.Minute).ComEstado(e).irGaveta(indiceGaveta("configuracoes"))
 	tela := ansi.Strip(m.Render(110, 30))
 	for _, s := range []string{"ações", "atualizar DayDreaming", "trabalhando", "última 23/10 09:05", "reconectando…", "1/4 sessões"} {
 		if !strings.Contains(tela, s) {
@@ -38,9 +38,9 @@ func TestAtualizarPedeSegundoU(t *testing.T) {
 		chamou++
 		return dados.Resultado{Novos: 2, Trocou: true, Binario: "/x/bin/fantasmas"}, nil
 	}}
-	m := Novo(nil, ac, time.Minute).ComEstado(dados.Estado{At: time.Now()}).irGaveta(indiceGaveta("settings"))
+	m := Novo(nil, ac, time.Minute).ComEstado(dados.Estado{At: time.Now()}).irGaveta(indiceGaveta("configuracoes"))
 	if !strings.Contains(ansi.Strip(m.Render(110, 30)), "atualizar app fantasmas") {
-		t.Fatal("falta o item nas ações de settings")
+		t.Fatal("falta o item nas ações de configurações")
 	}
 	n, cmd := m.tecla("U")
 	m = n.(Model)

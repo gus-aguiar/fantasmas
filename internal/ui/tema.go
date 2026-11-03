@@ -26,7 +26,7 @@ type Tokens struct {
 // T é o tema em uso; UsarTema troca.
 var T = temaRoxo
 
-// NomesTemas na ordem da aba settings; o primeiro é o padrão.
+// NomesTemas na ordem da aba configurações; o primeiro é o padrão.
 var NomesTemas = []string{"roxo", "orca", "terminal"}
 
 var temas = map[string]*Tokens{"roxo": &temaRoxo, "orca": &temaOrca, "terminal": &temaTerminal}

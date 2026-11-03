@@ -33,7 +33,7 @@ var Gavetas = []Gaveta{
 	{"ambiente", "5", "ambiente", "Serviços locais do Spark"},
 	{"maquina", "6", "máquina", "Saúde do computador"},
 	{"worktrees", "7", "worktrees", "Onde cada branch está aberto"},
-	{"settings", "8", "settings", "Ações, tema, figura e variáveis"},
+	{"configuracoes", "8", "configurações", "Ações, tema, figura e variáveis"},
 }
 
 func fundo(c lipgloss.Color) lipgloss.Style { return lipgloss.NewStyle().Background(c) }

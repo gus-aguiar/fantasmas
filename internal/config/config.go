@@ -1,4 +1,4 @@
-// Package config guarda os ajustes do fantasmas: as variáveis FANTASMAS_* escolhidas na aba settings.
+// Package config guarda os ajustes do fantasmas: as variáveis FANTASMAS_* escolhidas na aba configurações.
 //
 // O arquivo fica fora do repo (~/.config/fantasmas/ajustes.json, permissão 0600) e é aplicado ao
 // ambiente do processo na abertura, antes de qualquer os.Getenv. O ambiente real sempre manda:
@@ -16,7 +16,7 @@ import (
 	"strings"
 )
 
-// Opcao é um ajuste da aba settings.
+// Opcao é um ajuste da aba configurações.
 type Opcao struct {
 	Chave     string
 	Grupo     string
@@ -101,7 +101,7 @@ type Origem int
 
 const (
 	Padrao   Origem = iota // nada definido
-	Arquivo                // salvo pela aba settings
+	Arquivo                // salvo pela aba configurações
 	Ambiente               // definido no shell; a aba não mexe
 )
 

@@ -38,10 +38,10 @@ func main() {
 	cor := flag.Bool("cor", false, "força cor de 24 bits (só com --uma-vez)")
 	demo := flag.Bool("demo", false, "usa o estado de demonstração (só com --uma-vez)")
 	demoVerde := flag.Bool("demo-verde", false, "demonstração com todos os PRs de CI verde (só com --uma-vez)")
-	gaveta := flag.String("gaveta", "", "gaveta inicial: missoes|agora|crew|pipes|prs|ambiente|maquina|worktrees|settings (só com --uma-vez)")
+	gaveta := flag.String("gaveta", "", "gaveta inicial: missoes|agora|crew|pipes|prs|ambiente|maquina|worktrees|configuracoes (só com --uma-vez)")
 	missao := flag.String("missao", "", "foca a missão pelo slug (só com --uma-vez)")
 	pipe := flag.Int("pipe", 0, "abre o detalhe do run N da gaveta pipes (só com --uma-vez)")
-	acharRaiz := flag.Bool("achar-raiz", false, "procura a raiz do Spark na home, salva em settings (FANTASMAS_RAIZ) e sai; o setup.sh usa")
+	acharRaiz := flag.Bool("achar-raiz", false, "procura a raiz do Spark na home, salva em configurações (FANTASMAS_RAIZ) e sai; o setup.sh usa")
 	flag.Parse()
 	if *acharRaiz {
 		var l lojaRaiz
@@ -203,7 +203,7 @@ func main() {
 	logf("modo %s (%s)", rotulo, motivo)
 	m = m.ComModoImagem(rotulo)
 	final, err := tea.NewProgram(m, tea.WithAltScreen(), tea.WithMouseCellMotion(), tea.WithOutput(saida)).Run()
-	// a figura pode ter trocado pela aba settings: encerra a imagem que está no terminal agora.
+	// a figura pode ter trocado pela aba configurações: encerra a imagem que está no terminal agora.
 	if fm, ok := final.(ui.Model); ok && fm.Grafico() != nil {
 		fm.Grafico().Encerrar()
 	} else if g != nil {
@@ -222,7 +222,7 @@ func main() {
 
 // resolverRaiz: --raiz manda; sem ela, FANTASMAS_RAIZ (aceita ~/); sem as duas, a pasta atual.
 // FANTASMAS_RAIZ que não é pasta cai na pasta atual com um aviso que não mostra o caminho,
-// porque o valor pode vir da aba settings, que nunca o exibe.
+// porque o valor pode vir da aba configurações, que nunca o exibe.
 func resolverRaiz(flag string, getenv func(string) string, getwd func() (string, error),
 	home func() (string, error), stat func(string) (os.FileInfo, error)) (string, string) {
 	atual := func() string { d, _ := getwd(); return d }
@@ -255,13 +255,13 @@ type lojaRaiz interface {
 }
 
 // configurarRaiz é o --achar-raiz: mantém a FANTASMAS_RAIZ que já serve; senão procura e salva. Com uma
-// raiz achada, não mostra o caminho (a aba settings também não mostra); com várias, lista para escolher
-// no terminal, ou fica com a mais ativa sem terminal. Nunca falha o setup: só devolve 1 sem settings.
+// raiz achada, não mostra o caminho (a aba configurações também não mostra); com várias, lista para escolher
+// no terminal, ou fica com a mais ativa sem terminal. Nunca falha o setup: só devolve 1 sem configurações.
 func configurarRaiz(l lojaRaiz, achar func() []string, home string, entrada io.Reader, saida io.Writer, interativo bool) int {
 	const chave = "FANTASMAS_RAIZ"
 	diz := func(f string, a ...any) { fmt.Fprintf(saida, "▸ "+f+"\n", a...) }
 	if l == nil {
-		diz("sem arquivo de settings; não salvei a raiz do Spark")
+		diz("sem arquivo de configurações; não salvei a raiz do Spark")
 		return 1
 	}
 	switch l.Origem(chave) {
@@ -270,7 +270,7 @@ func configurarRaiz(l lojaRaiz, achar func() []string, home string, entrada io.R
 		return 0
 	case config.Arquivo:
 		if v := expandirHome(l.Valor(chave), home); dados.EhRaizSpark(v) {
-			diz("%s já está em settings e tem os scripts do Spark; não mexi", chave)
+			diz("%s já está em configurações e tem os scripts do Spark; não mexi", chave)
 			return 0
 		}
 		diz("a %s salva não tem os scripts do Spark; procurando outra", chave)
@@ -286,7 +286,7 @@ func configurarRaiz(l lojaRaiz, achar func() []string, home string, entrada io.R
 	switch {
 	case len(rs) == 0:
 		diz("não achei a raiz do Spark na home (até %d níveis)", profBuscaRaiz)
-		diz("defina em settings (8 → %s) ou rode: gengar --raiz <pasta do Spark>", chave)
+		diz("defina em configurações (8 → %s) ou rode: gengar --raiz <pasta do Spark>", chave)
 		return 0
 	case len(rs) > 1 && interativo:
 		diz("achei %d raízes do Spark (da mais ativa para a menos ativa):", len(rs))
@@ -300,13 +300,13 @@ func configurarRaiz(l lojaRaiz, achar func() []string, home string, entrada io.R
 			escolha = n - 1
 		}
 	case len(rs) > 1:
-		diz("achei %d raízes do Spark; fiquei com a mais ativa (troque em settings)", len(rs))
+		diz("achei %d raízes do Spark; fiquei com a mais ativa (troque em configurações)", len(rs))
 	}
 	if err := l.Definir(chave, rs[escolha]); err != nil {
 		diz("não salvei a raiz: %v", err)
 		return 0
 	}
-	diz("raiz do Spark salva em settings (%s); o gengar abre nela de qualquer pasta", chave)
+	diz("raiz do Spark salva em configurações (%s); o gengar abre nela de qualquer pasta", chave)
 	return 0
 }
 
@@ -318,7 +318,7 @@ func expandirHome(p, home string) string {
 	return p
 }
 
-// abrirAjustes aplica o arquivo da aba settings ao ambiente; o aviso vai para a linha de status.
+// abrirAjustes aplica o arquivo da aba configurações ao ambiente; o aviso vai para a linha de status.
 func abrirAjustes() (*config.Loja, string) {
 	caminho, err := config.Caminho()
 	if err != nil {

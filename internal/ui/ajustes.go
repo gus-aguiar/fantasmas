@@ -13,10 +13,10 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-// Gaveta settings: o tema e as variáveis FANTASMAS_*, salvos fora do repo pela config.Loja.
+// Gaveta configurações: o tema e as variáveis FANTASMAS_*, salvos fora do repo pela config.Loja.
 // Valor de texto livre nunca aparece: nem na lista, nem no campo de edição, nem no toast.
 
-// OpsAjustes é o que a gaveta settings usa da config.Loja.
+// OpsAjustes é o que a gaveta configurações usa da config.Loja.
 type OpsAjustes interface {
 	Origem(chave string) config.Origem
 	Valor(chave string) string
@@ -49,7 +49,7 @@ func gavetaSettings(c *corpo, e dados.Estado, ops OpsAjustes, pedindoDD, atualiz
 	c.branco()
 	if ops == nil {
 		c.branco()
-		c.vazioIcone("◆", T.Espera, "settings indisponível nesta execução")
+		c.vazioIcone("◆", T.Espera, "configurações indisponíveis nesta execução")
 		return
 	}
 	grupo := ""

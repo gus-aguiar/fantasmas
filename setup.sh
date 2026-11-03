@@ -94,7 +94,7 @@ fi
 ln -sfn "$ALVO" "$LINK"
 info "gengar -> $ALVO"
 
-# 4. Raiz do Spark: procura na home e salva em settings (FANTASMAS_RAIZ), se ainda não houver uma
+# 4. Raiz do Spark: procura na home e salva em configurações (FANTASMAS_RAIZ), se ainda não houver uma
 #    que sirva; com várias, pergunta. Não derruba o setup se não achar.
 "$ALVO" --achar-raiz || true
 

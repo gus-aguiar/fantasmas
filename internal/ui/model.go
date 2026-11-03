@@ -29,12 +29,12 @@ type Acoes struct {
 	Daydreaming    func() (string, error)
 	ReconectarMCPs func() error
 	ProgressoMCP   func() dados.ProgressoMCP
-	// settings → atualizar app fantasmas: git pull + build + troca do binário
+	// configurações → atualizar app fantasmas: git pull + build + troca do binário
 	Atualizar func() (dados.Resultado, error)
 	// gaveta pipes
 	Pipes  OpsPipes
 	Editar func(arquivo string) *exec.Cmd
-	// gaveta settings: tema e variáveis FANTASMAS_*
+	// gaveta configurações: tema e variáveis FANTASMAS_*
 	Ajustes OpsAjustes
 	// pasta das figuras do usuário (além das embutidas)
 	DirFiguras string
@@ -143,7 +143,7 @@ func (m Model) ComGrafico(g *Grafico) Model {
 	return m
 }
 
-// Grafico devolve a imagem kitty em uso (a figura pode trocar pela aba settings), ou nil.
+// Grafico devolve a imagem kitty em uso (a figura pode trocar pela aba configurações), ou nil.
 func (m Model) Grafico() *Grafico { return m.img }
 
 // ComModoImagem registra o modo do Gengar para a ajuda.
@@ -806,7 +806,7 @@ func (m Model) montarCorpo(largura, altura int) *corpo {
 		gavetaMaquina(c, e)
 	case "worktrees":
 		gavetaWorktrees(c, e)
-	case "settings":
+	case "configuracoes":
 		gavetaSettings(c, e, m.acoes.Ajustes, m.pedindoDD, m.atualizando, m.armadoAtu)
 	}
 	if c.desc != "" {
@@ -844,8 +844,8 @@ func esqueleto(largura, altura int) []string {
 
 // corpoLinhas devolve as linhas visíveis da gaveta e, para cada uma, o item dono (ou -1).
 func (m Model) corpoLinhas(largura, altura int) ([]string, []int) {
-	// settings não depende da coleta: aparece já na abertura.
-	if m.estado.At.IsZero() && Gavetas[m.gaveta].ID != "settings" {
+	// a gaveta configurações não depende da coleta: aparece já na abertura.
+	if m.estado.At.IsZero() && Gavetas[m.gaveta].ID != "configuracoes" {
 		ls := esqueleto(largura, altura)
 		dono := make([]int, len(ls))
 		for i := range dono {
@@ -900,7 +900,7 @@ func (m Model) ajudaLinhas(largura int) []string {
 		k("enter", "abre · responde · foca a missão"),
 		k("enter 2×", "confirma Liberar merge"),
 		k("", "e Não vou fazer"),
-		k("← → 0-9", "troca de gaveta · 0 missões (todas) · 8 settings"),
+		k("← → 0-9", "troca de gaveta · 0 missões (todas) · 8 configurações"),
 		k("/", "filtra a lista"),
 		k("esc", "volta · limpa o filtro (ou a missão)"),
 		k("o", "abre o link (abrir ↗)"),
