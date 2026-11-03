@@ -72,7 +72,7 @@ A lista completa fica no `?` dentro do app, e a fonte é `ajudaLinhas` em `inter
   - `R 2×`: retoma um fantasminha caído;
   - `U 2×`: atualiza o app (botão "atualizar app fantasmas" nas ações de configurações);
   - `A`/`S`/`T 2×`: avança, pula ou faz retry de uma etapa da sidequest (no detalhe dela).
-- Gaveta missões: cada carta mostra as sidequests da missão (um bloco por etapa) e as decisões; as sem missão saem em "SIDEQUESTS SOLTAS". `n` lança uma sidequest (na missão em foco, senão solta), `N` faz o mesmo e abre o gengar dedicado, `e` edita o YAML, `m` abre uma missão (`missao-abrir.sh`), `v` veta uma decisão tomada pela regra e `enter` numa sidequest abre o detalhe. Merge (`juntar`) é sempre humano: a TUI não aprova.
+- Gaveta missões: cada carta mostra as sidequests da missão (um bloco por etapa) e as decisões; as sem missão saem em "SIDEQUESTS SOLTAS". `n` lança uma sidequest (na missão em foco, senão solta; com uma missão em foco vale em qualquer gaveta), `N` faz o mesmo e abre o gengar dedicado, `e` edita o YAML, `m` abre uma missão (`missao-abrir.sh`, enter 2× confirma), `v` veta uma decisão tomada pela regra (enter 2× confirma) e `enter` numa sidequest abre o detalhe. Merge (`juntar`) é sempre humano: a TUI não aprova.
 - Outras: `D` pede uma rodada do DayDreaming e `M` reconecta os MCPs. Esses dois botões e o "atualizar app fantasmas" ficam na seção "ações" da aba configurações; a gaveta máquina é só monitoramento e a gaveta worktrees (`6`) só lista os worktrees.
 
 ## De onde vêm os dados

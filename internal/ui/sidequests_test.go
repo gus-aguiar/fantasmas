@@ -37,7 +37,7 @@ func (r *runnerPipes) Run(_ context.Context, argv ...string) (string, error) {
 
 func estadoPipes() dados.Estado {
 	e := EstadoDemo(time.Date(2026, 10, 30, 10, 0, 0, 0, time.UTC))
-	e.Proximo = map[string]string{"2026-10-30-PL-1203-homolog": "lançaria (homolog, skill homolog)"}
+	e.Proximo = map[string]string{"2026-10-30-PL-19597-homolog": "lançaria (homolog, skill homolog)"}
 	return e
 }
 
@@ -237,6 +237,22 @@ func TestTeclaNLancaNaMissaoEmFoco(t *testing.T) {
 	}
 }
 
+func TestTeclaNComFocoEmOutraGaveta(t *testing.T) {
+	r := &runnerPipes{}
+	m := comPipes(estadoSQ(), r)
+	m.missao = "multas-custos"
+	m = m.irGaveta(indiceGaveta("crew"))
+	m = preencheImplementar(tecla(m, "n"))
+	if c := r.calls[len(r.calls)-1]; !strings.HasSuffix(c, "--workspace w20") {
+		t.Fatalf("n na gaveta crew com foco: %s", c)
+	}
+	r = &runnerPipes{}
+	m = comPipes(estadoSQ(), r).irGaveta(indiceGaveta("crew"))
+	if m = tecla(m, "n"); m.form != nil {
+		t.Fatal("sem foco, n fora da gaveta missões não lança")
+	}
+}
+
 func TestTeclaMAbreMissao(t *testing.T) {
 	r := &runnerPipes{}
 	m := tecla(comPipes(estadoSQ(), r), "m")
@@ -246,6 +262,10 @@ func TestTeclaMAbreMissao(t *testing.T) {
 	for _, v := range []string{"multas-novas", "Multas novas", "produto", "pedido do CS", "PL-1,PL-2"} {
 		m = digitaPipe(m, v)
 		m = teclaMsg(m, tea.KeyMsg{Type: tea.KeyTab})
+	}
+	m = tecla(m, "enter")
+	if len(r.calls) != 0 || m.form == nil || !strings.Contains(m.status, "enter de novo") {
+		t.Fatalf("1º enter deveria só armar: calls=%v status=%q", r.calls, m.status)
 	}
 	m = tecla(m, "enter")
 	quer := "bash /r/scripts/delegate/missao-abrir.sh multas-novas --nome Multas novas --origem produto --origem-ref pedido do CS --cards PL-1,PL-2"
@@ -291,6 +311,10 @@ func TestDecisoesComVetar(t *testing.T) {
 		t.Fatal("v não abriu o veto")
 	}
 	m = digitaPipe(m, "refaz o plano")
+	m = tecla(m, "enter")
+	if len(r.calls) != 0 || m.form == nil {
+		t.Fatalf("1º enter deveria só armar: calls=%v", r.calls)
+	}
 	m = tecla(m, "enter")
 	if quer := "python3 /r/ddb.py --raiz /r stage 3:implementar veto -- refaz o plano"; len(r.calls) == 0 || r.calls[len(r.calls)-1] != quer {
 		t.Fatalf("calls=%v", r.calls)
@@ -450,7 +474,7 @@ func TestPipesLinhaMostraGengarEProntidao(t *testing.T) {
 		out := m.Render(w, 80)
 		p := ansi.Strip(out)
 		if w >= 46 {
-			for _, s := range []string{"g-multas", "aguardando prontidão", "g-filtro-frota", "✓ pronto"} {
+			for _, s := range []string{"g-economia-multas", "aguardando prontidão", "g-multas-custos", "✓ pronto"} {
 				if !strings.Contains(p, s) {
 					t.Errorf("w=%d: falta %q:\n%s", w, s, p)
 				}

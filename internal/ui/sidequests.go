@@ -48,6 +48,7 @@ type formPipe struct {
 	vetoID    int
 	vetoEtapa string
 	vetoDe    string
+	armado    bool
 }
 
 var glifoEtapa = map[string]string{
@@ -582,6 +583,9 @@ func (m Model) teclaForm(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.form = &f
 		return m, nil
 	}
+	if k != "enter" && f.armado {
+		f.armado, m.status = false, ""
+	}
 	switch k {
 	case "tab", "down":
 		f.focar(f.foco + 1)
@@ -592,6 +596,19 @@ func (m Model) teclaForm(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			f.focar(f.foco + 1)
 			break
 		}
+		m.form = &f
+		if msg := m.invalidoForm(); msg != "" {
+			m.status = msg
+			return m, nil
+		}
+		if f.tipo != "" && !f.armado {
+			// missão e veto mudam estado externo: o 1º enter só arma
+			f.armado = true
+			m.form = &f
+			m.status = map[string]string{"missao": "enter de novo abre a missão", "veto": "enter de novo entrega o veto"}[f.tipo]
+			return m, nil
+		}
+		f.armado = false
 		m.form = &f
 		switch f.tipo {
 		case "missao":
@@ -836,26 +853,36 @@ func (m Model) valoresForm() []string {
 	return vs
 }
 
-func (m Model) enviarMissao() (tea.Model, tea.Cmd) {
+// invalidoForm valida os formulários de missão e veto antes de armar; "" = pode seguir.
+func (m Model) invalidoForm() string {
 	v := m.valoresForm()
-	var falta []string
-	for i, nome := range m.form.nomes[:5] {
-		if v[i] == "" {
-			falta = append(falta, nome)
+	switch m.form.tipo {
+	case "missao":
+		var falta []string
+		for i, nome := range m.form.nomes[:5] {
+			if v[i] == "" {
+				falta = append(falta, nome)
+			}
+		}
+		if len(falta) > 0 {
+			return "falta: " + strings.Join(falta, ", ")
+		}
+		for _, o := range origensMissao {
+			if o == v[2] {
+				return ""
+			}
+		}
+		return "origem é PDY, produto ou designer"
+	case "veto":
+		if v[0] == "" {
+			return "o veto precisa do texto"
 		}
 	}
-	if len(falta) > 0 {
-		m.status = "falta: " + strings.Join(falta, ", ")
-		return m, nil
-	}
-	ok := false
-	for _, o := range origensMissao {
-		ok = ok || o == v[2]
-	}
-	if !ok {
-		m.status = "origem é PDY, produto ou designer"
-		return m, nil
-	}
+	return ""
+}
+
+func (m Model) enviarMissao() (tea.Model, tea.Cmd) {
+	v := m.valoresForm()
 	n := dados.NovaMissao{Slug: v[0], Nome: v[1], Origem: v[2], OrigemRef: v[3], Cards: v[4], Objetivo: v[5]}
 	if _, err := m.acoes.Pipes.AbrirMissao(n); err != nil {
 		m.status = "missao-abrir: " + err.Error()
@@ -870,10 +897,6 @@ func (m Model) enviarMissao() (tea.Model, tea.Cmd) {
 func (m Model) enviarVeto() (tea.Model, tea.Cmd) {
 	f := m.form
 	texto := m.valoresForm()[0]
-	if texto == "" {
-		m.status = "o veto precisa do texto"
-		return m, nil
-	}
 	if err := m.acoes.Pipes.Vetar(f.vetoID, f.vetoEtapa, texto); err != nil {
 		m.status = "veto: " + err.Error()
 		return m.mostrarToast(m.status, T.Erro)

@@ -36,11 +36,11 @@ func TestCartaEmTodasAsLarguras(t *testing.T) {
 			}
 		}
 		p := ansi.Strip(out)
-		if !strings.Contains(p, "Frota") || !strings.Contains(p, "Genguinha") {
+		if !strings.Contains(p, "multas-custos") || !strings.Contains(p, "Genguinha") {
 			t.Fatalf("w=%d sem missão ou principal:\n%s", w, p)
 		}
 		if w >= 96 {
-			for _, s := range []string{"Frota por unidade", "g-frota", "PL-1203", "trabalhando", "PR vermelho", "gengar-1030-0900"} {
+			for _, s := range []string{"multas-custos", "g-multas-custos", "PL-19597", "trabalhando", "PR vermelho", "gengar-1030-0900"} {
 				if !strings.Contains(p, s) {
 					t.Errorf("w=%d sem %q:\n%s", w, s, p)
 				}
@@ -96,7 +96,7 @@ func TestEscEZeroLimpamMissao(t *testing.T) {
 		if m.missao != "" {
 			t.Fatalf("%s não limpou", k)
 		}
-		if strings.Contains(ansi.Strip(m.Render(140, 42)), "◆ Frota") {
+		if strings.Contains(ansi.Strip(m.Render(140, 42)), "◆ multas-custos") {
 			t.Fatalf("%s: selo ficou", k)
 		}
 	}

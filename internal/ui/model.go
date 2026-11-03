@@ -723,11 +723,11 @@ func (m Model) tecla(k string) (tea.Model, tea.Cmd) {
 			return m.mover(0), nil
 		}
 	case "n":
-		if Gavetas[m.gaveta].ID == "missoes" {
+		if Gavetas[m.gaveta].ID == "missoes" || m.missao != "" {
 			return m.abrirForm()
 		}
 	case "N":
-		if Gavetas[m.gaveta].ID == "missoes" {
+		if Gavetas[m.gaveta].ID == "missoes" || m.missao != "" {
 			return m.pedeGengar(armadoGengar)
 		}
 	case "e":
@@ -916,7 +916,7 @@ func (m Model) ajudaLinhas(largura int) []string {
 		k("x 2×", "arquiva a pergunta antiga"),
 		k("R 2×", "retoma fantasminha caído (crew)"),
 		k("d", "PRs: mostra · esconde rascunhos"),
-		k("n N e · m · v", "missões: nova sidequest (N com gengar) · YAML · nova missão · veta"),
+		k("n N e · m · v", "nova sidequest (N com gengar; com foco, em qualquer gaveta) · YAML · missão e veto com enter 2×"),
 		k("A S T 2×", "detalhe da sidequest: avança, pula, retry"),
 		k("D", "pede rodada do DayDreaming"),
 		k("M", "reconecta os MCPs de todas as sessões"),
