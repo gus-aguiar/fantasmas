@@ -184,22 +184,18 @@ func TestFaltaDe(t *testing.T) {
 
 func TestComandoMaquina(t *testing.T) {
 	raiz := t.TempDir()
-	scripts := filepath.Join(raiz, "shared", "mods", "control-panel", "scripts")
-
-	argv := comandoMaquina(raiz, scripts)
+	argv := comandoMaquina(raiz)
 	if len(argv) != 4 || argv[1] != "-c" || argv[2] != assets.Maquina {
-		t.Fatalf("sem script nem .delegate: %q", argv[:2])
+		t.Fatalf("sem .delegate: %q", argv[:2])
 	}
 	os.MkdirAll(filepath.Join(raiz, ".delegate"), 0o755)
-	argv = comandoMaquina(raiz, scripts)
-	if len(argv) != 5 || argv[4] != filepath.Join(raiz, ".delegate", "heavy.lock") {
-		t.Fatalf("com .delegate deveria passar a trava: %q", argv[3:])
-	}
+	// o maquina.sh do Spark na raiz não muda nada: o fantasmas usa sempre o seu
+	scripts := filepath.Join(raiz, "shared", "mods", "control-panel", "scripts")
 	os.MkdirAll(scripts, 0o755)
 	os.WriteFile(filepath.Join(scripts, "maquina.sh"), []byte("#"), 0o644)
-	argv = comandoMaquina(raiz, scripts)
-	if len(argv) != 2 || argv[1] != filepath.Join(scripts, "maquina.sh") {
-		t.Fatalf("com o script do Spark deveria usá-lo: %q", argv)
+	argv = comandoMaquina(raiz)
+	if len(argv) != 5 || argv[2] != assets.Maquina || argv[4] != filepath.Join(raiz, ".delegate", "heavy.lock") {
+		t.Fatalf("com .delegate deveria passar a trava: %q", argv[3:])
 	}
 }
 
@@ -223,7 +219,7 @@ func TestMaquinaEmbutidaLeOComputador(t *testing.T) {
 		for _, l := range TSV(out) {
 			chaves[l.Chave] = true
 		}
-		for _, k := range []string{"memoria", "pressao", "oom", "carga", "sessoes"} {
+		for _, k := range []string{"memoria", "swap", "pressao", "oom", "carga", "sessoes", "disco"} {
 			if !chaves[k] {
 				t.Errorf("trava %q: sem %s em %q", trava, k, out)
 			}

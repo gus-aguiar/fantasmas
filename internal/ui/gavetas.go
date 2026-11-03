@@ -480,6 +480,8 @@ func gavetaMaquina(c *corpo, e dados.Estado, pedindoDD bool) {
 			cor, glifo = T.Erro, "✗"
 		case "aviso":
 			cor, glifo = T.Espera, "◆"
+		case "neutro":
+			cor, glifo = T.Dim, "○"
 		}
 		c.linhaLista(alvo{}, glifo, cor, l.Rotulo, "", cor, l.Detalhe)
 	}

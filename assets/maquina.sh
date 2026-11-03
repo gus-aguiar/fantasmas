@@ -1,5 +1,6 @@
 #!/bin/bash
-# maquina.sh (cópia embutida no fantasmas; a original fica em shared/mods/control-panel/scripts do Spark)
+# maquina.sh do fantasmas (embutido no binário; nasceu do shared/mods/control-panel/scripts do Spark,
+# com disco e swap a mais). Roda com bash -c; $1 é a trava de testes pesados, vazia fora do Spark.
 # -> linhas chave<TAB>rotulo<TAB>detalhe<TAB>tom  (tom: ok | aviso | erro | neutro)
 # O que derrubou tudo em 06/10: memória (o oomd mata o terminal inteiro), sessões demais e testes pesados em paralelo.
 set -u
@@ -11,6 +12,16 @@ tg=$(awk -v k="$total" 'BEGIN{printf "%.0f", k/1048576}')
 ug=$(awk -v k="$((total - disp))" 'BEGIN{printf "%.0f", k/1048576}')
 tom=ok; [ "$usado" -ge 80 ] && tom=aviso; [ "$usado" -ge 90 ] && tom=erro
 l memoria "memória" "${ug} de ${tg} GB (${usado}%)" "$tom"
+
+# swap cheio é o último degrau antes do oomd matar processos
+read -r st sf <<<"$(awk '/SwapTotal/{t=$2} /SwapFree/{f=$2} END{print t+0, f+0}' /proc/meminfo)"
+if [ "$st" -gt 0 ]; then
+  su=$(( (st - sf) * 100 / st ))
+  tom=ok; [ "$su" -ge 50 ] && tom=aviso; [ "$su" -ge 80 ] && tom=erro
+  l swap "swap" "$(awk -v k="$((st - sf))" 'BEGIN{printf "%.1f", k/1048576}') de $(awk -v k="$st" 'BEGIN{printf "%.0f", k/1048576}') GB (${su}%)" "$tom"
+else
+  l swap "swap" "sem swap" neutro
+fi
 
 press=$(awk '/^some/{split($3,a,"="); print a[2]}' /proc/pressure/memory 2>/dev/null)
 tom=ok; awk -v p="${press:-0}" 'BEGIN{exit !(p>10)}' && tom=aviso; awk -v p="${press:-0}" 'BEGIN{exit !(p>40)}' && tom=erro
@@ -28,7 +39,14 @@ s=$(pgrep -fc '^claude' 2>/dev/null); s=${s:-0}
 tom=ok; [ "$s" -gt 15 ] && tom=aviso; [ "$s" -gt 25 ] && tom=erro
 l sessoes "sessões do Claude" "$s" "$tom"
 
-# cópia embutida: a trava vem como $1 (<raiz>/.delegate/heavy.lock); sem raiz do Spark não há trava.
+# disco da home, onde ficam worktrees, caches e builds
+read -r dt du dp <<<"$(df -P -k "$HOME" 2>/dev/null | awk 'NR==2{gsub("%","",$5); print $2, $3, $5}')"
+if [ -n "${dt:-}" ]; then
+  tom=ok; [ "$dp" -ge 85 ] && tom=aviso; [ "$dp" -ge 95 ] && tom=erro
+  l disco "disco" "$(awk -v k="$du" 'BEGIN{printf "%.0f", k/1048576}') de $(awk -v k="$dt" 'BEGIN{printf "%.0f", k/1048576}') GB (${dp}%)" "$tom"
+fi
+
+# a trava vem como $1 (<raiz>/.delegate/heavy.lock); sem raiz do Spark não há trava.
 trava="${1:-}"
 [ -z "$trava" ] && exit 0
 fila=$(pgrep -fc "flock $trava" 2>/dev/null); fila=${fila:-0}
