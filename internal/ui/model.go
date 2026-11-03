@@ -34,6 +34,10 @@ type Acoes struct {
 	// gaveta pipes
 	Pipes  OpsPipes
 	Editar func(arquivo string) *exec.Cmd
+	// gaveta settings: tema e variáveis FANTASMAS_*
+	Ajustes OpsAjustes
+	// pasta das figuras do usuário (além das embutidas)
+	DirFiguras string
 }
 
 type coletouMsg struct{ dados.Estado }
@@ -111,6 +115,8 @@ type Model struct {
 	armadoPipe string
 	form       *formPipe
 
+	ajuste *editaAjuste
+
 	// missao é o slug da missão em foco ("" = todas).
 	missao string
 }
@@ -136,6 +142,9 @@ func (m Model) ComGrafico(g *Grafico) Model {
 	m.img = g
 	return m
 }
+
+// Grafico devolve a imagem kitty em uso (a figura pode trocar pela aba settings), ou nil.
+func (m Model) Grafico() *Grafico { return m.img }
 
 // ComModoImagem registra o modo do Gengar para a ajuda.
 func (m Model) ComModoImagem(s string) Model {
@@ -226,7 +235,7 @@ func (m Model) alturaEfetiva() int {
 }
 
 func (m Model) temBarra() bool {
-	return m.aberto == nil && m.pipe == 0 && m.form == nil && !m.ajuda && (m.filtro != nil || m.busca != "")
+	return m.aberto == nil && m.pipe == 0 && m.form == nil && !m.ajuda && (m.ajuste != nil || m.filtro != nil || m.busca != "")
 }
 
 // alturaLista é a altura do corpo da gaveta, a mesma usada no desenho, para enter e clique baterem.
@@ -381,6 +390,9 @@ func (m Model) enter() Model {
 // enterCmd é o enter com efeito assíncrono: os botões da gaveta máquina.
 func (m Model) enterCmd() (tea.Model, tea.Cmd) {
 	if a, ok := m.selecionado(); ok {
+		if a.ajuste != "" {
+			return m.acionarAjuste(a.ajuste)
+		}
 		switch a.acao {
 		case acaoDaydreaming:
 			return m.daydreaming()
@@ -576,6 +588,9 @@ func (m Model) atualizar(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.pipe != 0 {
 			return m.teclaPipe(msg.String())
 		}
+		if m.ajuste != nil {
+			return m.teclaAjuste(msg)
+		}
 		if m.filtro != nil {
 			return m.teclaFiltro(msg)
 		}
@@ -586,6 +601,13 @@ func (m Model) atualizar(msg tea.Msg) (tea.Model, tea.Cmd) {
 			ti, cmd := f.campos[f.foco].Update(msg)
 			f.campos[f.foco] = ti
 			m.form = &f
+			return m, cmd
+		}
+		if m.ajuste != nil {
+			e := *m.ajuste
+			ti, cmd := e.campo.Update(msg)
+			e.campo = ti
+			m.ajuste = &e
 			return m, cmd
 		}
 		if m.rascunho != nil {
@@ -620,6 +642,9 @@ func (m Model) mouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 	}
 	if m.ajuda {
 		m.ajuda = false
+		return m, nil
+	}
+	if m.ajuste != nil {
 		return m, nil
 	}
 	q := m.montar(m.larguraEfetiva(), m.alturaEfetiva())
@@ -752,8 +777,10 @@ func (m Model) tecla(k string) (tea.Model, tea.Cmd) {
 		return m.irAba(), nil
 	case "p":
 		return m.abrirURL(PainelURL), nil
+	case ",":
+		return m.irGaveta(indiceGaveta("settings")), nil
 	}
-	if len(k) == 1 && k[0] >= '1' && int(k[0]-'1') < len(Gavetas) {
+	if len(k) == 1 && k[0] >= '1' && k[0] <= '9' && int(k[0]-'1') < len(Gavetas) {
 		return m.irGaveta(int(k[0] - '1')), nil
 	}
 	return m, nil
@@ -781,6 +808,8 @@ func (m Model) montarCorpo(largura, altura int) *corpo {
 		gavetaMaquina(c, e, m.pedindoDD)
 	case "mais":
 		gavetaMais(c, e, m.atualizando, m.armadoAtu)
+	case "settings":
+		gavetaSettings(c, m.acoes.Ajustes)
 	}
 	if c.filtro != "" && c.vis == 0 {
 		c.branco()
@@ -807,7 +836,8 @@ func esqueleto(largura, altura int) []string {
 
 // corpoLinhas devolve as linhas visíveis da gaveta e, para cada uma, o item dono (ou -1).
 func (m Model) corpoLinhas(largura, altura int) ([]string, []int) {
-	if m.estado.At.IsZero() {
+	// settings não depende da coleta: aparece já na abertura.
+	if m.estado.At.IsZero() && Gavetas[m.gaveta].ID != "settings" {
 		ls := esqueleto(largura, altura)
 		dono := make([]int, len(ls))
 		for i := range dono {
@@ -862,7 +892,7 @@ func (m Model) ajudaLinhas(largura int) []string {
 		k("enter", "abre · responde · foca a missão"),
 		k("enter 2×", "confirma Liberar merge"),
 		k("", "e Não vou fazer"),
-		k("← → 1-9 0", "troca de gaveta · 0 volta a todas as missões"),
+		k("← → 1-9 0 ,", "troca de gaveta · 0 todas as missões · , settings"),
 		k("/", "filtra a lista"),
 		k("esc", "volta · limpa o filtro (ou a missão)"),
 		k("o", "abre o link (abrir ↗)"),
@@ -1003,7 +1033,11 @@ func (m Model) montar(largura, altura int) tela {
 		}
 		barra := m.temBarra() && h > 1
 		if barra {
-			corpo[h-1] = m.linhaFiltro(largura)
+			if m.ajuste != nil {
+				corpo[h-1] = m.linhaAjuste(largura)
+			} else {
+				corpo[h-1] = m.linhaFiltro(largura)
+			}
 		}
 		if m.toast != "" {
 			y := h - 1

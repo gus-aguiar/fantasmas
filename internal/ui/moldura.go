@@ -26,6 +26,7 @@ type Gaveta struct{ ID, Tecla, Nome string }
 var Gavetas = []Gaveta{
 	{"missoes", "1", "missões"}, {"agora", "2", "agora"}, {"crew", "3", "fantasminhas"}, {"pipes", "4", "pipes"},
 	{"prs", "5", "PRs"}, {"ci", "6", "CI"}, {"ambiente", "7", "ambiente"}, {"maquina", "8", "máquina"}, {"mais", "9", "mais"},
+	{"settings", ",", "settings"},
 }
 
 func fundo(c lipgloss.Color) lipgloss.Style { return lipgloss.NewStyle().Background(c) }

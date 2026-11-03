@@ -109,6 +109,10 @@ func TestTeclasTrocamGaveta(t *testing.T) {
 	}
 	m = tecla(m, "9")
 	m = tecla(m, "right")
+	if Gavetas[m.gaveta].ID != "settings" {
+		t.Fatalf("esperava settings, veio %s", Gavetas[m.gaveta].ID)
+	}
+	m = tecla(m, "right")
 	if Gavetas[m.gaveta].ID != "missoes" {
 		t.Fatalf("esperava missoes, veio %s", Gavetas[m.gaveta].ID)
 	}

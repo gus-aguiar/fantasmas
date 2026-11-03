@@ -17,8 +17,18 @@ import (
 
 const idImagem = 4100
 
-// FatorAmpliacao amplia cada quadro por vizinho mais próximo antes do PNG, para o terminal não suavizar.
+// FatorAmpliacao é a ampliação máxima de cada quadro, por vizinho mais próximo antes do PNG, para o
+// terminal não suavizar a pixel art.
 const FatorAmpliacao = 4
+
+// ladoAlvo é o lado maior que o PNG ampliado busca: figura grande não é ampliada, porque no modo T
+// cada quadro é reenviado (~10 fps) e um PNG enorme pesa no terminal.
+const ladoAlvo = 320
+
+// fatorAmpliacao devolve quanto ampliar um quadro w×h: até FatorAmpliacao, sem passar de ladoAlvo.
+func fatorAmpliacao(w, h int) int {
+	return min(FatorAmpliacao, max(1, ladoAlvo/max(w, h, 1)))
+}
 
 // Modos de envio da imagem.
 const (
@@ -67,6 +77,17 @@ func NovoGrafico(w io.Writer, modo string) (*Grafico, error) {
 
 func novoGrafico(w io.Writer, modo string, ps [][]byte, delays []int) *Grafico {
 	return &Grafico{w: w, modo: modo, porQuadro: modo == ModoQuadros, png: ps, delays: delays, agora: time.Now}
+}
+
+// Recarregado tira a imagem do terminal e devolve um Grafico novo com a figura atual, no mesmo modo e saída.
+func (g *Grafico) Recarregado() (*Grafico, error) {
+	n, err := NovoGrafico(g.w, g.modo)
+	if err != nil {
+		return g, err
+	}
+	g.Encerrar()
+	n.Log = g.Log
+	return n, nil
 }
 
 // Modo devolve o modo de envio.
@@ -167,11 +188,12 @@ func QuadrosPNG(gifBytes []byte) ([][]byte, []time.Duration, error) {
 	}
 	var ps [][]byte
 	var ds []time.Duration
+	fator := fatorAmpliacao(w, h)
 	for i, f := range fs {
 		dst := image.NewNRGBA(image.Rect(0, 0, w, h))
 		draw.Draw(dst, dst.Bounds(), f, js[i].Min, draw.Src)
 		var b bytes.Buffer
-		if err := png.Encode(&b, ampliar(dst, FatorAmpliacao)); err != nil {
+		if err := png.Encode(&b, ampliar(dst, fator)); err != nil {
 			return nil, nil, err
 		}
 		ps = append(ps, b.Bytes())

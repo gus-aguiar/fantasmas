@@ -13,6 +13,7 @@ import (
 	"syscall"
 	"time"
 
+	"fantasmas/internal/config"
 	"fantasmas/internal/dados"
 	"fantasmas/internal/kitty"
 	"fantasmas/internal/ui"
@@ -24,6 +25,8 @@ import (
 )
 
 func main() {
+	// antes de qualquer os.Getenv, inclusive os padrões das flags
+	loja, aviso := abrirAjustes()
 	raiz := flag.String("raiz", "", "raiz do workspace Spark")
 	intervalo := flag.Duration("intervalo", 30*time.Second, "intervalo da coleta automática")
 	largura := flag.Int("largura", 0, "largura do quadro (só com --uma-vez)")
@@ -33,7 +36,7 @@ func main() {
 	cor := flag.Bool("cor", false, "força cor de 24 bits (só com --uma-vez)")
 	demo := flag.Bool("demo", false, "usa o estado de demonstração (só com --uma-vez)")
 	demoVerde := flag.Bool("demo-verde", false, "demonstração com todos os PRs de CI verde (só com --uma-vez)")
-	gaveta := flag.String("gaveta", "", "gaveta inicial: missoes|agora|crew|pipes|prs|ci|ambiente|maquina|mais (só com --uma-vez)")
+	gaveta := flag.String("gaveta", "", "gaveta inicial: missoes|agora|crew|pipes|prs|ci|ambiente|maquina|mais|settings (só com --uma-vez)")
 	missao := flag.String("missao", "", "foca a missão pelo slug (só com --uma-vez)")
 	pipe := flag.Int("pipe", 0, "abre o detalhe do run N da gaveta pipes (só com --uma-vez)")
 	flag.Parse()
@@ -97,9 +100,24 @@ func main() {
 		Pipes:  &dados.Pipes{R: runner, Raiz: *raiz, Script: dados.ScriptDdb(*raiz)},
 		Editar: func(arq string) *exec.Cmd { return ui.ComandoEditor(os.Getenv("FANTASMAS_EDITOR"), arq) },
 	}
+	if loja != nil {
+		acoes.Ajustes = loja
+		acoes.DirFiguras = filepath.Join(filepath.Dir(loja.Caminho()), "figuras")
+	}
+	config.DefinirValores(config.ChaveFigura, ui.NomesFiguras(acoes.DirFiguras))
+	if err := ui.UsarTema(os.Getenv(config.ChaveTema)); err != nil {
+		aviso = err.Error()
+	}
 	m := ui.Novo(coleta, acoes, *intervalo)
+	if aviso != "" {
+		m = m.ComStatus(aviso)
+	}
 	if *sprite != "" {
 		if err := ui.UsarSprite(*sprite); err != nil {
+			m = m.ComStatus(err.Error())
+		}
+	} else if f := os.Getenv(config.ChaveFigura); f != "" {
+		if err := ui.UsarFigura(f, acoes.DirFiguras); err != nil {
 			m = m.ComStatus(err.Error())
 		}
 	}
@@ -167,7 +185,10 @@ func main() {
 	logf("modo %s (%s)", rotulo, motivo)
 	m = m.ComModoImagem(rotulo)
 	final, err := tea.NewProgram(m, tea.WithAltScreen(), tea.WithMouseCellMotion(), tea.WithOutput(saida)).Run()
-	if g != nil {
+	// a figura pode ter trocado pela aba settings: encerra a imagem que está no terminal agora.
+	if fm, ok := final.(ui.Model); ok && fm.Grafico() != nil {
+		fm.Grafico().Encerrar()
+	} else if g != nil {
 		g.Encerrar()
 	}
 	if err != nil {
@@ -179,6 +200,19 @@ func main() {
 		err := syscall.Exec(fm.Reiniciar(), os.Args, os.Environ())
 		fmt.Fprintln(os.Stderr, "fantasmas: atualizado; feche e abra de novo:", err)
 	}
+}
+
+// abrirAjustes aplica o arquivo da aba settings ao ambiente; o aviso vai para a linha de status.
+func abrirAjustes() (*config.Loja, string) {
+	caminho, err := config.Caminho()
+	if err != nil {
+		return nil, err.Error()
+	}
+	l, err := config.Abrir(caminho)
+	if err != nil {
+		return l, err.Error()
+	}
+	return l, ""
 }
 
 // escolherModo decide kitty ou células pelo ambiente; consultar indica que só a consulta ao terminal decide.
@@ -193,6 +227,9 @@ func escolherModo(env func(string) string) (modo, motivo string, consultar bool)
 	case "WezTerm", "kitty":
 		return "kitty", "TERM_PROGRAM=" + tp, false
 	}
+	if v := env("ORCA_IMAGE_PROTOCOL"); v == "kitty" {
+		return "kitty", "ORCA_IMAGE_PROTOCOL=" + v, false
+	}
 	for _, k := range []string{"HERDR_PANE_ID", "WEZTERM_EXECUTABLE", "KITTY_WINDOW_ID"} {
 		if env(k) != "" {
 			return "kitty", k + " presente", false
@@ -201,13 +238,15 @@ func escolherModo(env func(string) string) (modo, motivo string, consultar bool)
 	return "", "nenhum indício no ambiente", true
 }
 
-// escolherModoImagem: FANTASMAS_IMAGEM_MODO manda; sem ele, T dentro do Herdr e animação fora.
+// escolherModoImagem: FANTASMAS_IMAGEM_MODO manda; sem ele, T dentro do Herdr e do Orca e animação fora.
+// O terminal do Orca (addon de imagem do xterm.js) só aceita as ações t, T, q, p e d: sem a=f e a=a
+// a animação nativa fica parada no primeiro quadro, então o modo T reenvia cada quadro.
 func escolherModoImagem(env func(string) string) string {
 	switch v := env("FANTASMAS_IMAGEM_MODO"); v {
 	case ui.ModoAnimacao, ui.ModoQuadros, ui.ModoT:
 		return v
 	}
-	if env("HERDR_PANE_ID") != "" {
+	if env("HERDR_PANE_ID") != "" || env("TERM_PROGRAM") == "Orca" || env("ORCA_IMAGE_PROTOCOL") != "" {
 		return ui.ModoT
 	}
 	return ui.ModoAnimacao
