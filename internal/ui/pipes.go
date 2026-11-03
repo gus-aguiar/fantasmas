@@ -144,7 +144,7 @@ func gavetaPipes(c *corpo, e dados.Estado) {
 	if !e.PipesLigado {
 		c.secao("pipes", "")
 		c.branco()
-		c.vazio(MsgPipesDesligado)
+		c.vazioIcone("◆", T.Espera, MsgPipesDesligado)
 		return
 	}
 	espera := 0

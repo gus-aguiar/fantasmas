@@ -70,6 +70,16 @@ func (c *corpo) texto(f func(bg lipgloss.Color) string) {
 
 func (c *corpo) branco() { c.texto(func(lipgloss.Color) string { return "" }) }
 
+// descricao é a frase do topo de cada gaveta: para que ela serve.
+func (c *corpo) descricao(s string) {
+	if s == "" {
+		return
+	}
+	w := c.largura
+	c.texto(func(bg lipgloss.Color) string { return st(bg, T.Sub).Italic(true).Render(" " + Corte(s, max(4, w-2))) })
+	c.branco()
+}
+
 func (c *corpo) secao(titulo, extra string) {
 	c.texto(func(bg lipgloss.Color) string {
 		s := st(bg, T.Acao).Render("› ") + st(bg, T.Sub).Bold(true).Render(titulo)
@@ -80,13 +90,42 @@ func (c *corpo) secao(titulo, extra string) {
 	})
 }
 
-func (c *corpo) vazio(msg string) {
+// vazio é o estado vazio neutro (○); vazioIcone escolhe o ícone e a cor.
+func (c *corpo) vazio(msg string) { c.vazioIcone("○", T.Dim, msg) }
+
+// vazioIcone desenha o estado vazio como uma caixa de borda arredondada, centrada, com uma linha de
+// folga em cima e embaixo e o ícone antes da primeira linha de texto.
+func (c *corpo) vazioIcone(icone string, cor lipgloss.Color, linhas ...string) {
 	w := c.largura
-	c.texto(func(bg lipgloss.Color) string {
-		m := Corte(msg, w)
-		esq := (w - lipgloss.Width(m)) / 2
-		return espacos(esq, bg) + st(bg, T.Dim).Render(m)
-	})
+	maior := 0
+	for _, l := range linhas {
+		maior = max(maior, lipgloss.Width(l))
+	}
+	caixa := min(max(4, w-2), max(36, maior+10)) // largura total, bordas incluídas
+	dentro := caixa - 2
+	esq := max(0, (w-caixa)/2)
+	borda := func(bg lipgloss.Color, a, b string) string {
+		return espacos(esq, bg) + st(bg, T.Borda).Render(a+strings.Repeat("─", dentro)+b)
+	}
+	meio := func(bg lipgloss.Color, s string) string {
+		s = Corte(s, max(1, dentro-2))
+		e := (dentro - lipgloss.Width(s)) / 2
+		return espacos(esq, bg) + st(bg, T.Borda).Render("│") + espacos(e, bg) + s +
+			espacos(dentro-e-lipgloss.Width(s), bg) + st(bg, T.Borda).Render("│")
+	}
+	c.texto(func(bg lipgloss.Color) string { return borda(bg, "╭", "╮") })
+	c.texto(func(bg lipgloss.Color) string { return meio(bg, "") })
+	for i, l := range linhas {
+		l, i := l, i
+		c.texto(func(bg lipgloss.Color) string {
+			if i == 0 {
+				return meio(bg, st(bg, cor).Render(icone)+espacos(2, bg)+st(bg, T.Sub).Render(Corte(l, max(1, dentro-6))))
+			}
+			return meio(bg, st(bg, T.Dim).Render(Corte(l, max(1, dentro-4))))
+		})
+	}
+	c.texto(func(bg lipgloss.Color) string { return meio(bg, "") })
+	c.texto(func(bg lipgloss.Color) string { return borda(bg, "╰", "╯") })
 }
 
 func (c *corpo) item(a alvo, fs ...func(bg lipgloss.Color) string) {

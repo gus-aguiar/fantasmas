@@ -44,12 +44,12 @@ func mostravel(o config.Opcao, valor string) string {
 	return valor
 }
 
-func gavetaSettings(c *corpo, e dados.Estado, ops OpsAjustes, pedindoDD bool) {
-	secaoAcoes(c, e, pedindoDD)
+func gavetaSettings(c *corpo, e dados.Estado, ops OpsAjustes, pedindoDD, atualizando, armadoAtu bool) {
+	secaoAcoes(c, e, pedindoDD, atualizando, armadoAtu)
 	c.branco()
 	if ops == nil {
 		c.branco()
-		c.vazio("settings indisponível nesta execução")
+		c.vazioIcone("◆", T.Espera, "settings indisponível nesta execução")
 		return
 	}
 	grupo := ""

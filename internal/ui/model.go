@@ -29,7 +29,7 @@ type Acoes struct {
 	Daydreaming    func() (string, error)
 	ReconectarMCPs func() error
 	ProgressoMCP   func() dados.ProgressoMCP
-	// gaveta mais: git pull + build + troca do binário
+	// settings → atualizar app fantasmas: git pull + build + troca do binário
 	Atualizar func() (dados.Resultado, error)
 	// gaveta pipes
 	Pipes  OpsPipes
@@ -421,7 +421,7 @@ func (m Model) atualizarApp() (tea.Model, tea.Cmd) {
 	}
 	if !m.armadoAtu {
 		m.armadoAtu = true
-		m.status = "U de novo confirma atualizar fantasmas"
+		m.status = "U de novo confirma atualizar app fantasmas"
 		return m, nil
 	}
 	m.armadoAtu, m.atualizando = false, true
@@ -753,8 +753,9 @@ func (m Model) tecla(k string) (tea.Model, tea.Cmd) {
 		m.busca, m.sel = "", 0
 		return m, nil
 	case "0":
-		m.missao, m.sel = "", 0
-		return m, nil
+		// 0 é a gaveta missões e volta a todas as missões (tira o foco)
+		m.missao = ""
+		return m.irGaveta(indiceGaveta("missoes")), nil
 	case "r":
 		return m.coletar()
 	case "left", "h":
@@ -777,11 +778,9 @@ func (m Model) tecla(k string) (tea.Model, tea.Cmd) {
 		return m.irAba(), nil
 	case "p":
 		return m.abrirURL(PainelURL), nil
-	case ",":
-		return m.irGaveta(indiceGaveta("settings")), nil
 	}
-	if len(k) == 1 && k[0] >= '1' && k[0] <= '9' && int(k[0]-'1') < len(Gavetas) {
-		return m.irGaveta(int(k[0] - '1')), nil
+	if len(k) == 1 && k[0] >= '0' && k[0] <= '9' && int(k[0]-'0') < len(Gavetas) {
+		return m.irGaveta(int(k[0] - '0')), nil
 	}
 	return m, nil
 }
@@ -789,6 +788,7 @@ func (m Model) tecla(k string) (tea.Model, tea.Cmd) {
 func (m Model) montarCorpo(largura, altura int) *corpo {
 	c := &corpo{largura: largura, filtro: normaliza(m.busca), antigasAbertas: m.antigas, rascunhos: m.rascunhos}
 	e := m.estadoVisto()
+	c.descricao(Gavetas[m.gaveta].Descricao)
 	switch Gavetas[m.gaveta].ID {
 	case "missoes":
 		gavetaMissoes(c, m.estado, m.missao)
@@ -806,10 +806,10 @@ func (m Model) montarCorpo(largura, altura int) *corpo {
 		gavetaAmbiente(c, e)
 	case "maquina":
 		gavetaMaquina(c, e)
-	case "mais":
-		gavetaMais(c, e, m.atualizando, m.armadoAtu)
+	case "worktrees":
+		gavetaWorktrees(c, e)
 	case "settings":
-		gavetaSettings(c, e, m.acoes.Ajustes, m.pedindoDD)
+		gavetaSettings(c, e, m.acoes.Ajustes, m.pedindoDD, m.atualizando, m.armadoAtu)
 	}
 	if c.filtro != "" && c.vis == 0 {
 		c.branco()
@@ -892,7 +892,7 @@ func (m Model) ajudaLinhas(largura int) []string {
 		k("enter", "abre · responde · foca a missão"),
 		k("enter 2×", "confirma Liberar merge"),
 		k("", "e Não vou fazer"),
-		k("← → 1-9 0 ,", "troca de gaveta · 0 todas as missões · , settings"),
+		k("← → 0-9", "troca de gaveta · 0 missões (todas) · 9 settings"),
 		k("/", "filtra a lista"),
 		k("esc", "volta · limpa o filtro (ou a missão)"),
 		k("o", "abre o link (abrir ↗)"),

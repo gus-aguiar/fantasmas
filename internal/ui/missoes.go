@@ -183,8 +183,7 @@ func chip(bg, fg lipgloss.Color, s string) string {
 func gavetaMissoes(c *corpo, e dados.Estado, foco string) {
 	if !e.MissoesLigado {
 		c.branco()
-		c.vazio("missões: ligue FANTASMAS_FONTE=ddb")
-		c.vazio("o filtro por workspace segue valendo pelo meta")
+		c.vazioIcone("◆", T.Espera, "missões: ligue FANTASMAS_FONTE=ddb", "o filtro por workspace segue valendo pelo meta")
 		return
 	}
 	w := c.largura - 2

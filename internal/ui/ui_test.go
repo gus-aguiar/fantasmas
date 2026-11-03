@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"unicode"
 
 	"fantasmas/internal/dados"
 
@@ -81,8 +82,8 @@ func TestRodape56SoTeclaNasInativas(t *testing.T) {
 }
 
 func TestRodape110TeclaENome(t *testing.T) {
-	if !strings.Contains(ansi.Strip(Rodape("agora", 110)), "3 fantasminhas") {
-		t.Fatal("sem 3 fantasminhas")
+	if !strings.Contains(ansi.Strip(Rodape("agora", 110)), "2 fantasminhas") {
+		t.Fatal("sem 2 fantasminhas")
 	}
 }
 
@@ -153,5 +154,47 @@ func TestTopoSemTravaForaDoSpark(t *testing.T) {
 	e.Maquina = nil
 	if out := ansi.Strip(Topo(e, 96, 0, false, "")); !strings.Contains(out, "fila de pesados livre") {
 		t.Fatalf("antes da primeira leitura segue o livre:\n%s", out)
+	}
+}
+
+func TestTodaGavetaTemDescricao(t *testing.T) {
+	for i, g := range Gavetas {
+		r := []rune(g.Descricao)
+		if len(r) == 0 || !unicode.IsUpper(r[0]) || !strings.HasSuffix(g.Descricao, ".") {
+			t.Errorf("%s: descrição %q deveria começar com maiúscula e terminar com ponto", g.ID, g.Descricao)
+			continue
+		}
+		m := modelo(fixture(), &registro{}).irGaveta(i)
+		inicio := string(r[:min(30, len(r))])
+		if out := render(m, 140, 40); !strings.Contains(out, inicio) {
+			t.Errorf("%s: descrição não aparece:\n%s", g.ID, out)
+		}
+	}
+}
+
+func TestVazioEmCaixa(t *testing.T) {
+	for _, w := range []int{30, 46, 96, 140} {
+		c := &corpo{largura: w}
+		c.vazioIcone("✓", T.Ok, "nada pedindo você agora", "segunda linha")
+		var ls []string
+		for _, l := range c.linhas {
+			ls = append(ls, ansi.Strip(l.desenha(T.Base)))
+		}
+		if len(ls) != 6 || !strings.HasPrefix(strings.TrimSpace(ls[0]), "╭") || !strings.HasSuffix(strings.TrimSpace(ls[5]), "╯") {
+			t.Fatalf("w=%d: %q", w, ls)
+		}
+		if !strings.Contains(ls[2], "✓  nada pedindo") || strings.TrimSpace(strings.Trim(strings.TrimSpace(ls[1]), "│")) != "" {
+			t.Fatalf("w=%d: ícone, texto ou folga: %q", w, ls)
+		}
+		for i, l := range ls {
+			if lipgloss.Width(l) > w {
+				t.Fatalf("w=%d linha %d estoura: %q", w, i, l)
+			}
+		}
+		// centrada: as sobras dos dois lados diferem em no máximo 1
+		esq := len(ls[0]) - len(strings.TrimLeft(ls[0], " "))
+		if dir := w - lipgloss.Width(ls[0]); esq-dir > 1 || dir-esq > 1 {
+			t.Fatalf("w=%d: caixa fora do centro (%d × %d)", w, esq, dir)
+		}
 	}
 }

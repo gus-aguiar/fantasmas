@@ -154,7 +154,7 @@ func gavetaAgora(c *corpo, e dados.Estado, altura int) {
 	if len(praVoce) > 0 || c.filtro == "" {
 		c.secao("precisa de você", contagem(len(praVoce)))
 		if len(praVoce) == 0 {
-			c.vazio("nada pedindo você agora ✓")
+			c.vazioIcone("✓", T.Ok, "nada pedindo você agora")
 		} else {
 			usados += lista(praVoce, cabem)
 		}
@@ -456,9 +456,17 @@ func gavetaAmbiente(c *corpo, e dados.Estado) {
 	}
 }
 
-// secaoAcoes: os botões DayDreaming e MCPs, no topo da aba settings (teclas D e M valem de qualquer gaveta).
-func secaoAcoes(c *corpo, e dados.Estado, pedindoDD bool) {
+// secaoAcoes: os botões do topo da aba settings. As teclas U (2×), D e M valem de qualquer gaveta.
+func secaoAcoes(c *corpo, e dados.Estado, pedindoDD, atualizando, armadoAtu bool) {
 	c.secao("ações", "enter aciona")
+	g0, cor0, est0 := "⟳", T.Texto, "U 2×"
+	switch {
+	case atualizando:
+		g0, cor0, est0 = "◐", T.Andamento, "atualizando…"
+	case armadoAtu:
+		cor0, est0 = T.Espera, "de novo confirma"
+	}
+	c.linhaLista(alvo{acao: acaoAtualizar}, g0, cor0, "atualizar app fantasmas", est0, cor0, "git pull, build e reabre")
 	g, cor, est, det := botaoDaydreaming(e.Daydreamer, pedindoDD)
 	c.linhaLista(alvo{acao: "daydreaming"}, g, cor, "atualizar DayDreaming", est, cor, det)
 	g, cor, est, det = botaoMCP(e.MCP)
@@ -473,9 +481,9 @@ func secaoAcoes(c *corpo, e dados.Estado, pedindoDD bool) {
 
 // gavetaMaquina é só monitoramento: a saúde do computador, relida a cada coleta (r atualiza na hora).
 func gavetaMaquina(c *corpo, e dados.Estado) {
-	c.secao("máquina", "r atualiza")
+	c.secao("máquina", "")
 	if len(e.Maquina) == 0 {
-		c.vazio("sem leitura da máquina: o maquina.sh não respondeu")
+		c.vazioIcone("◆", T.Espera, "sem leitura da máquina", "o maquina.sh não respondeu")
 	}
 	for _, l := range e.Maquina {
 		cor, glifo := T.Ok, "●"
@@ -491,18 +499,10 @@ func gavetaMaquina(c *corpo, e dados.Estado) {
 	}
 }
 
-func gavetaMais(c *corpo, e dados.Estado, atualizando, armado bool) {
-	c.secao("app", "enter aciona")
-	g, cor, est := "⟳", T.Texto, "U 2×"
-	switch {
-	case atualizando:
-		g, cor, est = "◐", T.Andamento, "atualizando…"
-	case armado:
-		cor, est = T.Espera, "de novo confirma"
-	}
-	c.linhaLista(alvo{acao: acaoAtualizar}, g, cor, "atualizar fantasmas", est, cor, "")
-	c.branco()
-	c.secao("worktrees", "")
+// gavetaWorktrees lista onde cada branch está aberto no disco: o Spark e os repos dentro dele
+// (coleta.sh worktrees); enter abre a pasta.
+func gavetaWorktrees(c *corpo, e dados.Estado) {
+	c.secao("worktrees", "enter abre a pasta")
 	if len(e.Worktrees) == 0 {
 		c.vazio("nenhum worktree")
 	}

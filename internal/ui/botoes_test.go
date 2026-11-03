@@ -23,6 +23,9 @@ func TestSettingsTemBotoes(t *testing.T) {
 			t.Errorf("falta %q", s)
 		}
 	}
+	if wt := ansi.Strip(m.irGaveta(indiceGaveta("worktrees")).Render(110, 30)); strings.Contains(wt, "atualizar") {
+		t.Errorf("worktrees deveria ter só os worktrees:\n%s", wt)
+	}
 	maq := ansi.Strip(m.irGaveta(indiceGaveta("maquina")).Render(110, 30))
 	if strings.Contains(maq, "DayDreaming") || strings.Contains(maq, "reconectar MCPs") {
 		t.Errorf("máquina deveria ser só monitoramento:\n%s", maq)
@@ -35,9 +38,9 @@ func TestAtualizarPedeSegundoU(t *testing.T) {
 		chamou++
 		return dados.Resultado{Novos: 2, Trocou: true, Binario: "/x/bin/fantasmas"}, nil
 	}}
-	m := Novo(nil, ac, time.Minute).ComEstado(dados.Estado{At: time.Now()}).irGaveta(indiceGaveta("mais"))
-	if !strings.Contains(ansi.Strip(m.Render(110, 30)), "atualizar fantasmas") {
-		t.Fatal("falta o item na gaveta mais")
+	m := Novo(nil, ac, time.Minute).ComEstado(dados.Estado{At: time.Now()}).irGaveta(indiceGaveta("settings"))
+	if !strings.Contains(ansi.Strip(m.Render(110, 30)), "atualizar app fantasmas") {
+		t.Fatal("falta o item nas ações de settings")
 	}
 	n, cmd := m.tecla("U")
 	m = n.(Model)

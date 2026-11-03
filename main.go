@@ -38,7 +38,7 @@ func main() {
 	cor := flag.Bool("cor", false, "força cor de 24 bits (só com --uma-vez)")
 	demo := flag.Bool("demo", false, "usa o estado de demonstração (só com --uma-vez)")
 	demoVerde := flag.Bool("demo-verde", false, "demonstração com todos os PRs de CI verde (só com --uma-vez)")
-	gaveta := flag.String("gaveta", "", "gaveta inicial: missoes|agora|crew|pipes|prs|ci|ambiente|maquina|mais|settings (só com --uma-vez)")
+	gaveta := flag.String("gaveta", "", "gaveta inicial: missoes|agora|crew|pipes|prs|ci|ambiente|maquina|worktrees|settings (só com --uma-vez)")
 	missao := flag.String("missao", "", "foca a missão pelo slug (só com --uma-vez)")
 	pipe := flag.Int("pipe", 0, "abre o detalhe do run N da gaveta pipes (só com --uma-vez)")
 	acharRaiz := flag.Bool("achar-raiz", false, "procura a raiz do Spark na home, salva em settings (FANTASMAS_RAIZ) e sai; o setup.sh usa")
@@ -286,7 +286,7 @@ func configurarRaiz(l lojaRaiz, achar func() []string, home string, entrada io.R
 	switch {
 	case len(rs) == 0:
 		diz("não achei a raiz do Spark na home (até %d níveis)", profBuscaRaiz)
-		diz("defina em settings (, → %s) ou rode: gengar --raiz <pasta do Spark>", chave)
+		diz("defina em settings (9 → %s) ou rode: gengar --raiz <pasta do Spark>", chave)
 		return 0
 	case len(rs) > 1 && interativo:
 		diz("achei %d raízes do Spark (da mais ativa para a menos ativa):", len(rs))
