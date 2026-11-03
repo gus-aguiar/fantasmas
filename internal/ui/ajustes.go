@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"fantasmas/internal/config"
+	"fantasmas/internal/dados"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -43,7 +44,9 @@ func mostravel(o config.Opcao, valor string) string {
 	return valor
 }
 
-func gavetaSettings(c *corpo, ops OpsAjustes) {
+func gavetaSettings(c *corpo, e dados.Estado, ops OpsAjustes, pedindoDD bool) {
+	secaoAcoes(c, e, pedindoDD)
+	c.branco()
 	if ops == nil {
 		c.branco()
 		c.vazio("settings indisponível nesta execução")

@@ -456,7 +456,8 @@ func gavetaAmbiente(c *corpo, e dados.Estado) {
 	}
 }
 
-func gavetaMaquina(c *corpo, e dados.Estado, pedindoDD bool) {
+// secaoAcoes: os botões DayDreaming e MCPs, no topo da aba settings (teclas D e M valem de qualquer gaveta).
+func secaoAcoes(c *corpo, e dados.Estado, pedindoDD bool) {
 	c.secao("ações", "enter aciona")
 	g, cor, est, det := botaoDaydreaming(e.Daydreamer, pedindoDD)
 	c.linhaLista(alvo{acao: "daydreaming"}, g, cor, "atualizar DayDreaming", est, cor, det)
@@ -468,8 +469,11 @@ func gavetaMaquina(c *corpo, e dados.Estado, pedindoDD bool) {
 			c.linhaLista(alvo{}, "  "+glifo, cor, s.Nome, s.Tom, cor, s.Detalhe)
 		}
 	}
-	c.branco()
-	c.secao("máquina", "")
+}
+
+// gavetaMaquina é só monitoramento: a saúde do computador, relida a cada coleta (r atualiza na hora).
+func gavetaMaquina(c *corpo, e dados.Estado) {
+	c.secao("máquina", "r atualiza")
 	if len(e.Maquina) == 0 {
 		c.vazio("sem leitura da máquina: o maquina.sh não respondeu")
 	}

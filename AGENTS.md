@@ -72,7 +72,7 @@ A lista completa fica no `?` dentro do app, e a fonte é `ajudaLinhas` em `inter
   - `U 2×`: atualiza o app;
   - `A`/`S`/`T 2×`: avança, pula ou faz retry de uma etapa do pipe.
 - Gaveta pipes: `n` lança um run, `e` edita o YAML e `N` abre o gengar dedicado do run.
-- Outras: `D` pede uma rodada do DayDreaming e `M` reconecta os MCPs.
+- Outras: `D` pede uma rodada do DayDreaming e `M` reconecta os MCPs. Os dois botões ficam na seção "ações" da aba settings; a gaveta máquina é só monitoramento.
 
 ## De onde vêm os dados
 
