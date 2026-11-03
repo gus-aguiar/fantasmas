@@ -18,10 +18,10 @@ func TestDeDdbLeRuns(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(p.Runs) != 1 {
-		t.Fatalf("runs=%+v", p.Runs)
+	if len(p.Sidequests) != 1 {
+		t.Fatalf("runs=%+v", p.Sidequests)
 	}
-	r := p.Runs[0]
+	r := p.Sidequests[0]
 	if r.ID != 2 || r.Pipeline != "implementar-homologar" || r.EsperaVoce != 1 || r.IdadeMin != 42 || len(r.Etapas) != 2 {
 		t.Fatalf("run=%+v", r)
 	}
@@ -60,8 +60,8 @@ func TestColetaComDdbTrazRunsETick(t *testing.T) {
 	f.saida[" state --json"] = estadoRuns
 	f.saida[" tick --dry-run"] = "lançaria 2026-10-30-PL-2-homolog (homolog, skill homolog)\n"
 	e := (&Coletor{Raiz: raizDdb(t), R: f}).Coletar(context.Background())
-	if !e.PipesLigado || len(e.Runs) != 1 {
-		t.Fatalf("ligado=%v runs=%v", e.PipesLigado, e.Runs)
+	if !e.PipesLigado || len(e.Sidequests) != 1 {
+		t.Fatalf("ligado=%v runs=%v", e.PipesLigado, e.Sidequests)
 	}
 	if e.Proximo["2026-10-30-PL-2-homolog"] == "" {
 		t.Errorf("proximo=%v", e.Proximo)
@@ -76,21 +76,21 @@ func TestColetaComDdbTrazRunsETick(t *testing.T) {
 func TestSemChavePipesDesligado(t *testing.T) {
 	t.Setenv("FANTASMAS_FONTE", "")
 	e := (&Coletor{Raiz: raizDdb(t), R: novoFake()}).Coletar(context.Background())
-	if e.PipesLigado || len(e.Runs) != 0 {
-		t.Errorf("ligado=%v runs=%v", e.PipesLigado, e.Runs)
+	if e.PipesLigado || len(e.Sidequests) != 0 {
+		t.Errorf("ligado=%v runs=%v", e.PipesLigado, e.Sidequests)
 	}
 }
 
 func TestPipesMontaComandos(t *testing.T) {
 	f := novoFake()
-	f.saida[" pipeline list --json"] = `[{"name":"implementar","arquivo":"/s/implementar.yaml","version":1,"inputs":["card","repos"],"stages":["implementar"],"erros":[]}]`
-	f.saida[" pipeline validate /s/implementar.yaml"] = "ok implementar v1 (1 etapas)\n"
+	f.saida[" sidequest list --json"] = `[{"name":"implementar","arquivo":"/s/implementar.yaml","version":1,"inputs":["card","repos"],"stages":["implementar"],"erros":[]}]`
+	f.saida[" sidequest validate /s/implementar.yaml"] = "ok implementar v1 (1 etapas)\n"
 	p := Pipes{R: f, Raiz: "/r", Script: "/r/ddb.py"}
 	ps, err := p.Listar()
 	if err != nil || len(ps) != 1 || ps[0].Arquivo != "/s/implementar.yaml" || len(ps[0].Inputs) != 2 {
 		t.Fatalf("ps=%+v err=%v", ps, err)
 	}
-	if _, err := p.Novo("implementar", [][2]string{{"card", "PL-9"}, {"repos", "WS React"}}, "Meu título"); err != nil {
+	if _, err := p.Novo("implementar", [][2]string{{"card", "PL-9"}, {"repos", "WS React"}}, "Meu título", "w15"); err != nil {
 		t.Fatal(err)
 	}
 	if err := p.Etapa(3, "homologar", "retry"); err != nil {
@@ -100,10 +100,10 @@ func TestPipesMontaComandos(t *testing.T) {
 		t.Fatalf("validar=%q %v", out, err)
 	}
 	quer := []string{
-		"python3 /r/ddb.py --raiz /r pipeline list --json",
-		"python3 /r/ddb.py --raiz /r run new implementar --input card=PL-9 --input repos=WS React --title Meu título",
+		"python3 /r/ddb.py --raiz /r sidequest list --json",
+		"python3 /r/ddb.py --raiz /r sidequest new implementar --input card=PL-9 --input repos=WS React --title Meu título --workspace w15",
 		"python3 /r/ddb.py --raiz /r stage 3:homologar retry",
-		"python3 /r/ddb.py --raiz /r pipeline validate /s/implementar.yaml",
+		"python3 /r/ddb.py --raiz /r sidequest validate /s/implementar.yaml",
 	}
 	if strings.Join(f.calls, "\n") != strings.Join(quer, "\n") {
 		t.Fatalf("calls:\n%s", strings.Join(f.calls, "\n"))
@@ -114,12 +114,60 @@ func TestPipesMontaComandos(t *testing.T) {
 }
 
 func TestRunLeProntidao(t *testing.T) {
-	var rs []Run
+	var rs []Sidequest
 	js := `[{"id":1,"prontidao":"pronto"},{"id":2,"prontidao":"aguardando prontidão"},{"id":3,"prontidao":null}]`
 	if err := json.Unmarshal([]byte(js), &rs); err != nil {
 		t.Fatal(err)
 	}
 	if rs[0].Prontidao != "pronto" || rs[1].Prontidao != "aguardando prontidão" || rs[2].Prontidao != "" {
 		t.Fatalf("%+v", rs)
+	}
+}
+
+func TestFallbackRuns(t *testing.T) {
+	p, err := DeDdb([]byte(estadoRuns), time.Now())
+	if err != nil || len(p.Sidequests) != 1 || p.Sidequests[0].ID != 2 {
+		t.Fatalf("JSON só com runs não carregou: %+v %v", p.Sidequests, err)
+	}
+}
+
+func TestDeDdbLeSidequestsEDecisoes(t *testing.T) {
+	js := `{"sidequests":[{"id":5,"pipeline":"bugfix","solta":true,"stages":[]}],"runs":[{"id":9}],
+"missoes":[{"slug":"m1","sidequests":[5],"decisoes":[{"at":"2026-11-03T10:00:00","via":"regra","slug":"s-5","item":"plano","motivo":"plano curto"}]}],
+"decisoes_soltas":[{"at":"x","via":"humano","slug":"s-6","item":"plano","motivo":""}]}`
+	p, err := DeDdb([]byte(js), time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(p.Sidequests) != 1 || p.Sidequests[0].ID != 5 || !p.Sidequests[0].Solta {
+		t.Fatalf("sidequests deveria vencer runs: %+v", p.Sidequests)
+	}
+	m := p.Missoes[0]
+	if len(m.Sidequests) != 1 || m.Sidequests[0] != 5 || len(m.Decisoes) != 1 || m.Decisoes[0].Via != "regra" {
+		t.Fatalf("missão=%+v", m)
+	}
+	if len(p.DecisoesSoltas) != 1 || p.DecisoesSoltas[0].Slug != "s-6" {
+		t.Fatalf("soltas=%+v", p.DecisoesSoltas)
+	}
+}
+
+func TestVetarEAbrirMissao(t *testing.T) {
+	f := novoFake()
+	p := Pipes{R: f, Raiz: "/r", Script: "/r/ddb.py"}
+	if err := p.Vetar(5, "implementar", "  "); err == nil {
+		t.Error("veto vazio aceito")
+	}
+	if err := p.Vetar(5, "implementar", "refaz o plano"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := p.AbrirMissao(NovaMissao{Slug: "m1", Nome: "M 1", Origem: "PDY", OrigemRef: "PDY-1", Cards: "PL-1,PL-2", Objetivo: "x"}); err != nil {
+		t.Fatal(err)
+	}
+	quer := []string{
+		"python3 /r/ddb.py --raiz /r stage 5:implementar veto -- refaz o plano",
+		"bash /r/scripts/delegate/missao-abrir.sh m1 --nome M 1 --origem PDY --origem-ref PDY-1 --cards PL-1,PL-2 --objetivo x",
+	}
+	if strings.Join(f.calls, "|") != strings.Join(quer, "|") {
+		t.Fatalf("calls: %v", f.calls)
 	}
 }

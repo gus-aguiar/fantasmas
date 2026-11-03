@@ -18,6 +18,9 @@ type alvo struct {
 	pipe                          int
 	missao                        string
 	ajuste                        string
+	// decisão vetável: sidequest, etapa e o rótulo ("plano")
+	vetoID            int
+	vetoEtapa, vetoDe string
 }
 
 // linha do corpo; item é o índice do alvo dono da linha, ou -1.

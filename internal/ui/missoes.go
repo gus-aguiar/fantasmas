@@ -48,7 +48,7 @@ func filtrarPor(e dados.Estado, slug, ws string) dados.Estado {
 	m, _ := missaoDe(e, slug)
 	da := func(missao, aba string) bool { return slug != "" && missao == slug || noWs(aba, ws) }
 	f := e
-	f.Tasks, f.Esperando, f.Linhas, f.Runs, f.Mural, f.Travados, f.Caidos = nil, nil, nil, nil, nil, nil, nil
+	f.Tasks, f.Esperando, f.Linhas, f.Sidequests, f.Mural, f.Travados, f.Caidos = nil, nil, nil, nil, nil, nil, nil
 	pastas := map[string]bool{}
 	for _, t := range e.Tasks {
 		if da(t.Missao, t.Extra) {
@@ -72,9 +72,9 @@ func filtrarPor(e dados.Estado, slug, ws string) dados.Estado {
 			f.Linhas = append(f.Linhas, l)
 		}
 	}
-	for _, r := range e.Runs {
+	for _, r := range e.Sidequests {
 		if slug != "" && r.Missao == slug {
-			f.Runs = append(f.Runs, r)
+			f.Sidequests = append(f.Sidequests, r)
 		}
 	}
 	for _, a := range e.Mural {
@@ -204,9 +204,9 @@ func gavetaMissoes(c *corpo, e dados.Estado, foco string) {
 	}
 	c.secaoN("missões", abertas, extra)
 	if len(ms) == 0 {
-		c.vazio("nenhuma missão aberta · scripts/delegate/missao-abrir.sh")
-		return
+		c.vazio("nenhuma missão aberta · m abre uma missão")
 	}
+	daMissao, soltas := sidequestsPorMissao(e, ms)
 	for i, m := range ms {
 		if !c.passa(append([]string{m.Nome, m.Slug, m.Origem, m.OrigemRef, m.Gengar}, m.Cards...)...) {
 			continue
@@ -215,6 +215,140 @@ func gavetaMissoes(c *corpo, e dados.Estado, foco string) {
 			c.branco()
 		}
 		carta(c, e, m, m.Slug == foco, w)
+		faixa := func(bg lipgloss.Color) string { return st(bg, corMissao(m.Slug)).Render("▌ ") + espacos(2, bg) }
+		for _, r := range daMissao[m.Slug] {
+			c.linhaSidequestEm(r, r.Pipeline, faixa, w)
+		}
+		c.decisoes(e, m.Decisoes, faixa, w)
+	}
+	if len(soltas) > 0 || len(e.DecisoesSoltas) > 0 {
+		c.branco()
+		c.texto(func(bg lipgloss.Color) string { return st(bg, T.Dim).Bold(true).Render("SIDEQUESTS SOLTAS") })
+		sem := func(bg lipgloss.Color) string { return "" }
+		for _, r := range soltas {
+			nome := r.Pipeline
+			if r.SlugBase != "" {
+				nome += " · " + r.SlugBase
+			}
+			c.linhaSidequestEm(r, nome, sem, w)
+		}
+		c.decisoes(e, e.DecisoesSoltas, sem, w)
+	}
+	c.branco()
+	c.texto(func(bg lipgloss.Color) string {
+		return st(bg, T.Dim).Render(Corte(rodapeMissoes(len(ms), len(e.Sidequests), len(soltas), c.largura >= 70), w))
+	})
+}
+
+// sidequestsPorMissao separa as sidequests por missão; a que não acha missão vai para as soltas, nunca some.
+func sidequestsPorMissao(e dados.Estado, ms []dados.Missao) (map[string][]dados.Sidequest, []dados.Sidequest) {
+	dono := map[int]string{}
+	existe := map[string]bool{}
+	for _, m := range ms {
+		existe[m.Slug] = true
+		for _, id := range m.Sidequests {
+			dono[id] = m.Slug
+		}
+	}
+	por := map[string][]dados.Sidequest{}
+	var soltas []dados.Sidequest
+	for _, r := range e.Sidequests {
+		s := dono[r.ID]
+		if s == "" && !r.Solta {
+			s = r.Missao
+		}
+		if s != "" && existe[s] {
+			por[s] = append(por[s], r)
+		} else {
+			soltas = append(soltas, r)
+		}
+	}
+	return por, soltas
+}
+
+func rodapeMissoes(nm, ns, nsoltas int, largo bool) string {
+	plural := func(n int, um, varios string) string {
+		if n == 1 {
+			return fmt.Sprintf("%d %s", n, um)
+		}
+		return fmt.Sprintf("%d %s", n, varios)
+	}
+	s := plural(nm, "missão", "missões") + " · " + plural(ns, "sidequest", "sidequests")
+	if nsoltas > 0 {
+		s += " (" + plural(nsoltas, "solta", "soltas") + ")"
+	}
+	if largo {
+		s += " · n nova sidequest · m nova missão"
+	}
+	return s
+}
+
+func (c *corpo) linhaSidequestEm(r dados.Sidequest, nome string, faixa func(bg lipgloss.Color) string, w int) {
+	if !c.casa(r.Pipeline, nomeRun(r), r.SlugBase, r.Status) {
+		return
+	}
+	c.item(alvo{pipe: r.ID}, func(bg lipgloss.Color) string {
+		f := faixa(bg)
+		return f + linhaSidequest(bg, r, nome, w-lipgloss.Width(f))
+	}, c.linhaGengarSQ(r, faixa))
+}
+
+// linhaGengarSQ é a linha extra da sidequest com gengar dedicado; nil sem gengar.
+func (c *corpo) linhaGengarSQ(r dados.Sidequest, faixa func(bg lipgloss.Color) string) func(bg lipgloss.Color) string {
+	if r.Prontidao == "" {
+		return nil
+	}
+	return func(bg lipgloss.Color) string {
+		return faixa(bg) + espacos(2, bg) + st(bg, T.Dim).Render("gengar ") + gengarChip(bg, r)
+	}
+}
+
+// etapaDoSlug acha a sidequest e a etapa dona do slug da decisão.
+func etapaDoSlug(e dados.Estado, slug string) (int, string) {
+	for _, r := range e.Sidequests {
+		for _, et := range r.Etapas {
+			if et.Slug == slug {
+				return r.ID, et.ID
+			}
+		}
+	}
+	return 0, ""
+}
+
+// decisoes lista os gates decididos; os da regra podem ser vetados (v). Merge nunca passa por aqui.
+func (c *corpo) decisoes(e dados.Estado, ds []dados.Decisao, faixa func(bg lipgloss.Color) string, w int) {
+	for _, d := range ds {
+		d := d
+		id, etapa := etapaDoSlug(e, d.Slug)
+		a := alvo{pipe: id}
+		regra := d.Via == "regra"
+		if regra {
+			a.vetoID, a.vetoEtapa, a.vetoDe = id, etapa, d.Item
+		}
+		c.item(a, func(bg lipgloss.Color) string {
+			f := faixa(bg)
+			quem, cor := "você aprovou", T.Sub
+			if regra {
+				quem, cor = "regra aprovou", T.Info
+			}
+			s := st(bg, cor).Render("◇ "+quem+" ") + st(bg, T.Texto).Bold(true).Render(d.Item)
+			fim := ""
+			if regra {
+				fim = st(bg, T.Acao).Bold(true).Render("  v vetar")
+			}
+			if lipgloss.Width(f+s+fim) > w {
+				fim = st(bg, T.Acao).Bold(true).Render(" v")
+			}
+			resto := w - lipgloss.Width(f) - lipgloss.Width(s) - lipgloss.Width(fim)
+			det := d.Slug
+			if d.Motivo != "" {
+				det += " · " + d.Motivo
+			}
+			if resto > 4 {
+				s += st(bg, T.Dim).Render(Corte(" · "+det, resto))
+			}
+			return f + s + fim
+		})
 	}
 }
 
@@ -343,7 +477,7 @@ func contagens(k dados.Contagem, bg lipgloss.Color, largo bool) string {
 		{k.Trabalhando, "●", "trabalhando", "trabalhando", T.Andamento, T.Sub},
 		{k.Parados, "◌", "parado", "parados", T.Dim, T.Sub},
 		{k.Pendentes, "▲", "sua", "suas", T.Espera, T.Espera},
-		{k.PipesAtivos, "⟳", "pipe", "pipes", T.Acao, T.Sub},
+		{k.PipesAtivos, "⟳", "sidequest", "sidequests", T.Acao, T.Sub},
 		{pv, "✗", "PR vermelho", "PRs vermelhos", T.Erro, T.Erro},
 	}
 	var out []string

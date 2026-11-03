@@ -44,12 +44,14 @@ type Estado struct {
 	MCP                                          ProgressoMCP
 	Mural                                        []Aviso
 	Caidos                                       []Caido
-	Runs                                         []Run
+	Sidequests                                   []Sidequest
 	PipesLigado                                  bool
 	Proximo                                      map[string]string
 	// missões (só com FANTASMAS_FONTE=ddb)
 	MissoesLigado bool
 	Principal     Principal
 	Missoes       []Missao
-	Coordenadores map[string]LinhaViva
+	// DecisoesSoltas são as decisões de sidequest sem missão.
+	DecisoesSoltas []Decisao
+	Coordenadores  map[string]LinhaViva
 }

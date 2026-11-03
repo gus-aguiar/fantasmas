@@ -23,6 +23,18 @@ type Missao struct {
 	Cards                                                                         []string
 	Contagem                                                                      Contagem
 	UltimaAtividade                                                               time.Time
+	// Sidequests são os ids das sidequests da missão; Decisoes, as decisões tomadas nelas.
+	Sidequests []int
+	Decisoes   []Decisao
+}
+
+// Decisao é um gate decidido (via "regra" ou "humano") numa etapa de sidequest.
+type Decisao struct {
+	At     string `json:"at"`
+	Via    string `json:"via"`
+	Slug   string `json:"slug"`
+	Item   string `json:"item"`
+	Motivo string `json:"motivo"`
 }
 
 type principalDdb struct {
@@ -32,17 +44,19 @@ type principalDdb struct {
 }
 
 type missaoDdb struct {
-	Slug      string   `json:"slug"`
-	Nome      string   `json:"nome"`
-	Workspace string   `json:"workspace"`
-	Origem    string   `json:"origem"`
-	OrigemRef string   `json:"origem_ref"`
-	Cards     []string `json:"cards"`
-	Estado    string   `json:"estado"`
-	Gengar    string   `json:"gengar"`
-	Objetivo  string   `json:"objetivo"`
-	Prototipo string   `json:"prototipo"`
-	Contagem  struct {
+	Slug       string    `json:"slug"`
+	Nome       string    `json:"nome"`
+	Workspace  string    `json:"workspace"`
+	Origem     string    `json:"origem"`
+	OrigemRef  string    `json:"origem_ref"`
+	Cards      []string  `json:"cards"`
+	Estado     string    `json:"estado"`
+	Gengar     string    `json:"gengar"`
+	Objetivo   string    `json:"objetivo"`
+	Prototipo  string    `json:"prototipo"`
+	Sidequests []int     `json:"sidequests"`
+	Decisoes   []Decisao `json:"decisoes"`
+	Contagem   struct {
 		Trabalhando  int  `json:"trabalhando"`
 		Parados      int  `json:"parados"`
 		Pendentes    int  `json:"pendentes"`
@@ -57,7 +71,7 @@ func (x missaoDdb) missao() Missao {
 	return Missao{Slug: x.Slug, Nome: x.Nome, Workspace: x.Workspace, Origem: x.Origem, OrigemRef: x.OrigemRef,
 		Estado: x.Estado, Gengar: x.Gengar, Objetivo: x.Objetivo, Prototipo: x.Prototipo, Cards: x.Cards,
 		Contagem:        Contagem{c.Trabalhando, c.Parados, c.Pendentes, c.PipesAtivos, c.PrsVermelhos},
-		UltimaAtividade: quandoISO(x.Ultima)}
+		UltimaAtividade: quandoISO(x.Ultima), Sidequests: x.Sidequests, Decisoes: x.Decisoes}
 }
 
 func quandoISO(s string) time.Time {

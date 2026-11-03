@@ -25,15 +25,14 @@ func Faixa(largura int) string {
 type Gaveta struct{ ID, Tecla, Nome, Descricao string }
 
 var Gavetas = []Gaveta{
-	{"missoes", "0", "missões", "Frentes abertas, com gengar, fantasminhas e PRs"},
+	{"missoes", "0", "missões", "Frentes abertas, com gengar, sidequests e PRs"},
 	{"agora", "1", "agora", "O que está acontecendo agora"},
 	{"crew", "2", "fantasminhas", "Agentes delegados: ativos e caídos"},
-	{"pipes", "3", "pipes", "Runs do ddb e o próximo passo"},
-	{"prs", "4", "PRs", "Seus PRs, o que falta e o CI"},
-	{"ambiente", "5", "ambiente", "Serviços locais do Spark"},
-	{"maquina", "6", "máquina", "Saúde do computador"},
-	{"worktrees", "7", "worktrees", "Onde cada branch está aberto"},
-	{"configuracoes", "8", "configurações", "Ações, tema, figura e variáveis"},
+	{"prs", "3", "PRs", "Seus PRs, o que falta e o CI"},
+	{"ambiente", "4", "ambiente", "Serviços locais do Spark"},
+	{"maquina", "5", "máquina", "Saúde do computador"},
+	{"worktrees", "6", "worktrees", "Onde cada branch está aberto"},
+	{"configuracoes", "7", "configurações", "Ações, tema, figura e variáveis"},
 }
 
 func fundo(c lipgloss.Color) lipgloss.Style { return lipgloss.NewStyle().Background(c) }

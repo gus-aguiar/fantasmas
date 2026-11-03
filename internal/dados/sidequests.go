@@ -8,8 +8,8 @@ import (
 	"time"
 )
 
-// Run é um run de pipeline como vem em `ddb state --json` (runs[]).
-type Run struct {
+// Sidequest é uma sidequest como vem em `ddb state --json` (sidequests[], antes runs[]).
+type Sidequest struct {
 	ID          int               `json:"id"`
 	Pipeline    string            `json:"pipeline"`
 	Title       string            `json:"title"`
@@ -23,6 +23,8 @@ type Run struct {
 	Prontidao string  `json:"prontidao"`
 	Etapas    []Etapa `json:"stages"`
 	Missao    string  `json:"missao"`
+	// Solta: a sidequest não pertence a nenhuma missão.
+	Solta bool `json:"solta"`
 }
 
 type Gate struct {
@@ -127,25 +129,29 @@ func (p *Pipes) ddb(args ...string) (string, error) {
 }
 
 func (p *Pipes) Listar() ([]Pipeline, error) {
-	out, err := p.ddb("pipeline", "list", "--json")
+	out, err := p.ddb("sidequest", "list", "--json")
 	if err != nil {
 		return nil, err
 	}
 	var ps []Pipeline
 	if err := json.Unmarshal([]byte(out), &ps); err != nil {
-		return nil, fmt.Errorf("pipeline list ilegível: %w", err)
+		return nil, fmt.Errorf("sidequest list ilegível: %w", err)
 	}
 	return ps, nil
 }
 
-// Novo chama `ddb run new` e devolve a primeira linha da saída (id e slugs).
-func (p *Pipes) Novo(pipeline string, entradas [][2]string, titulo string) (string, error) {
-	args := []string{"run", "new", pipeline}
+// Novo chama `ddb sidequest new` e devolve a primeira linha da saída (id e slugs).
+// Com workspace, a sidequest nasce na missão daquele workspace; vazio, fica solta.
+func (p *Pipes) Novo(pipeline string, entradas [][2]string, titulo, workspace string) (string, error) {
+	args := []string{"sidequest", "new", pipeline}
 	for _, kv := range entradas {
 		args = append(args, "--input", kv[0]+"="+kv[1])
 	}
 	if titulo = strings.TrimSpace(titulo); titulo != "" {
 		args = append(args, "--title", titulo)
+	}
+	if workspace != "" {
+		args = append(args, "--workspace", workspace)
 	}
 	out, err := p.ddb(args...)
 	l, _, _ := strings.Cut(strings.TrimSpace(out), "\n")
@@ -174,7 +180,34 @@ func (p *Pipes) Etapa(run int, etapa, acao string) error {
 }
 
 func (p *Pipes) Validar(alvo string) (string, error) {
-	out, err := p.ddb("pipeline", "validate", alvo)
+	out, err := p.ddb("sidequest", "validate", alvo)
+	return strings.TrimSpace(out), err
+}
+
+// Vetar entrega o veto do humano à etapa: `ddb stage <id>:<etapa> veto -- <texto>`.
+func (p *Pipes) Vetar(id int, etapa, texto string) error {
+	if texto = strings.TrimSpace(texto); texto == "" {
+		return fmt.Errorf("veto precisa do texto")
+	}
+	_, err := p.ddb("stage", fmt.Sprintf("%d:%s", id, etapa), "veto", "--", texto)
+	return err
+}
+
+// NovaMissao são os campos do missao-abrir.sh.
+type NovaMissao struct {
+	Slug, Nome, Origem, OrigemRef, Cards, Objetivo string
+}
+
+// AbrirMissao roda scripts/delegate/missao-abrir.sh e devolve a linha JSON que ele imprime.
+func (p *Pipes) AbrirMissao(n NovaMissao) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeoutGengar)
+	defer cancel()
+	argv := []string{"bash", p.Raiz + "/scripts/delegate/missao-abrir.sh", n.Slug, "--nome", n.Nome,
+		"--origem", n.Origem, "--origem-ref", n.OrigemRef, "--cards", n.Cards}
+	if o := strings.TrimSpace(n.Objetivo); o != "" {
+		argv = append(argv, "--objetivo", o)
+	}
+	out, err := p.R.Run(ctx, argv...)
 	return strings.TrimSpace(out), err
 }
 

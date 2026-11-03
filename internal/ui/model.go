@@ -185,8 +185,8 @@ func (m Model) coletar() (Model, tea.Cmd) {
 	}
 	m.coletando = true
 	ctx := context.Background()
-	if Gavetas[m.gaveta].ID == "pipes" {
-		// r na gaveta pipes pede o tick fresco, ignorando o cache.
+	if Gavetas[m.gaveta].ID == "missoes" {
+		// r na gaveta missões pede o tick fresco, ignorando o cache.
 		ctx = dados.ComTickForcado(ctx)
 	}
 	return m, m.comecarCom(ctx)
@@ -723,16 +723,24 @@ func (m Model) tecla(k string) (tea.Model, tea.Cmd) {
 			return m.mover(0), nil
 		}
 	case "n":
-		if Gavetas[m.gaveta].ID == "pipes" {
+		if Gavetas[m.gaveta].ID == "missoes" {
 			return m.abrirForm()
 		}
 	case "N":
-		if Gavetas[m.gaveta].ID == "pipes" {
+		if Gavetas[m.gaveta].ID == "missoes" {
 			return m.pedeGengar(armadoGengar)
 		}
 	case "e":
-		if Gavetas[m.gaveta].ID == "pipes" {
+		if Gavetas[m.gaveta].ID == "missoes" {
 			return m.editarPipeline()
+		}
+	case "m":
+		if Gavetas[m.gaveta].ID == "missoes" {
+			return m.abrirFormMissao()
+		}
+	case "v":
+		if a, ok := m.selecionado(); ok && Gavetas[m.gaveta].ID == "missoes" && a.vetoDe != "" {
+			return m.abrirVeto(a)
 		}
 	case "d":
 		if Gavetas[m.gaveta].ID == "prs" {
@@ -796,8 +804,6 @@ func (m Model) montarCorpo(largura, altura int) *corpo {
 		gavetaAgora(c, e, altura)
 	case "crew":
 		gavetaCrew(c, e)
-	case "pipes":
-		gavetaPipes(c, e)
 	case "prs":
 		gavetaPRs(c, e)
 	case "ambiente":
@@ -900,7 +906,7 @@ func (m Model) ajudaLinhas(largura int) []string {
 		k("enter", "abre · responde · foca a missão"),
 		k("enter 2×", "confirma Liberar merge"),
 		k("", "e Não vou fazer"),
-		k("← → 0-9", "troca de gaveta · 0 missões (todas) · 8 configurações"),
+		k("← → 0-7", "troca de gaveta · 0 missões (todas) · 7 configurações"),
 		k("/", "filtra a lista"),
 		k("esc", "volta · limpa o filtro (ou a missão)"),
 		k("o", "abre o link (abrir ↗)"),
@@ -910,7 +916,8 @@ func (m Model) ajudaLinhas(largura int) []string {
 		k("x 2×", "arquiva a pergunta antiga"),
 		k("R 2×", "retoma fantasminha caído (crew)"),
 		k("d", "PRs: mostra · esconde rascunhos"),
-		k("n e · A S T 2×", "pipes: lança · edita o YAML · avança, pula, retry"),
+		k("n N e · m · v", "missões: nova sidequest (N com gengar) · YAML · nova missão · veta"),
+		k("A S T 2×", "detalhe da sidequest: avança, pula, retry"),
 		k("D", "pede rodada do DayDreaming"),
 		k("M", "reconecta os MCPs de todas as sessões"),
 		k("U 2×", "atualiza o fantasmas (pull, build, reabre)"),

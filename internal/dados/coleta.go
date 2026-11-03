@@ -151,11 +151,11 @@ func (c *Coletor) Coletar(ctx context.Context) Estado {
 	}
 	if ddb != nil {
 		e.Tasks, e.Esperando, e.Opcoes, e.Mural = ddb.Tasks, ddb.Esperando, ddb.Opcoes, ddb.Mural
-		e.Runs, e.PipesLigado, e.Proximo = ddb.Runs, true, proximo
+		e.Sidequests, e.PipesLigado, e.Proximo = ddb.Sidequests, true, proximo
 		if os.Getenv("FANTASMAS_MURAL") == "off" {
 			e.Mural = nil
 		}
-		e.MissoesLigado, e.Principal, e.Missoes = true, ddb.Principal, ddb.Missoes
+		e.MissoesLigado, e.Principal, e.Missoes, e.DecisoesSoltas = true, ddb.Principal, ddb.Missoes, ddb.DecisoesSoltas
 		PreencherPRsVermelhos(e.Missoes, e.Travados)
 	}
 	e.Caidos = CaidosDe(c.Raiz, vivos, maxCaidos)

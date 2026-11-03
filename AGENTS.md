@@ -7,7 +7,7 @@ Guia para agentes que trabalham neste repositório.
 `fantasmas` é uma TUI em Go (Bubble Tea + Lip Gloss) que acompanha os agentes de um **workspace Spark**:
 - os "gengars" (coordenadores) e os "fantasminhas" (agentes delegados pelo `/delegate`);
 - as perguntas que eles fazem;
-- missões, pipelines, PRs, CI, serviços locais e a máquina.
+- missões (com as sidequests dentro), PRs, CI, serviços locais e a máquina.
 
 O binário se chama `fantasmas`, e o comando instalado no PATH se chama `gengar`.
 
@@ -49,31 +49,31 @@ A raiz precisa ser a do workspace Spark, não este repositório. É lá que fica
 Este é o modo para agentes e testes visuais. Ele imprime um quadro e sai, sem TTY:
 
 ```bash
-bin/fantasmas --uma-vez --demo --gaveta pipes --largura 140 --altura 42 --cor
+bin/fantasmas --uma-vez --demo --gaveta missoes --largura 140 --altura 42 --cor
 bin/fantasmas --uma-vez --demo-verde --gaveta prs
 bin/fantasmas --uma-vez --demo --gaveta missoes --missao <slug>
-bin/fantasmas --uma-vez --demo --gaveta pipes --pipe 13
+bin/fantasmas --uma-vez --demo --gaveta missoes --pipe 13
 ```
 
 - `--demo` e `--demo-verde` usam um estado fixo (`ui.EstadoDemo`) e não precisam de workspace.
 - Sem `--demo`, o comando faz uma coleta real.
-- Gavetas válidas: `missoes agora crew pipes prs ambiente maquina worktrees configuracoes`. Um nome inválido sai com código 2.
+- Gavetas válidas: `missoes agora crew prs ambiente maquina worktrees configuracoes`. Um nome inválido sai com código 2.
 - Para ver um tema sem mexer no arquivo do usuário: `FANTASMAS_AJUSTES=/tmp/a.json FANTASMAS_TEMA=orca bin/fantasmas --uma-vez --cor --demo --gaveta configuracoes`.
 
 ### Teclas principais
 
 A lista completa fica no `?` dentro do app, e a fonte é `ajudaLinhas` em `internal/ui/model.go`.
 
-- `← →`/`h l`/`0-8`: troca de gaveta (`0` missões, `1` agora, `2` fantasminhas, `3` pipes, `4` PRs com o CI, `5` ambiente, `6` máquina, `7` worktrees, `8` configurações); `0` também volta a todas as missões. `↑ ↓`/`j k`: escolhe um item. `enter`: abre ou responde. `esc`: volta.
+- `← →`/`h l`/`0-7`: troca de gaveta (`0` missões, `1` agora, `2` fantasminhas, `3` PRs com o CI, `4` ambiente, `5` máquina, `6` worktrees, `7` configurações); `0` também volta a todas as missões. `↑ ↓`/`j k`: escolhe um item. `enter`: abre ou responde. `esc`: volta.
 - `/`: filtra. `r`: coleta agora. `q`: sai.
 - `o`: abre o link. `g`: foca a aba no herdr. `p`: abre o painel do delegate (`http://127.0.0.1:7480/`).
 - Ações destrutivas exigem a tecla duas vezes (estado "armado"):
   - `x 2×`: arquiva a pergunta;
   - `R 2×`: retoma um fantasminha caído;
   - `U 2×`: atualiza o app (botão "atualizar app fantasmas" nas ações de configurações);
-  - `A`/`S`/`T 2×`: avança, pula ou faz retry de uma etapa do pipe.
-- Gaveta pipes: `n` lança um run, `e` edita o YAML e `N` abre o gengar dedicado do run.
-- Outras: `D` pede uma rodada do DayDreaming e `M` reconecta os MCPs. Esses dois botões e o "atualizar app fantasmas" ficam na seção "ações" da aba configurações; a gaveta máquina é só monitoramento e a gaveta worktrees (`7`) só lista os worktrees.
+  - `A`/`S`/`T 2×`: avança, pula ou faz retry de uma etapa da sidequest (no detalhe dela).
+- Gaveta missões: cada carta mostra as sidequests da missão (um bloco por etapa) e as decisões; as sem missão saem em "SIDEQUESTS SOLTAS". `n` lança uma sidequest (na missão em foco, senão solta), `N` faz o mesmo e abre o gengar dedicado, `e` edita o YAML, `m` abre uma missão (`missao-abrir.sh`), `v` veta uma decisão tomada pela regra e `enter` numa sidequest abre o detalhe. Merge (`juntar`) é sempre humano: a TUI não aprova.
+- Outras: `D` pede uma rodada do DayDreaming e `M` reconecta os MCPs. Esses dois botões e o "atualizar app fantasmas" ficam na seção "ações" da aba configurações; a gaveta máquina é só monitoramento e a gaveta worktrees (`6`) só lista os worktrees.
 
 ## De onde vêm os dados
 
@@ -82,7 +82,7 @@ A coleta é `dados.Coletor.Coletar` (`internal/dados/coleta.go`), e tudo nela ro
 | Fonte | Uso |
 |---|---|
 | `shared/mods/control-panel/scripts/delegate.py` (`tasks`, `esperando`, `opcoes-todas`) | tasks e perguntas do delegate (modo padrão) |
-| `scripts/delegate/ddb.py` (`import`, `state --json`, `tick --dry-run`) | substitui o delegate.py quando `FANTASMAS_FONTE=ddb`; liga as missões e os pipes |
+| `scripts/delegate/ddb.py` (`import`, `state --json`, `tick --dry-run`) | substitui o delegate.py quando `FANTASMAS_FONTE=ddb`; liga as missões e as sidequests |
 | `shared/mods/control-panel/scripts/{local.sh,coleta.sh worktrees,maquina.sh}` | serviços, worktrees e máquina. A máquina vem sempre do `assets/maquina.sh` embutido (memória, swap, pressão, OOM, carga, sessões, disco), não do script do Spark; a trava de pesados só entra com `.delegate/` na raiz. Polling: roda a cada coleta |
 | `shared/skills/delegate-painel/painel.py` | entrega das respostas (sem ele, a resposta só é gravada) |
 | `.delegate/` (incluindo `_mural.jsonl`) | tasks, mural e daydreamer |
@@ -94,7 +94,7 @@ As saídas em TSV passam por `dados.TSV`, e a do ddb passa por `dados.DeDdb`. As
 
 ### Aba configurações e variáveis de ambiente
 
-A gaveta **configurações** (`8`) lista as variáveis `FANTASMAS_*` do catálogo `config.Opcoes` (`internal/config/config.go`) pelo nome real, cada uma com o valor que vale agora (o padrão, quando nada foi definido), e as salva em `~/.config/fantasmas/ajustes.json`. `FANTASMAS_IMAGEM`, `FANTASMAS_IMAGEM_MODO` e `FANTASMAS_SPRITE` ficam fora da aba, só pelo shell.
+A gaveta **configurações** (`7`) lista as variáveis `FANTASMAS_*` do catálogo `config.Opcoes` (`internal/config/config.go`) pelo nome real, cada uma com o valor que vale agora (o padrão, quando nada foi definido), e as salva em `~/.config/fantasmas/ajustes.json`. `FANTASMAS_IMAGEM`, `FANTASMAS_IMAGEM_MODO` e `FANTASMAS_SPRITE` ficam fora da aba, só pelo shell.
 - o arquivo tem permissão 0600, numa pasta 0700, e fica fora do repo; `FANTASMAS_AJUSTES` muda o caminho;
 - `main` aplica o arquivo ao ambiente **antes de qualquer `os.Getenv`**, então o resto do código continua só lendo variáveis;
 - **o shell manda:** uma variável já definida no shell não é sobrescrita nem editável pela aba.
@@ -108,7 +108,7 @@ Regras para quem mexer:
 | `FANTASMAS_TEMA=roxo\|orca\|terminal` | cores do app (`ui.UsarTema`); padrão roxo; troca na hora |
 | `FANTASMAS_FIGURA=<nome>` | figura do topo, do catálogo de figuras (ver abaixo); padrão gengar; troca na hora |
 | `FANTASMAS_RAIZ` | raiz do workspace Spark quando não há `--raiz`; aceita `~/`; vale ao reabrir |
-| `FANTASMAS_FONTE=ddb` | usa o `ddb.py`, liga as gavetas missões e pipes e abre em `missoes` |
+| `FANTASMAS_FONTE=ddb` | usa o `ddb.py`, liga a gaveta missões com as sidequests e abre em `missoes` |
 | `FANTASMAS_DDB_SCRIPT` | caminho alternativo do `ddb.py` |
 | `FANTASMAS_EDITOR` | editor para arquivos e pastas (links continuam no `xdg-open`/`open`) |
 | `FANTASMAS_SPRITE` / `--sprite` | caminho de GIF ou PNG; manda sobre `FANTASMAS_FIGURA` |
@@ -139,7 +139,7 @@ internal/config/        ajustes da aba configurações: catálogo de opções, a
 internal/dados/         coleta e ações sobre o mundo externo (sem UI)
   runner.go             Runner: interface de execução de comandos; testes usam runners falsos
   coleta.go             Coletor e FaltaDe
-  fonte_ddb.go pipes.go modo ddb: estado, tick, runs e pipelines
+  fonte_ddb.go sidequests.go  modo ddb: estado, tick, sidequests, veto e missao-abrir
   responder.go          responder e arquivar perguntas (painel, ddb ou arquivo)
   atualizar.go          AcharRepo e Atualizar (pull, build, troca atômica de bin/fantasmas)
   botoes.go             daydreamer, reconectar MCPs
@@ -150,7 +150,7 @@ internal/ui/            Model do Bubble Tea, gavetas, detalhe, tema, sprite
   ajustes.go            gaveta configurações
   tema.go               temas (roxo, orca, terminal) e UsarTema
   figuras.go            catálogo de figuras, UsarFigura, PNG → GIF
-  gavetas.go missoes.go pipes.go detalhe.go ...   uma tela por arquivo
+  gavetas.go missoes.go sidequests.go detalhe.go ...   uma tela por arquivo
   demo.go               EstadoDemo / EstadoDemoVerde
 internal/kitty/         protocolo de gráficos do kitty (detecção e envio)
 ferramentas/            quadro.sh + ansi2html.py: renderizam uma gaveta da demo em HTML (shots/)

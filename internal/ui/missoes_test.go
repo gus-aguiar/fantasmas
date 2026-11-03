@@ -78,8 +78,8 @@ func TestEnterFocaMissaoEFiltraGavetas(t *testing.T) {
 	if dentro == 0 || fora != 0 {
 		t.Fatalf("filtro não aplicado (dentro=%d fora=%d):\n%s", dentro, fora, p)
 	}
-	m = m.irGaveta(indiceGaveta("pipes"))
-	for _, r := range FiltrarMissao(m.estado, m.missao).Runs {
+	m = m.irGaveta(indiceGaveta("missoes"))
+	for _, r := range FiltrarMissao(m.estado, m.missao).Sidequests {
 		if r.Missao != m.missao {
 			t.Fatalf("run de outra missão: %+v", r)
 		}

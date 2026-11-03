@@ -14,16 +14,18 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-// OpsPipes são os comandos de pipeline do ddb que a gaveta pipes usa.
+// OpsPipes são os comandos de sidequest e de missão do ddb que a gaveta missões usa.
 type OpsPipes interface {
 	Listar() ([]dados.Pipeline, error)
-	Novo(pipeline string, entradas [][2]string, titulo string) (string, error)
+	Novo(pipeline string, entradas [][2]string, titulo, workspace string) (string, error)
+	Vetar(id int, etapa, texto string) error
+	AbrirMissao(n dados.NovaMissao) (string, error)
 	Etapa(run int, etapa, acao string) error
 	Gengar(run int, assunto string) (string, error)
 	Validar(alvo string) (string, error)
 }
 
-const MsgPipesDesligado = "pipes: ligue FANTASMAS_FONTE=ddb"
+const MsgPipesDesligado = "sidequests: ligue FANTASMAS_FONTE=ddb"
 
 type editouMsg struct {
 	arquivo string
@@ -38,7 +40,14 @@ type formPipe struct {
 	campos    []textinput.Model
 	nomes     []string
 	foco      int
-	gengar    bool // N: depois do run new, abre o gengar dedicado
+	gengar    bool // N: depois do sidequest new, abre o gengar dedicado
+	// workspace da missão em foco; vazio, a sidequest nasce solta.
+	workspace, missao string
+	// tipo "" lança sidequest; "missao" abre missão (m); "veto" veta uma decisão (v).
+	tipo      string
+	vetoID    int
+	vetoEtapa string
+	vetoDe    string
 }
 
 var glifoEtapa = map[string]string{
@@ -66,7 +75,7 @@ func corEtapa(s string) lipgloss.Color {
 	return T.Dim
 }
 
-func glifoRun(r dados.Run) (string, lipgloss.Color) {
+func glifoRun(r dados.Sidequest) (string, lipgloss.Color) {
 	switch {
 	case r.EsperaVoce > 0:
 		return "▲", T.Espera
@@ -90,42 +99,82 @@ func idade(min int) string {
 	return fmt.Sprintf("%dd", min/(24*60))
 }
 
-func nomeRun(r dados.Run) string {
+func nomeRun(r dados.Sidequest) string {
 	if r.Title != "" {
 		return r.Title
 	}
 	if r.SlugBase != "" {
 		return r.SlugBase
 	}
-	return fmt.Sprintf("run %d", r.ID)
+	return fmt.Sprintf("sidequest %d", r.ID)
 }
 
-// chips desenha as etapas como pílulas; curto mostra só o glifo.
-func chips(bg lipgloss.Color, es []dados.Etapa, curto bool) string {
+// blocosEtapas desenha um bloco por etapa na cor do estado; na fila, pronta ou pulada fica □ neutro.
+func blocosEtapas(es []dados.Etapa) string { return blocosEm(T.Base, es) }
+
+func blocosEm(bg lipgloss.Color, es []dados.Etapa) string {
 	var b strings.Builder
-	for i, e := range es {
-		g := glifoEtapa[e.Status]
-		if g == "" {
-			g = "○"
+	for _, e := range es {
+		switch e.Status {
+		case "done", "running", "needs_input", "failed":
+			b.WriteString(st(bg, corEtapa(e.Status)).Render("■"))
+		default:
+			b.WriteString(st(bg, T.Dim).Render("□"))
 		}
-		cor := corEtapa(e.Status)
-		if curto {
-			if i > 0 {
-				b.WriteString(st(bg, T.Dim).Render(" "))
-			}
-			b.WriteString(st(bg, cor).Bold(true).Render(g))
-			continue
-		}
-		if i > 0 {
-			b.WriteString(st(bg, T.Borda).Render(" › "))
-		}
-		b.WriteString(st(T.Chip, cor).Bold(true).Render(" "+g) + st(T.Chip, T.ChipTexto).Render(" "+e.ID+" "))
 	}
 	return b.String()
 }
 
+// situacaoSidequest é a etapa em curso e o que ela espera ("homologar · login"); "concluída" no fim.
+func situacaoSidequest(r dados.Sidequest) (string, lipgloss.Color) {
+	for _, e := range r.Etapas {
+		switch e.Status {
+		case "done", "skipped":
+			continue
+		case "needs_input":
+			det := motivo(e.Reason)
+			if g, ok := strings.CutPrefix(e.Reason, "gate:"); ok {
+				det = g
+			} else if strings.HasPrefix(e.Reason, "question:") {
+				det = "pergunta"
+			}
+			return strings.TrimSuffix(e.ID+" · "+det, " · "), T.Espera
+		case "running":
+			det := e.Agent
+			if det == "" {
+				det = "rodando"
+			}
+			return e.ID + " · " + det, T.Sub
+		case "failed":
+			return e.ID + " · falhou", T.Erro
+		}
+		return e.ID + " · " + nomeEtapa[e.Status], T.Dim
+	}
+	if r.Status == "done" || len(r.Etapas) > 0 {
+		return "concluída", T.Ok
+	}
+	return r.Status, T.Dim
+}
+
+// linhaSidequest: glifo, nome, blocos e situação em w células; o nome é o que se corta, nunca os blocos.
+func linhaSidequest(bg lipgloss.Color, r dados.Sidequest, nome string, w int) string {
+	g, cg := glifoRun(r)
+	sit, csit := situacaoSidequest(r)
+	blocos := blocosEm(bg, r.Etapas)
+	fixo := 2 + 1 + lipgloss.Width(blocos) + 1
+	resto := max(0, w-fixo)
+	wNome := min(lipgloss.Width(nome), max(6, resto-lipgloss.Width(sit)))
+	if wNome > resto {
+		wNome = resto
+	}
+	nm := Corte(nome, wNome)
+	wSit := max(0, resto-lipgloss.Width(nm))
+	return st(bg, cg).Bold(true).Render(g+" ") + st(bg, T.Texto).Render(nm) + espacos(1, bg) + blocos +
+		espacos(1, bg) + st(bg, csit).Render(Corte(sit, wSit))
+}
+
 // gengarChip é o "g-assunto" do gengar dedicado e a prontidão dele; vazio sem gengar dedicado.
-func gengarChip(bg lipgloss.Color, r dados.Run) string {
+func gengarChip(bg lipgloss.Color, r dados.Sidequest) string {
 	if r.Prontidao == "" {
 		return ""
 	}
@@ -136,111 +185,15 @@ func gengarChip(bg lipgloss.Color, r dados.Run) string {
 	return s + st(bg, T.Espera).Bold(true).Render(" ◷ aguardando prontidão")
 }
 
-func larguraChips(es []dados.Etapa) int {
-	return lipgloss.Width(chips(T.Base, es, false))
-}
-
-func gavetaPipes(c *corpo, e dados.Estado) {
-	if !e.PipesLigado {
-		c.secao("pipes", "")
-		c.vazioIcone("◆", T.Espera, MsgPipesDesligado)
-		return
-	}
-	espera := 0
-	for _, r := range e.Runs {
-		espera += r.EsperaVoce
-	}
-	extra := ""
-	if espera > 0 {
-		extra = fmt.Sprintf("%d esperam você", espera)
-	}
-	if c.largura >= 70 {
-		extra = strings.TrimPrefix(extra+" · n lança · N com gengar · e edita", " · ")
-	}
-	c.secaoN("pipes", len(e.Runs), extra)
-	if len(e.Runs) == 0 {
-		c.vazio("nenhum run · n lança um pipeline")
-		return
-	}
-	for _, r := range e.Runs {
-		if !c.passa(r.Pipeline, nomeRun(r), r.SlugBase, r.Status) {
-			continue
-		}
-		c.linhaRun(r)
-	}
-}
-
-// linhaGengar é a linha extra do run com gengar dedicado (g-<assunto> e prontidão); nil sem gengar.
-func (c *corpo) linhaGengar(r dados.Run, recuo int) func(bg lipgloss.Color) string {
-	if r.Prontidao == "" {
-		return nil
-	}
-	return func(bg lipgloss.Color) string {
-		return espacos(recuo, bg) + st(bg, T.Dim).Render("gengar ") + gengarChip(bg, r)
-	}
-}
-
-func (c *corpo) linhaRun(r dados.Run) {
-	w := c.largura - 2
-	g, cg := glifoRun(r)
-	nome := nomeRun(r)
-	quando := idade(r.IdadeMin)
-	esp := ""
-	if r.EsperaVoce > 0 {
-		esp = fmt.Sprintf("espera você: %d", r.EsperaVoce)
-	}
-	a := alvo{pipe: r.ID}
-	dir := func(bg lipgloss.Color) string {
-		s := st(bg, T.Dim).Render(quando)
-		if esp != "" {
-			s += st(bg, T.Dim).Render("  ") + st(bg, T.Espera).Bold(true).Render(esp)
-		}
-		return s
-	}
-	wc := larguraChips(r.Etapas)
-	if w >= 94 {
-		wp := 24
-		wDir := lipgloss.Width(quando) + 2 + len([]rune(esp)) + 2
-		wNome := min(36, max(10, w-2-wp-wc-wDir-2))
-		c.item(a, func(bg lipgloss.Color) string {
-			esq := st(bg, cg).Bold(true).Render(g+" ") + st(bg, T.Info).Render(Col(r.Pipeline, wp)) +
-				st(bg, T.Texto).Bold(true).Render(Col(nome, wNome)) + espacos(2, bg) + chips(bg, r.Etapas, false)
-			d := dir(bg)
-			return esq + espacos(max(1, w-lipgloss.Width(esq)-lipgloss.Width(d)), bg) + d
-		}, c.linhaGengar(r, 2))
-		c.branco()
-		return
-	}
-	curto := wc > w-4
-	c.item(a, func(bg lipgloss.Color) string {
-		esq := st(bg, cg).Bold(true).Render(g+" ") + st(bg, T.Texto).Bold(true).Render(Corte(nome, max(4, w-2-14)))
-		d := ""
-		if esp != "" && w >= 46 {
-			d = st(bg, T.Espera).Bold(true).Render(esp)
-		} else if r.EsperaVoce > 0 {
-			d = st(bg, T.Espera).Bold(true).Render(fmt.Sprintf("▲%d", r.EsperaVoce))
-		}
-		return esq + espacos(max(1, w-lipgloss.Width(esq)-lipgloss.Width(d)), bg) + d
-	}, func(bg lipgloss.Color) string {
-		s := espacos(2, bg)
-		if w >= 46 {
-			s += st(bg, T.Info).Render(Corte(r.Pipeline, 22)) + espacos(2, bg)
-		}
-		s += chips(bg, r.Etapas, curto) + espacos(2, bg) + st(bg, T.Dim).Render(quando)
-		return s
-	}, c.linhaGengar(r, 2))
-	c.branco()
-}
-
 // ---- detalhe ----
 
-func (m Model) runAberto() dados.Run {
-	for _, r := range m.estado.Runs {
+func (m Model) runAberto() dados.Sidequest {
+	for _, r := range m.estado.Sidequests {
 		if r.ID == m.pipe {
 			return r
 		}
 	}
-	return dados.Run{}
+	return dados.Sidequest{}
 }
 
 func (m Model) abrirPipe(id int) Model {
@@ -293,7 +246,7 @@ func (m Model) conteudoPipe(w int) []linhaPipe {
 	add := func(dono int, f func(bg lipgloss.Color) string) { ls = append(ls, linhaPipe{f, dono}) }
 	cw := w - 2*margem
 	if r.ID == 0 {
-		add(-1, func(bg lipgloss.Color) string { return st(bg, T.Dim).Render("o run sumiu do ddb · esc volta") })
+		add(-1, func(bg lipgloss.Color) string { return st(bg, T.Dim).Render("a sidequest sumiu do ddb · esc volta") })
 		return ls
 	}
 	g, cg := glifoRun(r)
@@ -301,7 +254,7 @@ func (m Model) conteudoPipe(w int) []linhaPipe {
 		return st(bg, cg).Bold(true).Render(g+" ") + st(bg, T.Texto).Bold(true).Render(Corte(nomeRun(r), max(4, cw-2)))
 	})
 	add(-1, func(bg lipgloss.Color) string {
-		s := st(bg, T.Info).Render(fmt.Sprintf("run %d · %s", r.ID, r.Pipeline)) + st(bg, T.Dim).Render("  ·  ") +
+		s := st(bg, T.Info).Render(fmt.Sprintf("sidequest %d · %s", r.ID, r.Pipeline)) + st(bg, T.Dim).Render("  ·  ") +
 			st(bg, corEtapa(map[string]string{"done": "done", "failed": "failed", "running": "running"}[r.Status])).Render(r.Status) +
 			st(bg, T.Dim).Render("  ·  "+idade(r.IdadeMin))
 		if r.Prontidao != "" {
@@ -522,7 +475,7 @@ func (m Model) acaoEtapa(k, armado string) (tea.Model, tea.Cmd) {
 	if err := m.acoes.Pipes.Etapa(r.ID, e.ID, acaoDaTecla[k]); err != nil {
 		return m.mostrarToast("stage "+acaoDaTecla[k]+": "+err.Error(), T.Erro)
 	}
-	m2, toast := m.mostrarToast(fmt.Sprintf("run %d · %s: %s", r.ID, e.ID, acaoDaTecla[k]), T.Ok)
+	m2, toast := m.mostrarToast(fmt.Sprintf("sidequest %d · %s: %s", r.ID, e.ID, acaoDaTecla[k]), T.Ok)
 	m3, col := m2.coletar()
 	return m3, tea.Batch(toast, col)
 }
@@ -536,7 +489,7 @@ func (m Model) pedeGengar(armado bool) (tea.Model, tea.Cmd) {
 			return m.mostrarToast(MsgPipesDesligado, T.Espera)
 		}
 		m.armadoGengar = true
-		m.status = "N de novo lança o run e abre o gengar dedicado"
+		m.status = "N de novo lança a sidequest e abre o gengar dedicado"
 		return m, nil
 	}
 	m.status = ""
@@ -557,12 +510,16 @@ func (m Model) abrirForm() (tea.Model, tea.Cmd) {
 	}
 	ps, err := m.acoes.Pipes.Listar()
 	if err != nil {
-		return m.mostrarToast("pipeline list: "+err.Error(), T.Erro)
+		return m.mostrarToast("sidequest list: "+err.Error(), T.Erro)
 	}
 	if len(ps) == 0 {
-		return m.mostrarToast("nenhum pipeline em shared/delegate/pipelines", T.Espera)
+		return m.mostrarToast("nenhuma sidequest em shared/delegate/sidequests", T.Espera)
 	}
-	m.form = &formPipe{pipelines: ps}
+	f := &formPipe{pipelines: ps}
+	if mi, ok := missaoDe(m.estado, m.missao); ok {
+		f.workspace, f.missao = mi.Workspace, nomeMissao(m.estado, mi.Slug)
+	}
+	m.form = f
 	return m, nil
 }
 
@@ -636,6 +593,12 @@ func (m Model) teclaForm(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			break
 		}
 		m.form = &f
+		switch f.tipo {
+		case "missao":
+			return m.enviarMissao()
+		case "veto":
+			return m.enviarVeto()
+		}
 		return m.lancar()
 	default:
 		ti, cmd := f.campos[f.foco].Update(msg)
@@ -664,9 +627,9 @@ func (m Model) lancar() (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	titulo := f.campos[len(f.campos)-1].Value()
-	out, err := m.acoes.Pipes.Novo(p.Name, ents, titulo)
+	out, err := m.acoes.Pipes.Novo(p.Name, ents, titulo, f.workspace)
 	if err != nil {
-		m.status = "run new: " + err.Error()
+		m.status = "sidequest new: " + err.Error()
 		return m.mostrarToast(m.status, T.Erro)
 	}
 	m.form, m.status = nil, ""
@@ -674,7 +637,7 @@ func (m Model) lancar() (tea.Model, tea.Cmd) {
 	if f.gengar {
 		return m.abrirGengar(id, p.Name, ents)
 	}
-	m2, toast := m.mostrarToast("run "+id+" criado em intake ("+p.Name+") · o tick avisa o gengar", T.Ok)
+	m2, toast := m.mostrarToast("sidequest "+id+" criada em intake ("+p.Name+") · o tick avisa o gengar", T.Ok)
 	m3, col := m2.coletar()
 	return m3, tea.Batch(toast, col)
 }
@@ -689,14 +652,14 @@ func (m Model) abrirGengar(id, pipeline string, ents [][2]string) (tea.Model, te
 	}
 	n, err := strconv.Atoi(id)
 	if err != nil {
-		return m.mostrarToast("run criado, mas o id veio ilegível: "+id, T.Erro)
+		return m.mostrarToast("sidequest criada, mas o id veio ilegível: "+id, T.Erro)
 	}
 	if _, err := m.acoes.Pipes.Gengar(n, assunto); err != nil {
-		m2, toast := m.mostrarToast("run "+id+" criado; gengar falhou: "+err.Error(), T.Erro)
+		m2, toast := m.mostrarToast("sidequest "+id+" criada; gengar falhou: "+err.Error(), T.Erro)
 		m3, col := m2.coletar()
 		return m3, tea.Batch(toast, col)
 	}
-	m2, toast := m.mostrarToast("run "+id+" criado · gengar aberto na aba g-"+strings.ToLower(assunto)+", aguardando prontidão", T.Ok)
+	m2, toast := m.mostrarToast("sidequest "+id+" criada · gengar aberto na aba g-"+strings.ToLower(assunto)+", aguardando prontidão", T.Ok)
 	m3, col := m2.coletar()
 	return m3, tea.Batch(toast, col)
 }
@@ -707,14 +670,22 @@ func (m Model) formLinhas(w, h int) []string {
 	pad := func(s string, bg lipgloss.Color) string { return encaixa(espacos(margem, bg)+s, w, bg) }
 	var out []string
 	add := func(s string, bg lipgloss.Color) { out = append(out, pad(s, bg)) }
-	titulo := "lançar pipeline"
+	if f.tipo != "" {
+		return m.formTextoLinhas(w, h)
+	}
+	titulo := "lançar sidequest"
 	if f.gengar {
 		titulo += " com gengar dedicado"
+	}
+	if f.missao != "" {
+		titulo += " na missão " + f.missao
+	} else {
+		titulo += " solta"
 	}
 	add(st(T.Base, T.Acao).Render("› ")+st(T.Base, T.Texto).Bold(true).Render(titulo), T.Base)
 	add("", T.Base)
 	if f.passo == 0 {
-		add(st(T.Base, T.Dim).Bold(true).Render("PIPELINE"), T.Base)
+		add(st(T.Base, T.Dim).Bold(true).Render("SIDEQUEST"), T.Base)
 		for i, p := range f.pipelines {
 			bg := T.Base
 			seta := "  "
@@ -734,7 +705,7 @@ func (m Model) formLinhas(w, h int) []string {
 		add(st(T.Base, T.Dim).Render("↑↓ escolhe · enter segue · esc cancela"), T.Base)
 	} else {
 		p := f.pipelines[f.escolha]
-		add(st(T.Base, T.Dim).Render("pipeline  ")+st(T.Base, T.Info).Bold(true).Render(p.Name)+
+		add(st(T.Base, T.Dim).Render("sidequest ")+st(T.Base, T.Info).Bold(true).Render(p.Name)+
 			st(T.Base, T.Dim).Render("  "+Corte(strings.Join(p.Stages, " › "), max(4, cw-30))), T.Base)
 		add("", T.Base)
 		for i, nome := range f.nomes {
@@ -752,7 +723,7 @@ func (m Model) formLinhas(w, h int) []string {
 		if m.status != "" {
 			add(st(T.Base, T.Espera).Bold(true).Render("▲ "+Corte(m.status, max(4, cw-2))), T.Base)
 		}
-		add(st(T.Base, T.Dim).Render("o run nasce em intake; o tick avisa o gengar geral"), T.Base)
+		add(st(T.Base, T.Dim).Render("a sidequest nasce em intake; o tick avisa o gengar"), T.Base)
 	}
 	for len(out) < h {
 		out = append(out, espacos(w, T.Base))
@@ -771,11 +742,11 @@ func (m Model) editarPipeline() (tea.Model, tea.Cmd) {
 	}
 	ps, err := m.acoes.Pipes.Listar()
 	if err != nil || len(ps) == 0 {
-		return m.mostrarToast("pipeline list falhou", T.Erro)
+		return m.mostrarToast("sidequest list falhou", T.Erro)
 	}
 	alvoP := ps[0]
 	if a, ok := m.selecionado(); ok && a.pipe != 0 {
-		for _, r := range m.estado.Runs {
+		for _, r := range m.estado.Sidequests {
 			if r.ID != a.pipe {
 				continue
 			}
@@ -814,5 +785,136 @@ func ComandoEditor(editor, arquivo string) *exec.Cmd {
 	return exec.Command(ed[0], append(ed[1:], arquivo)...)
 }
 
-// ComPipe abre o detalhe do run (usado pelo --uma-vez --pipe).
+// ComPipe abre o detalhe da sidequest (usado pelo --uma-vez --pipe).
 func (m Model) ComPipe(id int) Model { return m.abrirPipe(id) }
+
+// ---- m: abrir missão · v: vetar decisão ----
+
+var origensMissao = []string{"PDY", "produto", "designer"}
+
+// abrirFormTexto põe o formulário direto nos campos de texto (sem a escolha do passo 0).
+func abrirFormTexto(f *formPipe, nomes, dicas []string) *formPipe {
+	f.passo = 1
+	for i, n := range nomes {
+		f.nomes = append(f.nomes, n)
+		f.campos = append(f.campos, novoCampo(dicas[i]))
+	}
+	f.focar(0)
+	return f
+}
+
+func (m Model) abrirFormMissao() (tea.Model, tea.Cmd) {
+	if !m.estado.MissoesLigado {
+		return m.mostrarToast("missões: ligue FANTASMAS_FONTE=ddb", T.Espera)
+	}
+	if m.acoes.Pipes == nil {
+		return m.mostrarToast("sem ddb nesta máquina", T.Erro)
+	}
+	m.form = abrirFormTexto(&formPipe{tipo: "missao"},
+		[]string{"slug", "nome", "origem", "origem-ref", "cards", "objetivo"},
+		[]string{"multas-custos", "rótulo da missão", "PDY, produto ou designer", "PDY-123 ou pedido do CS", "PL-1,PL-2", "opcional"})
+	return m, textinput.Blink
+}
+
+func (m Model) abrirVeto(a alvo) (tea.Model, tea.Cmd) {
+	if m.acoes.Pipes == nil {
+		return m.mostrarToast("sem ddb nesta máquina", T.Erro)
+	}
+	if a.vetoID == 0 {
+		return m.mostrarToast("a etapa dessa decisão não está no ddb", T.Espera)
+	}
+	m.form = abrirFormTexto(&formPipe{tipo: "veto", vetoID: a.vetoID, vetoEtapa: a.vetoEtapa, vetoDe: a.vetoDe},
+		[]string{"veto"}, []string{"o que o fantasminha deve refazer"})
+	return m, textinput.Blink
+}
+
+func (m Model) valoresForm() []string {
+	vs := make([]string, len(m.form.campos))
+	for i, c := range m.form.campos {
+		vs[i] = strings.TrimSpace(c.Value())
+	}
+	return vs
+}
+
+func (m Model) enviarMissao() (tea.Model, tea.Cmd) {
+	v := m.valoresForm()
+	var falta []string
+	for i, nome := range m.form.nomes[:5] {
+		if v[i] == "" {
+			falta = append(falta, nome)
+		}
+	}
+	if len(falta) > 0 {
+		m.status = "falta: " + strings.Join(falta, ", ")
+		return m, nil
+	}
+	ok := false
+	for _, o := range origensMissao {
+		ok = ok || o == v[2]
+	}
+	if !ok {
+		m.status = "origem é PDY, produto ou designer"
+		return m, nil
+	}
+	n := dados.NovaMissao{Slug: v[0], Nome: v[1], Origem: v[2], OrigemRef: v[3], Cards: v[4], Objetivo: v[5]}
+	if _, err := m.acoes.Pipes.AbrirMissao(n); err != nil {
+		m.status = "missao-abrir: " + err.Error()
+		return m.mostrarToast(m.status, T.Erro)
+	}
+	m.form, m.status = nil, ""
+	m2, toast := m.mostrarToast("missão "+n.Slug+" aberta · gengar g-"+n.Slug+" subindo", T.Ok)
+	m3, col := m2.coletar()
+	return m3, tea.Batch(toast, col)
+}
+
+func (m Model) enviarVeto() (tea.Model, tea.Cmd) {
+	f := m.form
+	texto := m.valoresForm()[0]
+	if texto == "" {
+		m.status = "o veto precisa do texto"
+		return m, nil
+	}
+	if err := m.acoes.Pipes.Vetar(f.vetoID, f.vetoEtapa, texto); err != nil {
+		m.status = "veto: " + err.Error()
+		return m.mostrarToast(m.status, T.Erro)
+	}
+	m.form, m.status = nil, ""
+	m2, toast := m.mostrarToast(fmt.Sprintf("veto entregue a sidequest %d · %s", f.vetoID, f.vetoEtapa), T.Ok)
+	m3, col := m2.coletar()
+	return m3, tea.Batch(toast, col)
+}
+
+func (m Model) formTextoLinhas(w, h int) []string {
+	f := m.form
+	cw := w - 2*margem
+	pad := func(s string, bg lipgloss.Color) string { return encaixa(espacos(margem, bg)+s, w, bg) }
+	var out []string
+	add := func(s string, bg lipgloss.Color) { out = append(out, pad(s, bg)) }
+	titulo, rodape := "abrir missão", "abre o workspace no Herdr, o missao.md e o gengar da missão"
+	if f.tipo == "veto" {
+		titulo = fmt.Sprintf("vetar %s · sidequest %d · %s", f.vetoDe, f.vetoID, f.vetoEtapa)
+		rodape = "o veto chega literal ao fantasminha; a etapa volta a esperar"
+	}
+	add(st(T.Base, T.Acao).Render("› ")+st(T.Base, T.Texto).Bold(true).Render(Corte(titulo, max(4, cw-2))), T.Base)
+	add("", T.Base)
+	for i, nome := range f.nomes {
+		ti := f.campos[i]
+		ti.Width = max(4, cw-18)
+		cor := T.Sub
+		if i == f.foco {
+			cor = T.Acao
+		}
+		campo := encaixa(ti.View(), max(4, cw-16), T.Surface)
+		add(st(T.Base, cor).Bold(i == f.foco).Render(Col(nome, 14))+espacos(1, T.Base)+campo, T.Base)
+	}
+	add("", T.Base)
+	add(st(T.Base, T.Dim).Render(Corte("tab próximo campo · enter no último envia · esc cancela", max(4, cw))), T.Base)
+	if m.status != "" {
+		add(st(T.Base, T.Espera).Bold(true).Render("▲ "+Corte(m.status, max(4, cw-2))), T.Base)
+	}
+	add(st(T.Base, T.Dim).Render(Corte(rodape, max(4, cw))), T.Base)
+	for len(out) < h {
+		out = append(out, espacos(w, T.Base))
+	}
+	return out[:h]
+}

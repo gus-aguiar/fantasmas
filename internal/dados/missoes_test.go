@@ -51,8 +51,8 @@ func TestDeDdbLeMissoes(t *testing.T) {
 	if p.Tasks[0].Missao != "frota" || p.Tasks[1].Missao != "" || p.Esperando[0].Missao != "frota" {
 		t.Errorf("tasks=%+v esperando=%+v", p.Tasks, p.Esperando)
 	}
-	if p.Runs[0].Missao != "frota" || len(p.Mural) != 1 || p.Mural[0].Missao != "frota" {
-		t.Errorf("runs=%+v mural=%+v", p.Runs, p.Mural)
+	if p.Sidequests[0].Missao != "frota" || len(p.Mural) != 1 || p.Mural[0].Missao != "frota" {
+		t.Errorf("runs=%+v mural=%+v", p.Sidequests, p.Mural)
 	}
 }
 

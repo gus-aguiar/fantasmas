@@ -179,7 +179,7 @@ func TestGavetaInicial(t *testing.T) {
 	if g := gavetaInicial("", env("ddb")); g != "missoes" || !ui.GavetaValida(g) {
 		t.Fatalf("com FANTASMAS_FONTE=ddb deve abrir em missoes, veio %q", g)
 	}
-	if g := gavetaInicial("pipes", env("ddb")); g != "pipes" {
+	if g := gavetaInicial("prs", env("ddb")); g != "prs" {
 		t.Fatalf("a flag --gaveta manda, veio %q", g)
 	}
 	if g := gavetaInicial("", env("arquivos")); g != "" {

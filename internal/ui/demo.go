@@ -21,7 +21,7 @@ func EstadoDemoVerde(agora time.Time) dados.Estado {
 func EstadoDemo(agora time.Time) dados.Estado {
 	e := estadoDemoBase(agora)
 	e.PipesLigado = true
-	e.Runs = runsDemo(agora)
+	e.Sidequests = runsDemo(agora)
 	e.Proximo = map[string]string{
 		"2026-10-30-PL-1210":         "lançaria (implementer, skill writing-plans)",
 		"2026-10-30-PL-1203-homolog": "não lança: aguarda implementar (after)",
@@ -81,15 +81,26 @@ func missoesDemo(e *dados.Estado, agora time.Time) {
 	for i := range e.Esperando {
 		e.Esperando[i].Missao = demoFrota
 	}
-	porRun := map[int]string{13: demoFrota, 10: demoMultas, 11: demoChecklist}
-	for i, r := range e.Runs {
-		e.Runs[i].Missao = porRun[r.ID]
+	porRun := map[int]string{13: demoFrota, 10: demoMultas, 14: demoMultas, 11: demoChecklist}
+	for i, r := range e.Sidequests {
+		e.Sidequests[i].Missao, e.Sidequests[i].Solta = porRun[r.ID], porRun[r.ID] == ""
+	}
+	for i := range e.Missoes {
+		for _, r := range e.Sidequests {
+			if r.Missao == e.Missoes[i].Slug {
+				e.Missoes[i].Sidequests = append(e.Missoes[i].Sidequests, r.ID)
+			}
+		}
+		if e.Missoes[i].Slug == demoMultas {
+			e.Missoes[i].Decisoes = []dados.Decisao{{At: agora.Add(-3 * time.Minute).Format(time.RFC3339), Via: "regra",
+				Slug: agora.Format("2006-01-02") + "-PL-1210", Item: "plano", Motivo: "plano de 1 repo, sem migration"}}
+		}
 	}
 	e.Mural = append([]dados.Aviso{{At: agora.Add(-4 * time.Minute), Autor: "g-frota-por-unidade",
 		Texto: "plano do filtro de frota pronto, esperando o humano", Missao: demoFrota}}, e.Mural...)
 }
 
-func runsDemo(agora time.Time) []dados.Run {
+func runsDemo(agora time.Time) []dados.Sidequest {
 	dia := agora.Format("2006-01-02")
 	impl := func(slug, status, reason, agent, tab string) dados.Etapa {
 		return dados.Etapa{ID: "implementar", Role: "implementer", Skill: "writing-plans", Status: status, Reason: reason,
@@ -100,15 +111,23 @@ func runsDemo(agora time.Time) []dados.Run {
 		return dados.Etapa{ID: "homologar", Role: "homolog", Skill: "homolog", Status: status, Slug: dia + "-" + slug + "-homolog",
 			After: []string{"implementar.done"}, Gates: []dados.Gate{{Item: "login", By: "human"}}}
 	}
+	juntar := func(slug string) dados.Etapa {
+		return dados.Etapa{ID: "juntar", Role: "gengar", Status: "pending", Slug: dia + "-" + slug + "-juntar",
+			After: []string{"homologar.done"}, Gates: []dados.Gate{{Item: "juntar", By: "human"}}}
+	}
+	esperaLogin := homol("PL-1203", "needs_input")
+	esperaLogin.Reason = "gate:login"
+	prVermelho := dados.Etapa{ID: "PR", Role: "implementer", Status: "failed", Reason: "falhou", Slug: dia + "-PL-1211-pr",
+		After: []string{"implementar.done"}}
 	feita := impl("PL-1150", "done", "", "c-pl-1150", "")
 	feita.Report = []byte(`{"status":"done","links":["https://github.com/prologapp/PrologWebReact/pull/3120"]}`)
 	hfeita := homol("PL-1150", "done")
 	hfeita.Report = []byte(`{"status":"done","links":["https://github.com/prologapp/PrologE2E/pull/512"]}`)
-	return []dados.Run{
+	return []dados.Sidequest{
 		{ID: 13, Pipeline: "implementar-homologar", Title: "Filtro de frota por unidade", SlugBase: "PL-1203", Status: "running",
 			Coordinator: "g-filtro-frota", Inputs: map[string]string{"card": "PL-1203", "repos": "WS React", "homolog_alvo": "hml"},
 			IdadeMin: 42, EsperaVoce: 1, Prontidao: "pronto",
-			Etapas: []dados.Etapa{impl("PL-1203", "needs_input", "gate:plano", "c-pl-1203", "w1:t3"), homol("PL-1203", "pending")}},
+			Etapas: []dados.Etapa{impl("PL-1203", "done", "", "c-pl-1203", "w1:t3"), esperaLogin, juntar("PL-1203")}},
 		{ID: 12, Pipeline: "bugfix", Title: "Km travado no abastecimento", SlugBase: "PL-1188", Status: "running",
 			Coordinator: "gengar-1030-0900", Inputs: map[string]string{"card": "PL-1188", "repos": "WS"}, IdadeMin: 95,
 			Etapas: []dados.Etapa{{ID: "implementar", Role: "implementer", Skill: "debug-for-fix", Status: "running",
@@ -120,6 +139,9 @@ func runsDemo(agora time.Time) []dados.Run {
 			Coordinator: "g-multas", Prontidao: "aguardando prontidão",
 			Inputs: map[string]string{"card": "PL-1210", "repos": "React"}, IdadeMin: 3,
 			Etapas: []dados.Etapa{impl("PL-1210", "ready", "", "", "")}},
+		{ID: 14, Pipeline: "implementar-homologar", Title: "Custo das multas", SlugBase: "PL-1211", Status: "failed",
+			Coordinator: "g-multas-por-veiculo", Inputs: map[string]string{"card": "PL-1211", "repos": "WS"}, IdadeMin: 70,
+			Etapas: []dados.Etapa{impl("PL-1211", "done", "", "c-pl-1211", ""), prVermelho, homol("PL-1211", "pending")}},
 	}
 }
 

@@ -38,9 +38,9 @@ func main() {
 	cor := flag.Bool("cor", false, "força cor de 24 bits (só com --uma-vez)")
 	demo := flag.Bool("demo", false, "usa o estado de demonstração (só com --uma-vez)")
 	demoVerde := flag.Bool("demo-verde", false, "demonstração com todos os PRs de CI verde (só com --uma-vez)")
-	gaveta := flag.String("gaveta", "", "gaveta inicial: missoes|agora|crew|pipes|prs|ambiente|maquina|worktrees|configuracoes (só com --uma-vez)")
+	gaveta := flag.String("gaveta", "", "gaveta inicial: missoes|agora|crew|prs|ambiente|maquina|worktrees|configuracoes (só com --uma-vez)")
 	missao := flag.String("missao", "", "foca a missão pelo slug (só com --uma-vez)")
-	pipe := flag.Int("pipe", 0, "abre o detalhe do run N da gaveta pipes (só com --uma-vez)")
+	pipe := flag.Int("pipe", 0, "abre o detalhe da sidequest N (só com --uma-vez)")
 	acharRaiz := flag.Bool("achar-raiz", false, "procura a raiz do Spark na home, salva em configurações (FANTASMAS_RAIZ) e sai; o setup.sh usa")
 	flag.Parse()
 	if *acharRaiz {

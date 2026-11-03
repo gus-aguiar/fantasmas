@@ -32,7 +32,7 @@ func modeloAjustes(t *testing.T, shell map[string]string) (Model, *config.Loja, 
 	m := modelo(fixture(), &registro{})
 	m.acoes.Ajustes = l
 	m.largura, m.altura = 110, 50
-	return tecla(m, "8"), l, arq
+	return tecla(m, "7"), l, arq
 }
 
 // selAjuste é a posição do ajuste entre os itens da aba (os botões de ações vêm antes).

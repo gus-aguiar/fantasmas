@@ -18,9 +18,10 @@ const maxTasksDdb = 14
 type ParteDdb struct {
 	Tasks, Esperando, Opcoes []Linha
 	Mural                    []Aviso
-	Runs                     []Run
+	Sidequests               []Sidequest
 	Principal                Principal
 	Missoes                  []Missao
+	DecisoesSoltas           []Decisao
 }
 
 type estadoDdbJSON struct {
@@ -51,9 +52,11 @@ type estadoDdbJSON struct {
 		Ate    string `json:"ate"`
 		Missao string `json:"missao,omitempty"`
 	} `json:"mural"`
-	Runs      []Run        `json:"runs"`
-	Principal principalDdb `json:"principal"`
-	Missoes   []missaoDdb  `json:"missoes"`
+	Sidequests     []Sidequest  `json:"sidequests"`
+	Runs           []Sidequest  `json:"runs"` // nome antigo; só vale sem sidequests
+	Principal      principalDdb `json:"principal"`
+	Missoes        []missaoDdb  `json:"missoes"`
+	DecisoesSoltas []Decisao    `json:"decisoes_soltas"`
 }
 
 type opcaoDdb struct {
@@ -98,7 +101,11 @@ func DeDdb(saida []byte, agora time.Time) (ParteDdb, error) {
 			p.Mural = append(p.Mural, a)
 		}
 	}
-	p.Runs = s.Runs
+	p.Sidequests = s.Sidequests
+	if p.Sidequests == nil {
+		p.Sidequests = s.Runs
+	}
+	p.DecisoesSoltas = s.DecisoesSoltas
 	p.Principal = Principal(s.Principal)
 	for _, m := range s.Missoes {
 		p.Missoes = append(p.Missoes, m.missao())
