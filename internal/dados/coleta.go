@@ -7,6 +7,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"fantasmas/assets"
 )
 
 type Coletor struct {
@@ -103,7 +105,7 @@ func (c *Coletor) Coletar(ctx context.Context) Estado {
 	}
 	roda(&local, timeoutColetor, "bash", filepath.Join(scripts, "local.sh"))
 	roda(&worktrees, timeoutColetor, "bash", cl, "worktrees")
-	roda(&maquina, timeoutColetor, "bash", filepath.Join(scripts, "maquina.sh"))
+	roda(&maquina, timeoutColetor, comandoMaquina(c.Raiz)...)
 	if c.recursos.Herdr {
 		roda(&agentes, timeoutProbe, "herdr", "agent", "list")
 	}
@@ -163,6 +165,16 @@ func (c *Coletor) Coletar(ctx context.Context) Estado {
 		e.Coordenadores = Coordenadores(e, c.Raiz, DirClaude(), time.Now())
 	}
 	return e
+}
+
+// comandoMaquina roda o maquina.sh embutido, que lê o computador de qualquer pasta (o do Spark não tem
+// disco nem swap). A trava de testes pesados só entra com .delegate/ na raiz.
+func comandoMaquina(raiz string) []string {
+	argv := []string{"bash", "-c", assets.Maquina, "maquina.sh"}
+	if st, err := os.Stat(filepath.Join(raiz, ".delegate")); err == nil && st.IsDir() {
+		argv = append(argv, filepath.Join(raiz, ".delegate", "heavy.lock"))
+	}
+	return argv
 }
 
 func FaltaDe(r Recursos) []string {

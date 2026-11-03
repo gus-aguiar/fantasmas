@@ -805,11 +805,11 @@ func (m Model) montarCorpo(largura, altura int) *corpo {
 	case "ambiente":
 		gavetaAmbiente(c, e)
 	case "maquina":
-		gavetaMaquina(c, e, m.pedindoDD)
+		gavetaMaquina(c, e)
 	case "mais":
 		gavetaMais(c, e, m.atualizando, m.armadoAtu)
 	case "settings":
-		gavetaSettings(c, m.acoes.Ajustes)
+		gavetaSettings(c, e, m.acoes.Ajustes, m.pedindoDD)
 	}
 	if c.filtro != "" && c.vis == 0 {
 		c.branco()

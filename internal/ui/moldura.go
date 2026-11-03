@@ -83,10 +83,11 @@ func topoArea(e dados.Estado, largura, quadro int, coletando bool, status string
 		glifo = spin[((quadro%4)+4)%4]
 		quando = "atualizando…"
 	}
-	livre, detalhe := true, ""
+	// sem a linha da trava (fora do Spark, ou antes da primeira coleta) não há fila de pesados a mostrar.
+	livre, detalhe, temTrava := true, "", false
 	for _, l := range e.Maquina {
 		if l.Chave == "trava" {
-			livre, detalhe = l.Extra == "ok", l.Detalhe
+			livre, detalhe, temTrava = l.Extra == "ok", l.Detalhe, true
 		}
 	}
 	dica := status
@@ -114,9 +115,12 @@ func topoArea(e dados.Estado, largura, quadro int, coletando bool, status string
 	l1 := st(T.Acao).Bold(true).Render("fantasmas") + st(T.Dim).Render("  "+glifo+" "+quando)
 	l2 := st(T.Texto).Render(resumo)
 	var l3 string
-	if livre {
+	switch {
+	case !temTrava && len(e.Maquina) > 0:
+		l3 = st(T.Dim).Render("○ ") + st(T.Dim).Render("sem fila de pesados fora do Spark")
+	case livre:
 		l3 = st(T.Ok).Render("● ") + st(T.Sub).Render("fila de pesados livre")
-	} else {
+	default:
 		l3 = st(T.Espera).Render("◆ ") + st(T.Sub).Render("pesados: "+detalhe)
 	}
 	l4 := st(cor).Render(dica)

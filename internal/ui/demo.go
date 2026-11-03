@@ -166,7 +166,7 @@ func estadoDemoBase(agora time.Time) dados.Estado {
 			{Chave: "PrologWebService", Rotulo: "parado", Detalhe: ""},
 		},
 		Maquina: []dados.Linha{
-			{Chave: "slot-1", Detalhe: "mvn há 4 min · KpisIT", Extra: "ok"},
+			{Chave: "trava", Rotulo: "trava de testes pesados", Detalhe: "livre", Extra: "ok"},
 		},
 	}
 }

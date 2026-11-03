@@ -35,10 +35,11 @@ func modeloAjustes(t *testing.T, shell map[string]string) (Model, *config.Loja, 
 	return tecla(m, ","), l, arq
 }
 
-func indiceAjuste(t *testing.T, chave string) int {
+// selAjuste é a posição do ajuste entre os itens da aba (os botões de ações vêm antes).
+func selAjuste(t *testing.T, m Model, chave string) int {
 	t.Helper()
-	for i, o := range config.Opcoes {
-		if o.Chave == chave {
+	for i, a := range m.alvos() {
+		if a.ajuste == chave {
 			return i
 		}
 	}
@@ -67,7 +68,7 @@ func TestVirgulaAbreSettings(t *testing.T) {
 
 func TestEnterTrocaOTemaESalva(t *testing.T) {
 	m, l, arq := modeloAjustes(t, nil)
-	m.sel = indiceAjuste(t, config.ChaveTema)
+	m.sel = selAjuste(t, m, config.ChaveTema)
 	m = tecla(m, "enter")
 	if T.Base != temaOrca.Base || l.Valor(config.ChaveTema) != "orca" {
 		t.Fatalf("primeiro enter deveria ir ao orca: base %q valor %q", T.Base, l.Valor(config.ChaveTema))
@@ -91,7 +92,7 @@ func TestEnterTrocaOTemaESalva(t *testing.T) {
 func TestTextoLivreNuncaAparece(t *testing.T) {
 	const segredo = "segredo-xyz-123"
 	m, l, _ := modeloAjustes(t, nil)
-	m.sel = indiceAjuste(t, "FANTASMAS_EDITOR")
+	m.sel = selAjuste(t, m, "FANTASMAS_EDITOR")
 	m = tecla(m, "enter")
 	if m.ajuste == nil {
 		t.Fatal("enter no texto livre deveria abrir a barra")
@@ -122,7 +123,7 @@ func TestTextoLivreNuncaAparece(t *testing.T) {
 
 func TestEscCancelaEdicao(t *testing.T) {
 	m, l, _ := modeloAjustes(t, nil)
-	m.sel = indiceAjuste(t, "FANTASMAS_DEBUG")
+	m.sel = selAjuste(t, m, "FANTASMAS_DEBUG")
 	m = tecla(m, "enter")
 	m = teclaMsg(m, tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("/tmp/x.log")})
 	m = teclaMsg(m, tea.KeyMsg{Type: tea.KeyEsc})
@@ -133,7 +134,7 @@ func TestEscCancelaEdicao(t *testing.T) {
 
 func TestShellNaoEditavel(t *testing.T) {
 	m, l, _ := modeloAjustes(t, map[string]string{"FANTASMAS_MURAL": "off", "FANTASMAS_CLAUDE_DIR": "/segredo/claude"})
-	m.sel = indiceAjuste(t, "FANTASMAS_MURAL")
+	m.sel = selAjuste(t, m, "FANTASMAS_MURAL")
 	m = tecla(m, "enter")
 	out := render(m, 110, 50)
 	if !strings.Contains(out, "vem do shell") || l.Origem("FANTASMAS_MURAL") != config.Ambiente {

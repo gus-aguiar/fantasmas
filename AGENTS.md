@@ -39,7 +39,9 @@ gengar --raiz ~/spark        # aponta para o workspace Spark
 gengar --intervalo 1m
 ```
 
-O `--raiz` precisa ser a raiz do workspace Spark, não este repositório. É lá que ficam `.delegate/`, `shared/` e `scripts/`.
+A raiz precisa ser a do workspace Spark, não este repositório. É lá que ficam `.delegate/`, `shared/` e `scripts/`.
+- **Ordem:** `--raiz` manda; sem ela vale `FANTASMAS_RAIZ` (definível na aba settings, aceita `~/`); sem as duas, a pasta atual (`resolverRaiz` em `main.go`).
+- Com a raiz errada, as gavetas que dependem dos scripts do Spark ficam vazias. A máquina, por exemplo, mostra "sem leitura da máquina".
 
 ### Modo quadro único
 
@@ -70,7 +72,7 @@ A lista completa fica no `?` dentro do app, e a fonte é `ajudaLinhas` em `inter
   - `U 2×`: atualiza o app;
   - `A`/`S`/`T 2×`: avança, pula ou faz retry de uma etapa do pipe.
 - Gaveta pipes: `n` lança um run, `e` edita o YAML e `N` abre o gengar dedicado do run.
-- Outras: `D` pede uma rodada do DayDreaming e `M` reconecta os MCPs.
+- Outras: `D` pede uma rodada do DayDreaming e `M` reconecta os MCPs. Os dois botões ficam na seção "ações" da aba settings; a gaveta máquina é só monitoramento.
 
 ## De onde vêm os dados
 
@@ -80,7 +82,7 @@ A coleta é `dados.Coletor.Coletar` (`internal/dados/coleta.go`), e tudo nela ro
 |---|---|
 | `shared/mods/control-panel/scripts/delegate.py` (`tasks`, `esperando`, `opcoes-todas`) | tasks e perguntas do delegate (modo padrão) |
 | `scripts/delegate/ddb.py` (`import`, `state --json`, `tick --dry-run`) | substitui o delegate.py quando `FANTASMAS_FONTE=ddb`; liga as missões e os pipes |
-| `shared/mods/control-panel/scripts/{local.sh,coleta.sh worktrees,maquina.sh}` | serviços, worktrees e máquina |
+| `shared/mods/control-panel/scripts/{local.sh,coleta.sh worktrees,maquina.sh}` | serviços, worktrees e máquina. A máquina vem sempre do `assets/maquina.sh` embutido (memória, swap, pressão, OOM, carga, sessões, disco), não do script do Spark; a trava de pesados só entra com `.delegate/` na raiz. Polling: roda a cada coleta |
 | `shared/skills/delegate-painel/painel.py` | entrega das respostas (sem ele, a resposta só é gravada) |
 | `.delegate/` (incluindo `_mural.jsonl`) | tasks, mural e daydreamer |
 | `herdr agent list` | agentes vivos e focar aba |
@@ -104,6 +106,7 @@ Regras para quem mexer:
 |---|---|
 | `FANTASMAS_TEMA=roxo\|orca\|terminal` | cores do app (`ui.UsarTema`); padrão roxo; troca na hora |
 | `FANTASMAS_FIGURA=<nome>` | figura do topo, do catálogo de figuras (ver abaixo); padrão gengar; troca na hora |
+| `FANTASMAS_RAIZ` | raiz do workspace Spark quando não há `--raiz`; aceita `~/`; vale ao reabrir |
 | `FANTASMAS_FONTE=ddb` | usa o `ddb.py`, liga as gavetas missões e pipes e abre em `missoes` |
 | `FANTASMAS_DDB_SCRIPT` | caminho alternativo do `ddb.py` |
 | `FANTASMAS_EDITOR` | editor para arquivos e pastas (links continuam no `xdg-open`/`open`) |

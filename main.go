@@ -27,7 +27,7 @@ import (
 func main() {
 	// antes de qualquer os.Getenv, inclusive os padrões das flags
 	loja, aviso := abrirAjustes()
-	raiz := flag.String("raiz", "", "raiz do workspace Spark")
+	raiz := flag.String("raiz", "", "raiz do workspace Spark (ou FANTASMAS_RAIZ; sem as duas, a pasta atual)")
 	intervalo := flag.Duration("intervalo", 30*time.Second, "intervalo da coleta automática")
 	largura := flag.Int("largura", 0, "largura do quadro (só com --uma-vez)")
 	altura := flag.Int("altura", 0, "altura do quadro (só com --uma-vez)")
@@ -48,8 +48,10 @@ func main() {
 		fmt.Fprintln(os.Stderr, "fantasmas:", err)
 		os.Exit(2)
 	}
-	if *raiz == "" {
-		*raiz, _ = os.Getwd()
+	var avisoRaiz string
+	*raiz, avisoRaiz = resolverRaiz(*raiz, os.Getenv, os.Getwd, os.UserHomeDir, os.Stat)
+	if avisoRaiz != "" {
+		aviso = avisoRaiz
 	}
 
 	runner := dados.ExecRunner{}
@@ -200,6 +202,30 @@ func main() {
 		err := syscall.Exec(fm.Reiniciar(), os.Args, os.Environ())
 		fmt.Fprintln(os.Stderr, "fantasmas: atualizado; feche e abra de novo:", err)
 	}
+}
+
+// resolverRaiz: --raiz manda; sem ela, FANTASMAS_RAIZ (aceita ~/); sem as duas, a pasta atual.
+// FANTASMAS_RAIZ que não é pasta cai na pasta atual com um aviso que não mostra o caminho,
+// porque o valor pode vir da aba settings, que nunca o exibe.
+func resolverRaiz(flag string, getenv func(string) string, getwd func() (string, error),
+	home func() (string, error), stat func(string) (os.FileInfo, error)) (string, string) {
+	atual := func() string { d, _ := getwd(); return d }
+	if flag != "" {
+		return flag, ""
+	}
+	r := strings.TrimSpace(getenv("FANTASMAS_RAIZ"))
+	if r == "" {
+		return atual(), ""
+	}
+	if r == "~" || strings.HasPrefix(r, "~/") {
+		if h, err := home(); err == nil {
+			r = filepath.Join(h, strings.TrimPrefix(r, "~"))
+		}
+	}
+	if st, err := stat(r); err != nil || !st.IsDir() {
+		return atual(), "FANTASMAS_RAIZ não é uma pasta; usei a pasta atual"
+	}
+	return r, ""
 }
 
 // abrirAjustes aplica o arquivo da aba settings ao ambiente; o aviso vai para a linha de status.

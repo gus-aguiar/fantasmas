@@ -183,3 +183,39 @@ func TestGavetaInicial(t *testing.T) {
 		t.Fatalf("outra fonte não muda a gaveta, veio %q", g)
 	}
 }
+
+func TestResolverRaiz(t *testing.T) {
+	dir := t.TempDir()
+	arq := filepath.Join(dir, "arquivo")
+	os.WriteFile(arq, []byte("x"), 0o644)
+	wd := func() (string, error) { return "/atual", nil }
+	home := func() (string, error) { return dir, nil }
+	casos := []struct {
+		flag, env, quer string
+		aviso           bool
+	}{
+		{"/da/flag", dir, "/da/flag", false},
+		{"", "", "/atual", false},
+		{"", dir, dir, false},
+		{"", "  " + dir + "  ", dir, false},
+		{"", "~", dir, false},
+		{"", "~/", dir, false},
+		{"", "/nao/existe", "/atual", true},
+		{"", arq, "/atual", true},
+	}
+	for _, c := range casos {
+		env := func(k string) string {
+			if k == "FANTASMAS_RAIZ" {
+				return c.env
+			}
+			return ""
+		}
+		r, aviso := resolverRaiz(c.flag, env, wd, home, os.Stat)
+		if r != c.quer || (aviso != "") != c.aviso {
+			t.Errorf("flag %q env %q: %q aviso %q", c.flag, c.env, r, aviso)
+		}
+		if strings.Contains(aviso, c.env) && c.env != "" {
+			t.Errorf("aviso mostrou o caminho: %q", aviso)
+		}
+	}
+}

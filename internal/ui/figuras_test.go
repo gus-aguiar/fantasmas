@@ -105,7 +105,7 @@ func TestSettingsTrocaFigura(t *testing.T) {
 
 	m, l, _ := modeloAjustes(t, nil)
 	m.acoes.DirFiguras = dir
-	m.sel = indiceAjuste(t, config.ChaveFigura)
+	m.sel = selAjuste(t, m, config.ChaveFigura)
 	if out := render(m, 110, 50); !strings.Contains(out, "4 figuras") {
 		t.Fatalf("sem a contagem de figuras:\n%s", out)
 	}

@@ -6,9 +6,13 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"sync"
 	"testing"
+	"time"
+
+	"fantasmas/assets"
 )
 
 type fakeRunner struct {
@@ -82,6 +86,7 @@ func novoFake() *fakeRunner {
 			"herdr agent list":    `{"result":{"agents":[{"name":"crew1"}]}}`,
 			"coleta.sh worktrees": "w1\twt\tlimpo\n",
 			"maquina.sh":          "m1\tRAM\t50%\n",
+			"heavy.lock":          "m1\tRAM\t50%\n",
 		},
 	}
 }
@@ -174,5 +179,53 @@ func TestFaltaDe(t *testing.T) {
 	got := FaltaDe(Recursos{GH: true, Herdr: true, Delegate: true})
 	if len(got) != 2 || !strings.HasPrefix(got[0], "login do GitHub") || got[1] != "painel.py: resposta só grava; a entrega fica com o coordenador" {
 		t.Errorf("got=%v", got)
+	}
+}
+
+func TestComandoMaquina(t *testing.T) {
+	raiz := t.TempDir()
+	argv := comandoMaquina(raiz)
+	if len(argv) != 4 || argv[1] != "-c" || argv[2] != assets.Maquina {
+		t.Fatalf("sem .delegate: %q", argv[:2])
+	}
+	os.MkdirAll(filepath.Join(raiz, ".delegate"), 0o755)
+	// o maquina.sh do Spark na raiz não muda nada: o fantasmas usa sempre o seu
+	scripts := filepath.Join(raiz, "shared", "mods", "control-panel", "scripts")
+	os.MkdirAll(scripts, 0o755)
+	os.WriteFile(filepath.Join(scripts, "maquina.sh"), []byte("#"), 0o644)
+	argv = comandoMaquina(raiz)
+	if len(argv) != 5 || argv[2] != assets.Maquina || argv[4] != filepath.Join(raiz, ".delegate", "heavy.lock") {
+		t.Fatalf("com .delegate deveria passar a trava: %q", argv[3:])
+	}
+}
+
+// TestMaquinaEmbutidaLeOComputador roda a cópia embutida de verdade (só Linux: lê /proc).
+func TestMaquinaEmbutidaLeOComputador(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("maquina.sh lê /proc")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	for _, trava := range []string{"", filepath.Join(t.TempDir(), "heavy.lock")} {
+		argv := []string{"bash", "-c", assets.Maquina, "maquina.sh"}
+		if trava != "" {
+			argv = append(argv, trava)
+		}
+		out, err := ExecRunner{}.Run(ctx, argv...)
+		if err != nil {
+			t.Fatalf("trava %q: %v", trava, err)
+		}
+		chaves := map[string]bool{}
+		for _, l := range TSV(out) {
+			chaves[l.Chave] = true
+		}
+		for _, k := range []string{"memoria", "swap", "pressao", "oom", "carga", "sessoes", "disco"} {
+			if !chaves[k] {
+				t.Errorf("trava %q: sem %s em %q", trava, k, out)
+			}
+		}
+		if chaves["trava"] != (trava != "") {
+			t.Errorf("trava %q: linha da trava = %v", trava, chaves["trava"])
+		}
 	}
 }
