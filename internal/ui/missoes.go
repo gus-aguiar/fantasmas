@@ -183,8 +183,7 @@ func chip(bg, fg lipgloss.Color, s string) string {
 func gavetaMissoes(c *corpo, e dados.Estado, foco string) {
 	if !e.MissoesLigado {
 		c.branco()
-		c.vazio("missões: ligue FANTASMAS_FONTE=ddb")
-		c.vazio("o filtro por workspace segue valendo pelo meta")
+		c.vazioIcone("◆", T.Espera, "missões: ligue FANTASMAS_FONTE=ddb", "o filtro por workspace segue valendo pelo meta")
 		return
 	}
 	w := c.largura - 2
@@ -199,11 +198,11 @@ func gavetaMissoes(c *corpo, e dados.Estado, foco string) {
 		}
 		suas += m.Contagem.Pendentes
 	}
-	extra := fmt.Sprintf("%d abertas", abertas)
+	extra := "enter foca · g vai ao gengar"
 	if suas > 0 {
-		extra += fmt.Sprintf(" · %d esperando você", suas)
+		extra = fmt.Sprintf("%d esperando você · ", suas) + extra
 	}
-	c.secao("missões", extra+" · enter foca · g vai ao gengar")
+	c.secaoN("missões", abertas, extra)
 	if len(ms) == 0 {
 		c.vazio("nenhuma missão aberta · scripts/delegate/missao-abrir.sh")
 		return

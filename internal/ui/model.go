@@ -29,12 +29,12 @@ type Acoes struct {
 	Daydreaming    func() (string, error)
 	ReconectarMCPs func() error
 	ProgressoMCP   func() dados.ProgressoMCP
-	// gaveta mais: git pull + build + troca do binário
+	// configurações → atualizar app fantasmas: git pull + build + troca do binário
 	Atualizar func() (dados.Resultado, error)
 	// gaveta pipes
 	Pipes  OpsPipes
 	Editar func(arquivo string) *exec.Cmd
-	// gaveta settings: tema e variáveis FANTASMAS_*
+	// gaveta configurações: tema e variáveis FANTASMAS_*
 	Ajustes OpsAjustes
 	// pasta das figuras do usuário (além das embutidas)
 	DirFiguras string
@@ -143,7 +143,7 @@ func (m Model) ComGrafico(g *Grafico) Model {
 	return m
 }
 
-// Grafico devolve a imagem kitty em uso (a figura pode trocar pela aba settings), ou nil.
+// Grafico devolve a imagem kitty em uso (a figura pode trocar pela aba configurações), ou nil.
 func (m Model) Grafico() *Grafico { return m.img }
 
 // ComModoImagem registra o modo do Gengar para a ajuda.
@@ -421,7 +421,7 @@ func (m Model) atualizarApp() (tea.Model, tea.Cmd) {
 	}
 	if !m.armadoAtu {
 		m.armadoAtu = true
-		m.status = "U de novo confirma atualizar fantasmas"
+		m.status = "U de novo confirma atualizar app fantasmas"
 		return m, nil
 	}
 	m.armadoAtu, m.atualizando = false, true
@@ -753,8 +753,9 @@ func (m Model) tecla(k string) (tea.Model, tea.Cmd) {
 		m.busca, m.sel = "", 0
 		return m, nil
 	case "0":
-		m.missao, m.sel = "", 0
-		return m, nil
+		// 0 é a gaveta missões e volta a todas as missões (tira o foco)
+		m.missao = ""
+		return m.irGaveta(indiceGaveta("missoes")), nil
 	case "r":
 		return m.coletar()
 	case "left", "h":
@@ -777,11 +778,9 @@ func (m Model) tecla(k string) (tea.Model, tea.Cmd) {
 		return m.irAba(), nil
 	case "p":
 		return m.abrirURL(PainelURL), nil
-	case ",":
-		return m.irGaveta(indiceGaveta("settings")), nil
 	}
-	if len(k) == 1 && k[0] >= '1' && k[0] <= '9' && int(k[0]-'1') < len(Gavetas) {
-		return m.irGaveta(int(k[0] - '1')), nil
+	if len(k) == 1 && k[0] >= '0' && k[0] <= '9' && int(k[0]-'0') < len(Gavetas) {
+		return m.irGaveta(int(k[0] - '0')), nil
 	}
 	return m, nil
 }
@@ -789,6 +788,7 @@ func (m Model) tecla(k string) (tea.Model, tea.Cmd) {
 func (m Model) montarCorpo(largura, altura int) *corpo {
 	c := &corpo{largura: largura, filtro: normaliza(m.busca), antigasAbertas: m.antigas, rascunhos: m.rascunhos}
 	e := m.estadoVisto()
+	c.desc = Gavetas[m.gaveta].Descricao
 	switch Gavetas[m.gaveta].ID {
 	case "missoes":
 		gavetaMissoes(c, m.estado, m.missao)
@@ -800,16 +800,24 @@ func (m Model) montarCorpo(largura, altura int) *corpo {
 		gavetaPipes(c, e)
 	case "prs":
 		gavetaPRs(c, e)
-	case "ci":
-		gavetaCI(c, e)
 	case "ambiente":
 		gavetaAmbiente(c, e)
 	case "maquina":
 		gavetaMaquina(c, e)
-	case "mais":
-		gavetaMais(c, e, m.atualizando, m.armadoAtu)
-	case "settings":
-		gavetaSettings(c, e, m.acoes.Ajustes, m.pedindoDD)
+	case "worktrees":
+		gavetaWorktrees(c, e)
+	case "configuracoes":
+		gavetaSettings(c, e, m.acoes.Ajustes, m.pedindoDD, m.atualizando, m.armadoAtu)
+	}
+	if c.desc != "" {
+		// gaveta sem seção (ex.: missões desligada): a descrição vira o título do topo
+		desc, nome := c.desc, Gavetas[m.gaveta].Nome
+		c.desc = ""
+		topo := linha{item: -1, desenha: func(bg lipgloss.Color) string {
+			return st(bg, T.Acao).Render("› ") + st(bg, T.Sub).Bold(true).Render(nome) + st(bg, T.Dim).Render("  "+desc)
+		}}
+		branco := linha{item: -1, desenha: func(lipgloss.Color) string { return "" }}
+		c.linhas = append([]linha{topo, branco}, c.linhas...)
 	}
 	if c.filtro != "" && c.vis == 0 {
 		c.branco()
@@ -836,8 +844,8 @@ func esqueleto(largura, altura int) []string {
 
 // corpoLinhas devolve as linhas visíveis da gaveta e, para cada uma, o item dono (ou -1).
 func (m Model) corpoLinhas(largura, altura int) ([]string, []int) {
-	// settings não depende da coleta: aparece já na abertura.
-	if m.estado.At.IsZero() && Gavetas[m.gaveta].ID != "settings" {
+	// a gaveta configurações não depende da coleta: aparece já na abertura.
+	if m.estado.At.IsZero() && Gavetas[m.gaveta].ID != "configuracoes" {
 		ls := esqueleto(largura, altura)
 		dono := make([]int, len(ls))
 		for i := range dono {
@@ -892,7 +900,7 @@ func (m Model) ajudaLinhas(largura int) []string {
 		k("enter", "abre · responde · foca a missão"),
 		k("enter 2×", "confirma Liberar merge"),
 		k("", "e Não vou fazer"),
-		k("← → 1-9 0 ,", "troca de gaveta · 0 todas as missões · , settings"),
+		k("← → 0-9", "troca de gaveta · 0 missões (todas) · 8 configurações"),
 		k("/", "filtra a lista"),
 		k("esc", "volta · limpa o filtro (ou a missão)"),
 		k("o", "abre o link (abrir ↗)"),

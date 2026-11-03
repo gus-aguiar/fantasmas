@@ -20,7 +20,7 @@ func modeloMissoes() Model {
 }
 
 func TestGavetaMissoesEhAPrimeira(t *testing.T) {
-	if Gavetas[0].ID != "missoes" || Gavetas[0].Tecla != "1" {
+	if Gavetas[0].ID != "missoes" || Gavetas[0].Tecla != "0" {
 		t.Fatalf("primeira=%+v", Gavetas[0])
 	}
 }

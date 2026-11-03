@@ -286,7 +286,7 @@ func limparSprites() {
 // UsarSprite troca a figura do topo pelo arquivo (GIF ou PNG); se não ler ou não decodificar, volta ao
 // embutido e devolve o erro.
 func UsarSprite(caminho string) error {
-	// a mensagem não leva o caminho: o valor pode vir da aba settings, que nunca o mostra.
+	// a mensagem não leva o caminho: o valor pode vir da aba configurações, que nunca o mostra.
 	b, err := os.ReadFile(caminho)
 	if err != nil {
 		gifTopo = nil

@@ -103,14 +103,14 @@ func TestEsqueletoAntesDaColeta(t *testing.T) {
 
 func TestTeclasTrocamGaveta(t *testing.T) {
 	m := modelo(fixture(), &registro{})
-	m = tecla(m, "5")
+	m = tecla(m, "4")
 	if Gavetas[m.gaveta].ID != "prs" {
 		t.Fatalf("esperava prs, veio %s", Gavetas[m.gaveta].ID)
 	}
-	m = tecla(m, "9")
+	m = tecla(m, "7")
 	m = tecla(m, "right")
-	if Gavetas[m.gaveta].ID != "settings" {
-		t.Fatalf("esperava settings, veio %s", Gavetas[m.gaveta].ID)
+	if Gavetas[m.gaveta].ID != "configuracoes" {
+		t.Fatalf("esperava configurações, veio %s", Gavetas[m.gaveta].ID)
 	}
 	m = tecla(m, "right")
 	if Gavetas[m.gaveta].ID != "missoes" {
@@ -143,7 +143,7 @@ func TestColetaNaoSobrepoe(t *testing.T) {
 func TestEnterEmPRAbreURL(t *testing.T) {
 	r := &registro{}
 	m := modelo(fixture(), r)
-	m = tecla(m, "5")
+	m = tecla(m, "4")
 	m = tecla(m, "enter")
 	if len(r.urls) != 1 || r.urls[0] != "https://github.com/o/PrologWebService/pull/1" {
 		t.Fatalf("urls = %v", r.urls)

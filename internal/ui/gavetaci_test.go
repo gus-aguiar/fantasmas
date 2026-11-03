@@ -11,9 +11,10 @@ import (
 	"github.com/charmbracelet/x/ansi"
 )
 
-func corpoCI(e dados.Estado, w int) (*corpo, []string) {
+// corpoPRs monta só a gaveta PRs (agora com o CI junto), sem a descrição da aba.
+func corpoPRs(e dados.Estado, w int) (*corpo, []string) {
 	c := &corpo{largura: w}
-	gavetaCI(c, e)
+	gavetaPRs(c, e)
 	var out []string
 	for _, l := range c.linhas {
 		out = append(out, ansi.Strip(l.desenha(T.Base)))
@@ -21,52 +22,64 @@ func corpoCI(e dados.Estado, w int) (*corpo, []string) {
 	return c, out
 }
 
-func TestGavetaCITudoVerde(t *testing.T) {
-	e := dados.Estado{Travados: []dados.Travado{{Repo: "PrologWebReact", Number: 1, CI: "SUCCESS"}, {Repo: "PrologFlutter", Number: 2, CI: "SUCCESS"}}}
-	_, ls := corpoCI(e, 70)
-	if len(ls) != 2 || strings.TrimSpace(ls[1]) != "✓ CI: tudo verde" {
-		t.Errorf("%q", ls)
+func TestPRsComCITudoVerde(t *testing.T) {
+	e := dados.Estado{Travados: []dados.Travado{{Repo: "PrologWebReact", Number: 1, CI: "SUCCESS", Motivo: "aprovado · mergear"}, {Repo: "PrologFlutter", Number: 2, CI: "SUCCESS", Motivo: "aprovado · mergear"}}}
+	_, ls := corpoPRs(e, 120)
+	if !strings.HasPrefix(ls[0], "› PRs (2)  CI: ✓ 2") {
+		t.Errorf("título: %q", ls[0])
 	}
-}
-
-func TestGavetaCISemPR(t *testing.T) {
-	_, ls := corpoCI(dados.Estado{}, 70)
-	if len(ls) != 2 || !strings.Contains(ls[1], "sem PR aberto") {
-		t.Errorf("%q", ls)
-	}
-}
-
-func TestGavetaCIVermelhoRodandoEVerdes(t *testing.T) {
-	e := dados.Estado{Travados: []dados.Travado{
-		{Repo: "PrologWebReact", Number: 3650, URL: "u/3650", CI: "FAILURE", Falhos: []string{"lint", "vitest"}},
-		{Repo: "PrologWebService", Number: 812, URL: "u/812", CI: "PENDING"},
-		{Repo: "PrologFlutter", Number: 3, CI: "SUCCESS"},
-		{Repo: "PrologE2E", Number: 4},
-	}}
-	c, ls := corpoCI(e, 70)
-	quer := []string{"✗ WebReact #3650  vermelho · lint, vitest", "◐ WebService #812  rodando", "✓ 1 PR verde", "1 sem CI"}
-	if len(ls) != 5 {
-		t.Fatalf("%q", ls)
-	}
-	for i, q := range quer {
-		if strings.TrimSpace(ls[i+1]) != q {
-			t.Errorf("linha %d: %q quer %q", i+1, ls[i+1], q)
+	for _, l := range ls[2:] {
+		if !strings.Contains(l, "✓ verde") {
+			t.Errorf("linha sem CI verde: %q", l)
 		}
 	}
-	if c.alvos[0].url != "u/3650/checks" {
-		t.Errorf("alvo %+v", c.alvos[0])
+}
+
+func TestPRsSemPR(t *testing.T) {
+	_, ls := corpoPRs(dados.Estado{}, 70)
+	// título, branco e a caixa do vazio: borda, 2 de folga, texto, 2 de folga, borda
+	if len(ls) != 9 || ls[0] != "› PRs (0)" || !strings.Contains(ls[2], "╭") || !strings.Contains(ls[5], "○  nenhum PR aberto") || !strings.Contains(ls[8], "╯") {
+		t.Errorf("%q", ls)
 	}
 }
 
-func TestGavetaCICabe(t *testing.T) {
+func TestPRsComCIVermelhoRodandoEVerdes(t *testing.T) {
 	e := dados.Estado{Travados: []dados.Travado{
-		{Repo: "PrologWebReact", Number: 3650, CI: "FAILURE", Falhos: []string{"lint-com-nome-muito-comprido", "vitest-e-os-testes-de-integracao-do-modulo"}},
-		{Repo: "PrologWebService", Number: 812, CI: "PENDING"},
+		{Repo: "PrologWebReact", Number: 3650, URL: "u/3650", CI: "FAILURE", Falhos: []string{"lint", "vitest"}, Motivo: "CI vermelho"},
+		{Repo: "PrologWebService", Number: 812, URL: "u/812", CI: "PENDING", Motivo: "aguardando revisão"},
+		{Repo: "PrologFlutter", Number: 3, CI: "SUCCESS", Motivo: "aprovado · mergear"},
+		{Repo: "PrologE2E", Number: 4, Motivo: "aguardando revisão"},
+	}}
+	c, ls := corpoPRs(e, 120)
+	if !strings.HasPrefix(ls[0], "› PRs (4)  CI: ✗ 1 · ◐ 1 · ✓ 1 · – 1") {
+		t.Errorf("título: %q", ls[0])
+	}
+	quer := map[string]string{"WebReact #3650": "✗ lint, vitest", "WebService #812": "◐ rodando", "Flutter #3": "✓ verde", "E2E #4": "– sem CI"}
+	for nome, ci := range quer {
+		achou := false
+		for _, l := range ls {
+			if strings.Contains(l, nome) && strings.Contains(l, ci) {
+				achou = true
+			}
+		}
+		if !achou {
+			t.Errorf("%s sem %q:\n%s", nome, ci, strings.Join(ls, "\n"))
+		}
+	}
+	if c.alvos[0].url != "u/3650" {
+		t.Errorf("enter deveria abrir o PR: %+v", c.alvos[0])
+	}
+}
+
+func TestPRsComCICabe(t *testing.T) {
+	e := dados.Estado{Travados: []dados.Travado{
+		{Repo: "PrologWebReact", Number: 3650, CI: "FAILURE", Falhos: []string{"lint-com-nome-muito-comprido", "vitest-e-os-testes-de-integracao-do-modulo"}, Motivo: "CI vermelho", Title: "um título bem comprido para estourar a largura da gaveta em telas estreitas"},
+		{Repo: "PrologWebService", Number: 812, CI: "PENDING", Motivo: "aguardando revisão"},
 		{Repo: "PrologFlutter", Number: 3, CI: "SUCCESS"},
 		{Repo: "PrologE2E", Number: 4},
 	}}
 	for _, w := range larguras {
-		_, ls := corpoCI(e, w)
+		_, ls := corpoPRs(e, w)
 		for _, l := range ls {
 			if lipgloss.Width(l) > w {
 				t.Errorf("w=%d largura %d: %q", w, lipgloss.Width(l), l)
@@ -82,5 +95,22 @@ func TestDemoVerdeSoTemVerdes(t *testing.T) {
 	}
 	if r := dados.ResumoDoCI(EstadoDemo(time.Now()).Travados, false); len(r.Falhos) != 1 || len(r.Falhos[0].Falhos) != 2 {
 		t.Errorf("demo vermelha: %+v", r)
+	}
+}
+
+func TestPRsColunasNuncaEncostam(t *testing.T) {
+	e := dados.Estado{Travados: []dados.Travado{
+		{Repo: "GlorpDesignSystem", Number: 605, CI: "SUCCESS", Motivo: "aprovado · mergear", Title: "Token de borda"},
+		{Repo: "PrologWebService", Number: 4202, CI: "PENDING", Motivo: "aguardando revisão", Title: "Endpoint"},
+	}}
+	for _, w := range []int{90, 120} {
+		_, ls := corpoPRs(e, w)
+		for _, l := range ls[2:] {
+			for _, colado := range []string{"#605aprovado", "#605a", "…◐", "…✓", "revisão◐", "mergear✓"} {
+				if strings.Contains(l, colado) {
+					t.Errorf("w=%d: colunas encostadas (%q): %q", w, colado, l)
+				}
+			}
+		}
 	}
 }

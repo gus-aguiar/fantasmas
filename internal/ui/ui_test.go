@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"unicode"
 
 	"fantasmas/internal/dados"
 
@@ -81,14 +82,14 @@ func TestRodape56SoTeclaNasInativas(t *testing.T) {
 }
 
 func TestRodape110TeclaENome(t *testing.T) {
-	if !strings.Contains(ansi.Strip(Rodape("agora", 110)), "3 fantasminhas") {
-		t.Fatal("sem 3 fantasminhas")
+	if !strings.Contains(ansi.Strip(Rodape("agora", 110)), "2 fantasminhas") {
+		t.Fatal("sem 2 fantasminhas")
 	}
 }
 
 func TestRodape96SoNomes(t *testing.T) {
 	r := ansi.Strip(Rodape("agora", 96))
-	if !strings.Contains(r, "fantasminhas") || !strings.Contains(r, "settings") {
+	if !strings.Contains(r, "fantasminhas") || !strings.Contains(r, "configurações") {
 		t.Fatalf("%q", r)
 	}
 }
@@ -153,5 +154,76 @@ func TestTopoSemTravaForaDoSpark(t *testing.T) {
 	e.Maquina = nil
 	if out := ansi.Strip(Topo(e, 96, 0, false, "")); !strings.Contains(out, "fila de pesados livre") {
 		t.Fatalf("antes da primeira leitura segue o livre:\n%s", out)
+	}
+}
+
+func TestTodaGavetaTemDescricao(t *testing.T) {
+	for i, g := range Gavetas {
+		r := []rune(g.Descricao)
+		if len(r) == 0 || !unicode.IsUpper(r[0]) || strings.HasSuffix(g.Descricao, ".") || len(r) > 48 {
+			t.Errorf("%s: descrição %q deveria ser curta, com maiúscula e sem ponto", g.ID, g.Descricao)
+			continue
+		}
+		m := modelo(fixture(), &registro{}).irGaveta(i)
+		achou := false
+		for _, l := range strings.Split(render(m, 140, 40), "\n") {
+			if strings.Contains(l, "› ") && strings.Contains(l, g.Descricao) {
+				achou = true
+			}
+		}
+		if !achou {
+			t.Errorf("%s: descrição não aparece ao lado de um título de seção:\n%s", g.ID, render(m, 140, 40))
+		}
+	}
+}
+
+func TestVazioEmCaixa(t *testing.T) {
+	for _, w := range []int{30, 46, 96, 140} {
+		c := &corpo{largura: w}
+		c.vazioIcone("✓", T.Ok, "nada pedindo você agora", "segunda linha")
+		var ls []string
+		for _, l := range c.linhas {
+			ls = append(ls, ansi.Strip(l.desenha(T.Base)))
+		}
+		// borda, 2 de folga, 2 linhas de texto, 2 de folga, borda
+		if len(ls) != 8 || !strings.HasPrefix(strings.TrimSpace(ls[0]), "╭") || !strings.HasSuffix(strings.TrimSpace(ls[7]), "╯") {
+			t.Fatalf("w=%d: %q", w, ls)
+		}
+		vazia := func(l string) bool { return strings.TrimSpace(strings.Trim(strings.TrimSpace(l), "│")) == "" }
+		if !strings.Contains(ls[3], "✓  nada pedindo") || !vazia(ls[1]) || !vazia(ls[2]) || !vazia(ls[5]) || !vazia(ls[6]) {
+			t.Fatalf("w=%d: ícone, texto ou folga: %q", w, ls)
+		}
+		// largura toda: 1 coluna de margem de cada lado
+		if lipgloss.Width(ls[0]) != w-1 || !strings.HasPrefix(ls[0], " ╭") {
+			t.Fatalf("w=%d: caixa deveria ocupar a largura toda: %q", w, ls[0])
+		}
+		for i, l := range ls {
+			if lipgloss.Width(l) > w {
+				t.Fatalf("w=%d linha %d estoura: %q", w, i, l)
+			}
+		}
+		// centrada: as sobras dos dois lados diferem em no máximo 1
+		esq := len(ls[0]) - len(strings.TrimLeft(ls[0], " "))
+		if dir := w - lipgloss.Width(ls[0]); esq-dir > 1 || dir-esq > 1 {
+			t.Fatalf("w=%d: caixa fora do centro (%d × %d)", w, esq, dir)
+		}
+	}
+}
+
+func TestDescricaoSemItalicoEApagada(t *testing.T) {
+	antes := lipgloss.ColorProfile()
+	lipgloss.SetColorProfile(termenv.TrueColor)
+	defer lipgloss.SetColorProfile(antes)
+	if T.Dim == T.Sub {
+		t.Fatal("Dim e Sub iguais: a descrição não se separa do título")
+	}
+	c := &corpo{largura: 120, desc: "Seus PRs abertos e o que falta"}
+	c.secaoN("PRs", 7, "")
+	l := c.linhas[0].desenha(T.Base)
+	if want := st(T.Base, T.Dim).Render("  Seus PRs abertos e o que falta"); !strings.Contains(l, want) {
+		t.Fatalf("descrição deveria vir só em Dim, sem itálico: %q", l)
+	}
+	if !strings.Contains(l, st(T.Base, T.Sub).Bold(true).Render("PRs (7)")) {
+		t.Fatalf("título fora do estilo: %q", l)
 	}
 }

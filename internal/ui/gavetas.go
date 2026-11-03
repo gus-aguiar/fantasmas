@@ -143,7 +143,7 @@ func gavetaAgora(c *corpo, e dados.Estado, altura int) {
 
 	usados := 0
 	if len(e.Mural) > 0 && c.filtro == "" {
-		c.secao("mural", contagem(len(e.Mural)))
+		c.secaoN("mural", len(e.Mural), "")
 		for _, a := range e.Mural {
 			a := a
 			w := c.largura
@@ -152,9 +152,9 @@ func gavetaAgora(c *corpo, e dados.Estado, altura int) {
 		c.branco()
 	}
 	if len(praVoce) > 0 || c.filtro == "" {
-		c.secao("precisa de você", contagem(len(praVoce)))
+		c.secaoN("precisa de você", len(praVoce), "")
 		if len(praVoce) == 0 {
-			c.vazio("nada pedindo você agora ✓")
+			c.vazioIcone("✓", T.Ok, "nada pedindo você agora")
 		} else {
 			usados += lista(praVoce, cabem)
 		}
@@ -164,7 +164,7 @@ func gavetaAgora(c *corpo, e dados.Estado, altura int) {
 		if len(c.linhas) > 0 {
 			c.branco()
 		}
-		c.secao("travados", contagem(len(travados)))
+		c.secaoN("travados", len(travados), "")
 		usados += lista(travados, cabem-usados)
 	}
 
@@ -172,7 +172,7 @@ func gavetaAgora(c *corpo, e dados.Estado, altura int) {
 		if len(c.linhas) > 0 {
 			c.branco()
 		}
-		c.secao("trabalhando", fmt.Sprint(len(trab)))
+		c.secaoN("trabalhando", len(trab), "")
 		for _, g := range grupos {
 			g := g
 			c.texto(func(bg lipgloss.Color) string {
@@ -192,7 +192,7 @@ func gavetaAgora(c *corpo, e dados.Estado, altura int) {
 		if len(c.linhas) > 0 {
 			c.branco()
 		}
-		c.secao(titulo, fmt.Sprint(len(ls)))
+		c.secaoN(titulo, len(ls), "")
 		for _, l := range ls {
 			c.linhaViva(l)
 		}
@@ -204,7 +204,7 @@ func gavetaAgora(c *corpo, e dados.Estado, altura int) {
 		if len(c.linhas) > 0 {
 			c.branco()
 		}
-		c.secao("acompanhando", fmt.Sprint(len(acomp)))
+		c.secaoN("acompanhando", len(acomp), "")
 		lista(acomp, cabem-usados)
 	}
 
@@ -287,7 +287,7 @@ func raiaCaidos(c *corpo, e dados.Estado) {
 		return
 	}
 	c.branco()
-	c.secao("caídos · R retoma", fmt.Sprintf("%d fora do Herdr", len(e.Caidos)))
+	c.secaoN("caídos", len(e.Caidos), "fora do Herdr · R retoma")
 	for _, x := range e.Caidos {
 		sid := x.SessionID
 		if len(sid) > 8 {
@@ -313,7 +313,7 @@ func gavetaCrew(c *corpo, e dados.Estado) {
 			ativos++
 		}
 	}
-	c.secao("fantasminhas", fmt.Sprintf("%d ativos", ativos))
+	c.secaoN("fantasminhas", ativos, "")
 	n := len(e.Esperando)
 	c.texto(func(bg lipgloss.Color) string {
 		return st(bg, T.Dim).Render(fmt.Sprintf("%d pendente(s) no painel", n))
@@ -350,6 +350,8 @@ func gavetaCrew(c *corpo, e dados.Estado) {
 	}
 }
 
+// gavetaPRs junta PRs e CI: uma linha por PR com o estado do PR, o CI e o título; o resumo do CI vai
+// no título da seção.
 func gavetaPRs(c *corpo, e dados.Estado) {
 	var prs []dados.Travado
 	ocultos := 0
@@ -360,7 +362,7 @@ func gavetaPRs(c *corpo, e dados.Estado) {
 		}
 		prs = append(prs, x)
 	}
-	c.secao("PRs", fmt.Sprintf("%d abertos", len(e.Travados)))
+	c.secaoN("PRs", len(e.Travados), resumoCI(dados.ResumoDoCI(e.Travados, c.rascunhos)))
 	if n := rascunhosDe(e); n > 0 {
 		msg := fmt.Sprintf("%d rascunhos ocultos · d mostra", ocultos)
 		if c.rascunhos {
@@ -382,56 +384,85 @@ func gavetaPRs(c *corpo, e dados.Estado) {
 			cor, glifo = T.Erro, "✗"
 		}
 		titulo := regexp.MustCompile(`^\[[^\]]+\]\s*`).ReplaceAllString(x.Title, "")
-		c.linhaLista(alvo{url: x.URL}, glifo, cor, fmt.Sprintf("%s #%d", strings.Replace(x.Repo, "Prolog", "", 1), x.Number), x.Motivo, cor, titulo)
+		gci, cci, tci := colunaCI(x)
+		c.linhaPR(alvo{url: x.URL}, glifo, cor, nomePR(x), x.Motivo, gci, cci, tci, titulo)
 	}
 }
 
-func gavetaCI(c *corpo, e dados.Estado) {
-	c.secao("CI", "")
-	if len(e.Travados) == 0 {
-		c.vazio("sem PR aberto")
-		return
+func nomePR(x dados.Travado) string {
+	return fmt.Sprintf("%s #%d", strings.Replace(x.Repo, "Prolog", "", 1), x.Number)
+}
+
+// resumoCI é o extra do título dos PRs: só os estados que existem, vermelho primeiro.
+func resumoCI(r dados.ResumoCI) string {
+	var ps []string
+	if n := len(r.Falhos); n > 0 {
+		ps = append(ps, fmt.Sprintf("✗ %d", n))
 	}
-	r := dados.ResumoDoCI(e.Travados, c.rascunhos)
-	nome := func(x dados.Travado) string {
-		return fmt.Sprintf("%s #%d", strings.Replace(x.Repo, "Prolog", "", 1), x.Number)
+	if n := len(r.Rodando); n > 0 {
+		ps = append(ps, fmt.Sprintf("◐ %d", n))
 	}
-	for _, x := range r.Falhos {
-		estado := "vermelho"
-		if len(x.Falhos) > 0 {
-			estado += " · " + strings.Join(x.Falhos, ", ")
-		}
-		c.linhaCI(alvo{url: x.URL + "/checks"}, "✗", T.Erro, nome(x), estado)
-	}
-	for _, x := range r.Rodando {
-		c.linhaCI(alvo{url: x.URL + "/checks"}, "◐", T.Andamento, nome(x), "rodando")
-	}
-	if len(r.Falhos) == 0 && len(r.Rodando) == 0 {
-		if r.Verdes > 0 {
-			c.texto(func(bg lipgloss.Color) string { return st(bg, T.Ok).Render("✓ CI: tudo verde") })
-		}
-	} else if r.Verdes > 0 {
-		msg := fmt.Sprintf("✓ %d PRs verdes", r.Verdes)
-		if r.Verdes == 1 {
-			msg = "✓ 1 PR verde"
-		}
-		c.texto(func(bg lipgloss.Color) string { return st(bg, T.Ok).Render(msg) })
+	if r.Verdes > 0 {
+		ps = append(ps, fmt.Sprintf("✓ %d", r.Verdes))
 	}
 	if r.SemCI > 0 {
-		msg := fmt.Sprintf("%d sem CI", r.SemCI)
-		c.texto(func(bg lipgloss.Color) string { return st(bg, T.Dim).Render(msg) })
+		ps = append(ps, fmt.Sprintf("– %d", r.SemCI))
 	}
+	if len(ps) == 0 {
+		return ""
+	}
+	return "CI: " + strings.Join(ps, " · ")
 }
 
-// linhaCI: glifo, PR e estado numa linha só, cortada na largura.
-func (c *corpo) linhaCI(a alvo, glifo string, cor lipgloss.Color, nome, estado string) {
-	if !c.passa(nome, estado, a.url) {
+// colunaCI é o glifo, a cor e o texto do CI de um PR; vermelho leva os checks que falharam.
+func colunaCI(x dados.Travado) (string, lipgloss.Color, string) {
+	switch x.CI {
+	case "FAILURE", "ERROR":
+		t := "vermelho"
+		if len(x.Falhos) > 0 {
+			t = strings.Join(x.Falhos, ", ")
+		}
+		return "✗", T.Erro, t
+	case "PENDING", "EXPECTED":
+		return "◐", T.Andamento, "rodando"
+	case "SUCCESS":
+		return "✓", T.Ok, "verde"
+	}
+	return "–", T.Dim, "sem CI"
+}
+
+// linhaPR: glifo, PR, estado do PR, CI e título, em colunas que encolhem com a largura.
+func (c *corpo) linhaPR(a alvo, glifo string, cor lipgloss.Color, nome, estado, gci string, cci lipgloss.Color, tci, titulo string) {
+	wNome, wEstado, wCI := 22, 22, 18
+	switch {
+	case c.largura < 70:
+		wNome, wEstado, wCI = 18, 12, 0
+	case c.largura < 110:
+		wNome, wEstado, wCI = 20, 16, 12
+	}
+	// tela estreita demais: o nome encolhe primeiro e o estado fica com o que sobrar
+	wNome = min(wNome, max(1, c.largura-2))
+	wEstado = min(wEstado, max(0, c.largura-2-wNome))
+	wTit := c.largura - 2 - wNome - wEstado - wCI
+	if !c.passa(nome, estado, tci, titulo, a.url) {
 		return
 	}
-	w := c.largura
+	// col deixa sempre um espaço entre as colunas, mesmo com o texto cortado
+	col := func(s string, n int) string {
+		if n <= 1 {
+			return Col(s, n)
+		}
+		return Col(s, n-1) + " "
+	}
 	c.item(a, func(bg lipgloss.Color) string {
-		resto := max(w-2-lipgloss.Width(nome)-2, 0)
-		return st(bg, cor).Render(glifo+" ") + st(bg, T.Texto).Render(nome) + st(bg, cor).Render("  "+Corte(estado, resto))
+		s := st(bg, cor).Render(glifo+" ") + st(bg, T.Texto).Render(col(nome, wNome)) + st(bg, cor).Render(col(estado, wEstado))
+		if wCI > 0 {
+			s += st(bg, cci).Render(col(gci+" "+tci, wCI))
+		}
+		if wTit > 6 {
+			s += st(bg, T.Dim).Render(Corte(titulo, wTit))
+		}
+		return s
 	})
 }
 
@@ -456,9 +487,17 @@ func gavetaAmbiente(c *corpo, e dados.Estado) {
 	}
 }
 
-// secaoAcoes: os botões DayDreaming e MCPs, no topo da aba settings (teclas D e M valem de qualquer gaveta).
-func secaoAcoes(c *corpo, e dados.Estado, pedindoDD bool) {
+// secaoAcoes: os botões do topo da aba configurações. As teclas U (2×), D e M valem de qualquer gaveta.
+func secaoAcoes(c *corpo, e dados.Estado, pedindoDD, atualizando, armadoAtu bool) {
 	c.secao("ações", "enter aciona")
+	g0, cor0, est0 := "⟳", T.Texto, "U 2×"
+	switch {
+	case atualizando:
+		g0, cor0, est0 = "◐", T.Andamento, "atualizando…"
+	case armadoAtu:
+		cor0, est0 = T.Espera, "de novo confirma"
+	}
+	c.linhaLista(alvo{acao: acaoAtualizar}, g0, cor0, "atualizar app fantasmas", est0, cor0, "git pull, build e reabre")
 	g, cor, est, det := botaoDaydreaming(e.Daydreamer, pedindoDD)
 	c.linhaLista(alvo{acao: "daydreaming"}, g, cor, "atualizar DayDreaming", est, cor, det)
 	g, cor, est, det = botaoMCP(e.MCP)
@@ -473,9 +512,9 @@ func secaoAcoes(c *corpo, e dados.Estado, pedindoDD bool) {
 
 // gavetaMaquina é só monitoramento: a saúde do computador, relida a cada coleta (r atualiza na hora).
 func gavetaMaquina(c *corpo, e dados.Estado) {
-	c.secao("máquina", "r atualiza")
+	c.secao("máquina", "")
 	if len(e.Maquina) == 0 {
-		c.vazio("sem leitura da máquina: o maquina.sh não respondeu")
+		c.vazioIcone("◆", T.Espera, "sem leitura da máquina", "o maquina.sh não respondeu")
 	}
 	for _, l := range e.Maquina {
 		cor, glifo := T.Ok, "●"
@@ -491,18 +530,10 @@ func gavetaMaquina(c *corpo, e dados.Estado) {
 	}
 }
 
-func gavetaMais(c *corpo, e dados.Estado, atualizando, armado bool) {
-	c.secao("app", "enter aciona")
-	g, cor, est := "⟳", T.Texto, "U 2×"
-	switch {
-	case atualizando:
-		g, cor, est = "◐", T.Andamento, "atualizando…"
-	case armado:
-		cor, est = T.Espera, "de novo confirma"
-	}
-	c.linhaLista(alvo{acao: acaoAtualizar}, g, cor, "atualizar fantasmas", est, cor, "")
-	c.branco()
-	c.secao("worktrees", "")
+// gavetaWorktrees lista onde cada branch está aberto no disco: o Spark e os repos dentro dele
+// (coleta.sh worktrees); enter abre a pasta.
+func gavetaWorktrees(c *corpo, e dados.Estado) {
+	c.secao("worktrees", "enter abre a pasta")
 	if len(e.Worktrees) == 0 {
 		c.vazio("nenhum worktree")
 	}
@@ -596,7 +627,7 @@ func gavetaCrewViva(c *corpo, e dados.Estado) {
 			ativos++
 		}
 	}
-	c.secao("fantasminhas", fmt.Sprintf("%d ativos", ativos))
+	c.secaoN("fantasminhas", ativos, "")
 	n := len(e.Esperando)
 	c.texto(func(bg lipgloss.Color) string {
 		return st(bg, T.Dim).Render(fmt.Sprintf("%d pendente(s) no painel", n))

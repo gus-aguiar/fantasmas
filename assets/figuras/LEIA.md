@@ -1,6 +1,6 @@
 # Figuras do topo
 
-Cada GIF (animado ou não) ou PNG desta pasta vira uma figura na aba **settings** (`,` → figura).
+Cada GIF (animado ou não) ou PNG desta pasta vira uma figura na aba **configurações** (`8` → figura).
 O nome da figura é o nome do arquivo sem extensão, em minúsculas: `entei.png` → `entei`.
 
 - **Aqui (`assets/figuras/`):** a figura entra no binário. Recompile com `./setup.sh` ou `go build -o bin/fantasmas .`.

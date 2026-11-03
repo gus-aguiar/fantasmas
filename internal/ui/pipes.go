@@ -143,28 +143,25 @@ func larguraChips(es []dados.Etapa) int {
 func gavetaPipes(c *corpo, e dados.Estado) {
 	if !e.PipesLigado {
 		c.secao("pipes", "")
-		c.branco()
-		c.vazio(MsgPipesDesligado)
+		c.vazioIcone("◆", T.Espera, MsgPipesDesligado)
 		return
 	}
 	espera := 0
 	for _, r := range e.Runs {
 		espera += r.EsperaVoce
 	}
-	extra := fmt.Sprintf("%d runs", len(e.Runs))
+	extra := ""
 	if espera > 0 {
-		extra += fmt.Sprintf(" · %d esperam você", espera)
+		extra = fmt.Sprintf("%d esperam você", espera)
 	}
 	if c.largura >= 70 {
-		extra += " · n lança · N lança com gengar · e edita"
+		extra = strings.TrimPrefix(extra+" · n lança · N com gengar · e edita", " · ")
 	}
-	c.secao("pipes", extra)
+	c.secaoN("pipes", len(e.Runs), extra)
 	if len(e.Runs) == 0 {
-		c.branco()
 		c.vazio("nenhum run · n lança um pipeline")
 		return
 	}
-	c.branco()
 	for _, r := range e.Runs {
 		if !c.passa(r.Pipeline, nomeRun(r), r.SlugBase, r.Status) {
 			continue
