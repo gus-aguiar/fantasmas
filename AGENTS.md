@@ -19,11 +19,12 @@ O app **não tem dados próprios**. A cada coleta (padrão: 30 s) ele roda ferra
 ./setup.sh
 ```
 
-O script é idempotente. Ele faz quatro coisas:
+O script é idempotente. Ele faz cinco coisas:
 1. **Go:** garante Go >= a versão do `go.mod`. Usa o Go do PATH; se não houver, instala pelo `mise`; sem mise, baixa o tarball oficial para `~/.local/share/go`, sem sudo.
 2. **Build:** compila `bin/fantasmas` com `GOTOOLCHAIN=local`.
 3. **Comando:** cria `~/.local/bin/gengar` como **symlink** para `bin/fantasmas`.
-4. **PATH:** põe `~/.local/bin` no PATH via `~/.zshrc` ou `~/.bashrc`, se faltar.
+4. **Raiz do Spark:** roda `bin/fantasmas --achar-raiz`, que procura até 5 níveis abaixo da home uma pasta com `shared/mods/control-panel/scripts/delegate.py` (sem entrar em pastas ocultas, `.worktrees` nem `node_modules`) e a salva como `FANTASMAS_RAIZ` em settings. Não mexe se o shell já define a variável ou se a salva ainda serve; com várias, pergunta no terminal (sem terminal, fica com a de `.delegate/` mais recente).
+5. **PATH:** põe `~/.local/bin` no PATH via `~/.zshrc` ou `~/.bashrc`, se faltar.
 
 `GENGAR_BIN_DIR` e `GENGAR_GO_DIR` mudam os diretórios.
 

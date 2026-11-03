@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -12,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"fantasmas/internal/config"
 	"fantasmas/internal/ui"
 
 	"github.com/charmbracelet/lipgloss"
@@ -217,5 +220,88 @@ func TestResolverRaiz(t *testing.T) {
 		if strings.Contains(aviso, c.env) && c.env != "" {
 			t.Errorf("aviso mostrou o caminho: %q", aviso)
 		}
+	}
+}
+
+type lojaFalsa struct {
+	origem  config.Origem
+	valor   string
+	salvo   string
+	falhar  bool
+	chamado bool
+}
+
+func (l *lojaFalsa) Origem(string) config.Origem { return l.origem }
+func (l *lojaFalsa) Valor(string) string         { return l.valor }
+func (l *lojaFalsa) Definir(_, v string) error {
+	l.chamado = true
+	if l.falhar {
+		return errors.New("disco cheio")
+	}
+	l.salvo = v
+	return nil
+}
+
+func TestConfigurarRaiz(t *testing.T) {
+	home := t.TempDir()
+	raiz := func(nome string) string {
+		d := filepath.Join(home, nome)
+		s := filepath.Join(d, "shared", "mods", "control-panel", "scripts")
+		os.MkdirAll(s, 0o755)
+		os.WriteFile(filepath.Join(s, "delegate.py"), []byte("#"), 0o644)
+		return d
+	}
+	a, b := raiz("a"), raiz("b")
+	duas := func() []string { return []string{a, b} }
+	nenhuma := func() []string { return nil }
+	uma := func() []string { return []string{a} }
+	roda := func(l lojaRaiz, achar func() []string, entrada string, interativo bool) (int, string) {
+		var out bytes.Buffer
+		n := configurarRaiz(l, achar, home, strings.NewReader(entrada), &out, interativo)
+		return n, out.String()
+	}
+
+	if n, _ := roda(nil, uma, "", false); n != 1 {
+		t.Fatal("sem loja deveria devolver 1")
+	}
+	l := &lojaFalsa{origem: config.Ambiente}
+	if _, out := roda(l, uma, "", false); l.chamado || !strings.Contains(out, "vem do shell") {
+		t.Fatalf("shell deveria mandar: %q", out)
+	}
+	l = &lojaFalsa{origem: config.Arquivo, valor: "~/a"}
+	if _, out := roda(l, duas, "", false); l.chamado || !strings.Contains(out, "não mexi") {
+		t.Fatalf("raiz salva válida (com ~) deveria ficar: %q", out)
+	}
+	l = &lojaFalsa{origem: config.Arquivo, valor: "/nao/existe"}
+	if _, out := roda(l, uma, "", false); l.salvo != a || !strings.Contains(out, "procurando outra") {
+		t.Fatalf("raiz salva inválida deveria ser trocada: %q %q", l.salvo, out)
+	}
+	l = &lojaFalsa{}
+	if _, out := roda(l, uma, "", false); l.salvo != a || strings.Contains(out, a) || strings.Contains(out, "~/a") {
+		t.Fatalf("uma raiz: salva sem mostrar o caminho: %q", out)
+	}
+	l = &lojaFalsa{}
+	if _, out := roda(l, nenhuma, "", false); l.chamado || !strings.Contains(out, "não achei") {
+		t.Fatalf("nenhuma raiz: %q", out)
+	}
+	l = &lojaFalsa{}
+	if _, out := roda(l, duas, "2\n", true); l.salvo != b || !strings.Contains(out, "~/b") {
+		t.Fatalf("escolha 2 no terminal: %q %q", l.salvo, out)
+	}
+	l = &lojaFalsa{}
+	if roda(l, duas, "\n", true); l.salvo != a {
+		t.Fatal("enter vazio deveria ficar com a primeira")
+	}
+	l = &lojaFalsa{}
+	if roda(l, duas, "9\n", true); l.salvo != a {
+		t.Fatal("número fora da lista deveria ficar com a primeira")
+	}
+	l = &lojaFalsa{}
+	if _, out := roda(l, duas, "", false); l.salvo != a || strings.Contains(out, "~/a") {
+		t.Fatalf("sem terminal: a mais ativa, sem listar: %q", out)
+	}
+	l = &lojaFalsa{falhar: true}
+	if n, out := roda(l, uma, "", false); n != 0 || !strings.Contains(out, "não salvei") {
+		t.Fatalf("falha ao salvar não derruba o setup: %d %q", n, out)
 	}
 }

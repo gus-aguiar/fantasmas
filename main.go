@@ -4,10 +4,12 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -39,7 +41,21 @@ func main() {
 	gaveta := flag.String("gaveta", "", "gaveta inicial: missoes|agora|crew|pipes|prs|ci|ambiente|maquina|mais|settings (só com --uma-vez)")
 	missao := flag.String("missao", "", "foca a missão pelo slug (só com --uma-vez)")
 	pipe := flag.Int("pipe", 0, "abre o detalhe do run N da gaveta pipes (só com --uma-vez)")
+	acharRaiz := flag.Bool("achar-raiz", false, "procura a raiz do Spark na home, salva em settings (FANTASMAS_RAIZ) e sai; o setup.sh usa")
 	flag.Parse()
+	if *acharRaiz {
+		var l lojaRaiz
+		if loja != nil {
+			l = loja
+		}
+		home, _ := os.UserHomeDir()
+		achar := func() []string {
+			ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+			defer cancel()
+			return dados.AcharRaizes(ctx, home, profBuscaRaiz)
+		}
+		os.Exit(configurarRaiz(l, achar, home, os.Stdin, os.Stdout, term.IsTerminal(os.Stdin.Fd())))
+	}
 	if *intervalo <= 0 {
 		fmt.Fprintln(os.Stderr, "fantasmas: --intervalo deve ser positivo")
 		os.Exit(2)
@@ -226,6 +242,80 @@ func resolverRaiz(flag string, getenv func(string) string, getwd func() (string,
 		return atual(), "FANTASMAS_RAIZ não é uma pasta; usei a pasta atual"
 	}
 	return r, ""
+}
+
+// profBuscaRaiz: quantos níveis abaixo da home o --achar-raiz desce (~/orca/workspaces/spark/<ws> é 4).
+const profBuscaRaiz = 5
+
+// lojaRaiz é o que configurarRaiz usa da config.Loja.
+type lojaRaiz interface {
+	Origem(chave string) config.Origem
+	Valor(chave string) string
+	Definir(chave, valor string) error
+}
+
+// configurarRaiz é o --achar-raiz: mantém a FANTASMAS_RAIZ que já serve; senão procura e salva. Com uma
+// raiz achada, não mostra o caminho (a aba settings também não mostra); com várias, lista para escolher
+// no terminal, ou fica com a mais ativa sem terminal. Nunca falha o setup: só devolve 1 sem settings.
+func configurarRaiz(l lojaRaiz, achar func() []string, home string, entrada io.Reader, saida io.Writer, interativo bool) int {
+	const chave = "FANTASMAS_RAIZ"
+	diz := func(f string, a ...any) { fmt.Fprintf(saida, "▸ "+f+"\n", a...) }
+	if l == nil {
+		diz("sem arquivo de settings; não salvei a raiz do Spark")
+		return 1
+	}
+	switch l.Origem(chave) {
+	case config.Ambiente:
+		diz("%s vem do shell; não mexi", chave)
+		return 0
+	case config.Arquivo:
+		if v := expandirHome(l.Valor(chave), home); dados.EhRaizSpark(v) {
+			diz("%s já está em settings e tem os scripts do Spark; não mexi", chave)
+			return 0
+		}
+		diz("a %s salva não tem os scripts do Spark; procurando outra", chave)
+	}
+	rs := achar()
+	curto := func(p string) string {
+		if home != "" && strings.HasPrefix(p, home+string(os.PathSeparator)) {
+			return "~" + p[len(home):]
+		}
+		return p
+	}
+	escolha := 0
+	switch {
+	case len(rs) == 0:
+		diz("não achei a raiz do Spark na home (até %d níveis)", profBuscaRaiz)
+		diz("defina em settings (, → %s) ou rode: gengar --raiz <pasta do Spark>", chave)
+		return 0
+	case len(rs) > 1 && interativo:
+		diz("achei %d raízes do Spark (da mais ativa para a menos ativa):", len(rs))
+		for i, r := range rs {
+			fmt.Fprintf(saida, "    %d) %s\n", i+1, curto(r))
+		}
+		fmt.Fprintf(saida, "  qual usar? [1] ")
+		var resp string
+		fmt.Fscanln(entrada, &resp)
+		if n, err := strconv.Atoi(strings.TrimSpace(resp)); err == nil && n >= 1 && n <= len(rs) {
+			escolha = n - 1
+		}
+	case len(rs) > 1:
+		diz("achei %d raízes do Spark; fiquei com a mais ativa (troque em settings)", len(rs))
+	}
+	if err := l.Definir(chave, rs[escolha]); err != nil {
+		diz("não salvei a raiz: %v", err)
+		return 0
+	}
+	diz("raiz do Spark salva em settings (%s); o gengar abre nela de qualquer pasta", chave)
+	return 0
+}
+
+// expandirHome troca o ~ inicial pela home, como o resolverRaiz.
+func expandirHome(p, home string) string {
+	if home != "" && (p == "~" || strings.HasPrefix(p, "~/")) {
+		return filepath.Join(home, strings.TrimPrefix(p, "~"))
+	}
+	return p
 }
 
 // abrirAjustes aplica o arquivo da aba settings ao ambiente; o aviso vai para a linha de status.

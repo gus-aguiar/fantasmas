@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# setup.sh: instala o Go (se faltar), compila bin/fantasmas e cria o comando gengar no PATH.
+# setup.sh: instala o Go (se faltar), compila bin/fantasmas, cria o comando gengar no PATH e
+# localiza a raiz do Spark (FANTASMAS_RAIZ).
 # Pode rodar de novo quando quiser: é idempotente.
 set -euo pipefail
 
@@ -93,7 +94,11 @@ fi
 ln -sfn "$ALVO" "$LINK"
 info "gengar -> $ALVO"
 
-# 4. PATH
+# 4. Raiz do Spark: procura na home e salva em settings (FANTASMAS_RAIZ), se ainda não houver uma
+#    que sirva; com várias, pergunta. Não derruba o setup se não achar.
+"$ALVO" --achar-raiz || true
+
+# 5. PATH
 case ":$PATH_ORIGINAL:" in
 *":$BIN_DIR:"*) ;;
 *)
