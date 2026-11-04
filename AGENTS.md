@@ -180,6 +180,7 @@ go vet ./...
 - Comentário de função no formato `// Nome faz X`, curto, explicando o porquê quando não é óbvio.
 - Commits no estilo Conventional Commits em português, com escopo: `feat(fantasmas): …`, `fix(fantasmas): …`, `feat(ui): …`.
 - Ações que mudam estado externo pedem confirmação dupla na UI (padrão `armado*` em `model.go`). Siga o mesmo padrão em ações novas.
+- **Patch notes no mesmo commit:** toda mudança que alguém percebe usando (tecla, gaveta, texto, comportamento, setup) ganha uma linha em `PATCH_NOTES.md`, na seção do dia (crie `## AAAA-MM-DD · <tema>` no topo se não existir). Escreva o que muda para quem usa, sem detalhe de implementação. O README só muda quando instalar, usar ou disparar algo muda.
 - Prefira degradar: se uma fonte falta, a gaveta fica vazia e aparece uma linha no `FaltaDe`, em vez de erro fatal.
 
 ## Armadilhas
