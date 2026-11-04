@@ -24,6 +24,9 @@ Cada entrada diz o que muda para quem usa; os detalhes técnicos ficam no histó
 - Teclas das gavetas: `0` missões, `1` agora, `2` fantasminhas, `3` PRs, `4` ambiente, `5` máquina, `6` worktrees, `7` configurações.
 - O painel web do delegate mostra as mesmas missões, as sidequests em blocos e as decisões.
 
+**Corrigido**
+- O gengar não pisca mais no Herdr, nem o cursor e o mouse junto com ele. No Windows ou em terminal sem suporte a imagem, ele aparece desenhado com caracteres em vez de uma linha piscando.
+
 ## 2026-11-03 · Configurações e máquina
 
 - **Aba configurações:** tema, figura do topo e variáveis `FANTASMAS_*` com o valor que vale agora. O valor que você define nunca aparece na tela.

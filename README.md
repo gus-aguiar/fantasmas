@@ -41,6 +41,8 @@ FANTASMAS_FONTE=ddb gengar      # liga missões e sidequests (recomendado)
 
 Toda vez que abre pelo `scripts/fantasmas.sh` do Spark, o `gengar` se atualiza antes: avança a `main` do Spark, ressincroniza as skills e traz a versão nova deste repo. Ele nunca sobrescreve trabalho local; para desligar, use `GENGAR_ATUALIZAR=off`.
 
+Terminal sem suporte a imagem (ex.: Windows Terminal): o gengar aparece desenhado com caracteres; para forçar, `FANTASMAS_IMAGEM=celulas`.
+
 As teclas que mais importam estão abaixo. A lista completa abre com `?`.
 
 | Tecla | Faz |

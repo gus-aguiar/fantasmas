@@ -484,6 +484,10 @@ func (m Model) mostrarToast(s string, cor lipgloss.Color) (Model, tea.Cmd) {
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	n, cmd := m.atualizar(msg)
 	if nm, ok := n.(Model); ok && nm.img != nil {
+		switch msg.(type) {
+		case tea.KeyMsg, tea.MouseMsg:
+			nm.img.marcarEntrada()
+		}
 		_, redim := msg.(tea.WindowSizeMsg)
 		n = nm.sincImagem(redim)
 	}

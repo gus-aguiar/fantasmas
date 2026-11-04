@@ -275,18 +275,55 @@ func TestImagemModoT(t *testing.T) {
 	agora = agora.Add(50 * time.Millisecond)
 	m, _ = atualiza(t, m, tickQuadroMsg{})
 	if b.Len() != 0 {
-		t.Fatalf("acima de 10 fps deveria pular: %q", b.String())
+		t.Fatalf("acima de 3 fps deveria pular: %q", b.String())
 	}
-	agora = agora.Add(60 * time.Millisecond)
+	agora = agora.Add(300 * time.Millisecond)
 	m, _ = atualiza(t, m, tickQuadroMsg{})
 	// q2 em base64 é cTI=: o quadro enviado é o do tempo real, não o seguinte ao último enviado.
 	if !strings.Contains(b.String(), "a=T,") || !strings.Contains(b.String(), "cTI=") {
-		t.Fatalf("depois de 100 ms manda o quadro atual: %q", b.String())
+		t.Fatalf("depois de 333 ms manda o quadro atual: %q", b.String())
 	}
 	b.Reset()
 	m = aperta(t, m, "?")
 	if !strings.Contains(b.String(), "a=d,d=i") {
 		t.Fatalf("ajuda não apagou: %q", b.String())
+	}
+}
+
+func TestDevoPularIntervaloEEntrada(t *testing.T) {
+	var b bytes.Buffer
+	g := novoGrafico(&b, ModoT, [][]byte{[]byte("q0")}, []int{100})
+	agora := time.Unix(100, 0)
+	g.agora = func() time.Time { return agora }
+	g.ultimoT = agora
+	agora = agora.Add(200 * time.Millisecond)
+	if !g.devoPular(false) {
+		t.Fatal("antes de intervaloT deveria pular")
+	}
+	if g.devoPular(true) {
+		t.Fatal("forca não pula")
+	}
+	agora = agora.Add(200 * time.Millisecond)
+	if g.devoPular(false) {
+		t.Fatal("depois de intervaloT não pula")
+	}
+	g.marcarEntrada()
+	agora = agora.Add(time.Second)
+	if !g.devoPular(false) {
+		t.Fatal("entrada recente pausa o reenvio")
+	}
+	if g.devoPular(true) {
+		t.Fatal("forca não pula nem com entrada")
+	}
+	agora = agora.Add(1100 * time.Millisecond)
+	if g.devoPular(false) {
+		t.Fatal("2 s sem entrada retoma")
+	}
+	a := novoGrafico(&b, ModoAnimacao, [][]byte{[]byte("q0")}, []int{100})
+	a.agora = func() time.Time { return agora }
+	a.marcarEntrada()
+	if a.devoPular(false) {
+		t.Fatal("fora do modo T nunca pula")
 	}
 }
 

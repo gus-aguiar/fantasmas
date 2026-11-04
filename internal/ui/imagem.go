@@ -22,7 +22,7 @@ const idImagem = 4100
 const FatorAmpliacao = 4
 
 // ladoAlvo é o lado maior que o PNG ampliado busca: figura grande não é ampliada, porque no modo T
-// cada quadro é reenviado (~10 fps) e um PNG enorme pesa no terminal.
+// cada quadro é reenviado (~3 fps) e um PNG enorme pesa no terminal.
 const ladoAlvo = 320
 
 // fatorAmpliacao devolve quanto ampliar um quadro w×h: até FatorAmpliacao, sem passar de ladoAlvo.
@@ -37,7 +37,10 @@ const (
 	ModoT        = "T"
 )
 
-const intervaloT = 100 * time.Millisecond
+const intervaloT = 333 * time.Millisecond
+
+// pausaEntrada: no modo T, sem reenvio enquanto houve tecla ou mouse há menos disso.
+const pausaEntrada = 2 * time.Second
 
 // Grafico desenha o Gengar no topo pelo protocolo de gráficos do kitty.
 type Grafico struct {
@@ -46,6 +49,7 @@ type Grafico struct {
 	modo      string
 	agora     func() time.Time
 	ultimoT   time.Time
+	entrada   time.Time
 	png       [][]byte
 	delays    []int
 	envio     sync.Once
@@ -93,7 +97,7 @@ func (g *Grafico) Recarregado() (*Grafico, error) {
 // Modo devolve o modo de envio.
 func (g *Grafico) Modo() string { return g.modo }
 
-// porTempo: no modo T cada quadro é reenviado, limitado a ~10 fps.
+// porTempo: no modo T cada quadro é reenviado, limitado a ~3 fps.
 func (g *Grafico) porTempo() bool { return g.modo == ModoT }
 
 func (g *Grafico) escrever(s string) {
@@ -126,9 +130,17 @@ func (g *Grafico) id(quadro int) int {
 	return idImagem + ((quadro%n)+n)%n
 }
 
-// devoPular: no modo T, pula o quadro se o último envio foi há menos de intervaloT (forca ignora).
+// marcarEntrada registra tecla ou mouse do usuário.
+func (g *Grafico) marcarEntrada() { g.entrada = g.agora() }
+
+// devoPular: no modo T, pula o quadro se o último envio foi há menos de intervaloT ou houve entrada
+// há menos de pausaEntrada (forca ignora).
 func (g *Grafico) devoPular(forca bool) bool {
-	return g.porTempo() && !forca && g.agora().Sub(g.ultimoT) < intervaloT
+	if !g.porTempo() || forca {
+		return false
+	}
+	t := g.agora()
+	return t.Sub(g.ultimoT) < intervaloT || !g.entrada.IsZero() && t.Sub(g.entrada) < pausaEntrada
 }
 
 func (g *Grafico) colocar(a areaImg, quadro, antes int) {

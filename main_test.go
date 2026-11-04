@@ -57,9 +57,9 @@ func TestEscolherModo(t *testing.T) {
 	}{
 		{map[string]string{"TERM_PROGRAM": "WezTerm"}, "kitty", false},
 		{map[string]string{"TERM_PROGRAM": "kitty"}, "kitty", false},
-		{map[string]string{"HERDR_PANE_ID": "p4"}, "kitty", false},
-		{map[string]string{"WEZTERM_EXECUTABLE": "/usr/bin/wezterm"}, "kitty", false},
-		{map[string]string{"KITTY_WINDOW_ID": "1"}, "kitty", false},
+		{map[string]string{"HERDR_PANE_ID": "p4"}, "", true},
+		{map[string]string{"WEZTERM_EXECUTABLE": "/usr/bin/wezterm"}, "", true},
+		{map[string]string{"KITTY_WINDOW_ID": "1"}, "", true},
 		{map[string]string{"FANTASMAS_IMAGEM": "celulas", "HERDR_PANE_ID": "p4"}, "celulas", false},
 		{map[string]string{"FANTASMAS_IMAGEM": "0", "TERM_PROGRAM": "WezTerm"}, "celulas", false},
 		{map[string]string{"FANTASMAS_IMAGEM": "kitty"}, "kitty", false},
@@ -67,6 +67,7 @@ func TestEscolherModo(t *testing.T) {
 		{map[string]string{"TERM_PROGRAM": "Orca", "ORCA_IMAGE_PROTOCOL": "kitty"}, "kitty", false},
 		{map[string]string{"FANTASMAS_IMAGEM": "celulas", "ORCA_IMAGE_PROTOCOL": "kitty"}, "celulas", false},
 		{map[string]string{"TERM_PROGRAM": "vscode"}, "", true},
+		{map[string]string{"HERDR_PANE_ID": "p4", "TERM_PROGRAM": "WezTerm"}, "kitty", false},
 		{map[string]string{}, "", true},
 	}
 	for _, c := range casos {
@@ -83,7 +84,9 @@ func TestEscolherModoImagem(t *testing.T) {
 		quer string
 	}{
 		{map[string]string{}, "animacao"},
-		{map[string]string{"HERDR_PANE_ID": "wG:p4"}, "T"},
+		{map[string]string{"HERDR_PANE_ID": "wG:p4"}, "animacao"},
+		{map[string]string{"HERDR_PANE_ID": "wG:p4", "FANTASMAS_IMAGEM_MODO": "T"}, "T"},
+		{map[string]string{"HERDR_PANE_ID": "wG:p4", "TERM_PROGRAM": "Orca"}, "T"},
 		{map[string]string{"HERDR_PANE_ID": "wG:p4", "FANTASMAS_IMAGEM_MODO": "animacao"}, "animacao"},
 		{map[string]string{"HERDR_PANE_ID": "wG:p4", "FANTASMAS_IMAGEM_MODO": "quadros"}, "quadros"},
 		{map[string]string{"FANTASMAS_IMAGEM_MODO": "T"}, "T"},
