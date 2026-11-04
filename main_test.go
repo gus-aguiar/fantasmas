@@ -84,7 +84,7 @@ func TestEscolherModoImagem(t *testing.T) {
 		quer string
 	}{
 		{map[string]string{}, "animacao"},
-		{map[string]string{"HERDR_PANE_ID": "wG:p4"}, "animacao"},
+		{map[string]string{"HERDR_PANE_ID": "wG:p4"}, "quadros"},
 		{map[string]string{"HERDR_PANE_ID": "wG:p4", "FANTASMAS_IMAGEM_MODO": "T"}, "T"},
 		{map[string]string{"HERDR_PANE_ID": "wG:p4", "TERM_PROGRAM": "Orca"}, "T"},
 		{map[string]string{"HERDR_PANE_ID": "wG:p4", "FANTASMAS_IMAGEM_MODO": "animacao"}, "animacao"},

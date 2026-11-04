@@ -25,7 +25,7 @@ Cada entrada diz o que muda para quem usa; os detalhes técnicos ficam no histó
 - O painel web do delegate mostra as mesmas missões, as sidequests em blocos e as decisões.
 
 **Corrigido**
-- O gengar não pisca mais no Herdr, nem o cursor e o mouse junto com ele. No Windows ou em terminal sem suporte a imagem, ele aparece desenhado com caracteres em vez de uma linha piscando.
+- O gengar não pisca mais no Herdr, nem o cursor e o mouse junto com ele, e continua animado. No Windows ou em terminal sem suporte a imagem, ele aparece desenhado com caracteres em vez de uma linha piscando.
 
 ## 2026-11-03 · Configurações e máquina
 

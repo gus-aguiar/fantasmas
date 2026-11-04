@@ -113,7 +113,7 @@ Regras para quem mexer:
 | `FANTASMAS_EDITOR` | editor para arquivos e pastas (links continuam no `xdg-open`/`open`) |
 | `FANTASMAS_SPRITE` / `--sprite` | caminho de GIF ou PNG; manda sobre `FANTASMAS_FIGURA` |
 | `FANTASMAS_IMAGEM=kitty\|celulas` | força o desenho da figura. Sem ela, o modo é detectado pelo terminal (WezTerm, kitty, Orca via `ORCA_IMAGE_PROTOCOL`; no herdr e nos demais, só com OK da consulta ao protocolo kitty, senão células) |
-| `FANTASMAS_IMAGEM_MODO=animacao\|quadros\|T` | modo do protocolo kitty (padrão: `T` só no Orca, `animacao` no resto, herdr incluso). O Orca não aceita `a=f`/`a=a`, então a animação nativa fica parada lá |
+| `FANTASMAS_IMAGEM_MODO=animacao\|quadros\|T` | modo do protocolo kitty (padrão: `T` no Orca, `quadros` no herdr, que recebe `a=f` mas não toca a animação, e `animacao` no resto). O Orca não aceita `a=f`/`a=a`, então a animação nativa fica parada lá |
 | `FANTASMAS_MURAL=off` | esconde o mural |
 | `FANTASMAS_CTX_JANELA` | tamanho da janela de contexto usada no % (padrão: 1 000 000) |
 | `FANTASMAS_CLAUDE_DIR`, `FANTASMAS_CACHE_DIR` | diretório do Claude e de cache |

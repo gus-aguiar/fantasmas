@@ -354,7 +354,8 @@ func escolherModo(env func(string) string) (modo, motivo string, consultar bool)
 	return "", "nenhum indício no ambiente", true
 }
 
-// escolherModoImagem: FANTASMAS_IMAGEM_MODO manda; sem ele, T só no Orca e animação no resto (Herdr incluso).
+// escolherModoImagem: FANTASMAS_IMAGEM_MODO manda; sem ele, T no Orca, quadros no Herdr (que não toca a=f) e
+// animação no resto.
 // O terminal do Orca (addon de imagem do xterm.js) só aceita as ações t, T, q, p e d: sem a=f e a=a
 // a animação nativa fica parada no primeiro quadro, então o modo T reenvia cada quadro.
 func escolherModoImagem(env func(string) string) string {
@@ -364,6 +365,9 @@ func escolherModoImagem(env func(string) string) string {
 	}
 	if env("TERM_PROGRAM") == "Orca" || env("ORCA_IMAGE_PROTOCOL") != "" {
 		return ui.ModoT
+	}
+	if env("HERDR_PANE_ID") != "" {
+		return ui.ModoQuadros
 	}
 	return ui.ModoAnimacao
 }
