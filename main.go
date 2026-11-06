@@ -126,8 +126,14 @@ func main() {
 			defer cancel()
 			return dados.Disparar(ctx, runner, *raiz, c, time.Now())
 		},
-		Pipes:  &dados.Pipes{R: runner, Raiz: *raiz, Script: dados.ScriptDdb(*raiz)},
-		Editar: func(arq string) *exec.Cmd { return ui.ComandoEditor(os.Getenv("FANTASMAS_EDITOR"), arq) },
+		Faxina: func() (*dados.Faxina, error) {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+			defer cancel()
+			return dados.RodarFaxina(ctx, runner, *raiz, time.Now())
+		},
+		Memoria: dados.LerMemoria,
+		Pipes:   &dados.Pipes{R: runner, Raiz: *raiz, Script: dados.ScriptDdb(*raiz)},
+		Editar:  func(arq string) *exec.Cmd { return ui.ComandoEditor(os.Getenv("FANTASMAS_EDITOR"), arq) },
 	}
 	if loja != nil {
 		acoes.Ajustes = loja

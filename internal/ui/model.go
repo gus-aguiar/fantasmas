@@ -33,6 +33,9 @@ type Acoes struct {
 	Atualizar func() (dados.Resultado, error)
 	// gaveta comandos: abre a aba do /dia ou do /saude-multas no Herdr
 	Disparar func(id string) (dados.Disparo, error)
+	// paleta: Faxina agora (segundo plano) e a leitura de memória do Esvaziar swap
+	Faxina  func() (*dados.Faxina, error)
+	Memoria func() (dados.Memoria, error)
 	// gaveta pipes
 	Pipes  OpsPipes
 	Editar func(arquivo string) *exec.Cmd
@@ -52,6 +55,10 @@ type tickMCPMsg struct{}
 type disparouMsg struct {
 	dados.Disparo
 	id  string
+	err error
+}
+type faxinouMsg struct {
+	f   *dados.Faxina
 	err error
 }
 type atualizouMsg struct {
@@ -132,6 +139,12 @@ type Model struct {
 	armadoCmd  string
 	disparando string
 	relogio    func() time.Time
+
+	// Faxina agora: rodando, e o resultado (resumo ou erro) com a hora em que terminou.
+	faxinando  bool
+	faxinaRes  string
+	faxinaErro bool
+	faxinaFim  time.Time
 
 	// botoes é a paleta de comandos (ctrl+p ou b); selGaveta guarda a seleção da gaveta enquanto ele está aberto.
 	botoes    bool
@@ -448,6 +461,20 @@ func (m Model) agora() time.Time {
 
 // acionarComando segue o padrão armado: o primeiro enter arma, o segundo dispara.
 func (m Model) acionarComando(id string) (tea.Model, tea.Cmd) {
+	if id == dados.CmdSwap {
+		switch mem, ok := m.memoria(); {
+		case !ok || mem.SwapVazio():
+			m.armadoCmd = ""
+			return m, nil
+		case !mem.CabeNaRAM():
+			m.armadoCmd = ""
+			m.status = msgPoucaRAM
+			return m.mostrarToast(msgPoucaRAM, T.Erro)
+		}
+	}
+	if id == dados.CmdFaxina && (m.faxinando || m.acoes.Faxina == nil) {
+		return m, nil
+	}
 	if m.armadoCmd != id {
 		m.armadoCmd = id
 		m.status = "enter de novo confirma"
@@ -463,6 +490,8 @@ func (m Model) acionarComando(id string) (tea.Model, tea.Cmd) {
 	case cmdAtualizar:
 		m.armadoAtu = true
 		return m.atualizarApp()
+	case dados.CmdFaxina:
+		return m.faxinar()
 	}
 	if _, ok := dados.ComandoPorID(id); !ok || m.acoes.Disparar == nil || m.disparando != "" {
 		return m, nil
@@ -470,6 +499,24 @@ func (m Model) acionarComando(id string) (tea.Model, tea.Cmd) {
 	m.disparando = id
 	f := m.acoes.Disparar
 	return m, func() tea.Msg { d, err := f(id); return disparouMsg{d, id, err} }
+}
+
+const msgPoucaRAM = "pouca RAM livre para receber o swap — rode a Faxina antes"
+
+// memoria lê a memória agora; sem leitor ou com erro, ok=false.
+func (m Model) memoria() (dados.Memoria, bool) {
+	if m.acoes.Memoria == nil {
+		return dados.Memoria{}, false
+	}
+	mem, err := m.acoes.Memoria()
+	return mem, err == nil
+}
+
+// faxinar roda a faxina em segundo plano, sem aba.
+func (m Model) faxinar() (tea.Model, tea.Cmd) {
+	m.faxinando, m.faxinaRes, m.faxinaErro = true, "", false
+	f := m.acoes.Faxina
+	return m, func() tea.Msg { r, err := f(); return faxinouMsg{r, err} }
 }
 
 // Reiniciar devolve o binário novo a executar depois que o Run() termina ("" = nada).
@@ -611,6 +658,17 @@ func (m Model) atualizar(msg tea.Msg) (tea.Model, tea.Cmd) {
 		ds[msg.id] = msg.Disparo
 		m.disparos = ds
 		return m.mostrarToast(k.Rotulo+" aberto na aba "+msg.Nome+" · g vai à aba", T.Ok)
+	case faxinouMsg:
+		m.faxinando, m.faxinaFim = false, m.agora()
+		switch {
+		case msg.err != nil:
+			m.faxinaRes, m.faxinaErro = "erro: "+Corte(dados.UmaLinha(msg.err.Error()), 40), true
+		case msg.f == nil:
+			m.faxinaRes = "nada a faxinar"
+		default:
+			m.faxinaRes = msg.f.Curta()
+		}
+		return m, nil
 	case tickMCPMsg:
 		f := m.acoes.ProgressoMCP
 		return m, func() tea.Msg { return progressoMCPMsg{f()} }

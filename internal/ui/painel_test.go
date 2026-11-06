@@ -41,8 +41,8 @@ func TestPaletaAbreComCtrlPEB(t *testing.T) {
 			t.Fatalf("paleta ainda com %q:\n%s", s, p)
 		}
 	}
-	if n := len(m.alvos()); n != 3 {
-		t.Fatalf("paleta devia ter 3 comandos: %d", n)
+	if n := len(m.alvos()); n != 5 {
+		t.Fatalf("paleta devia ter 5 comandos: %d", n)
 	}
 	if m = manda(m, tea.KeyMsg{Type: tea.KeyCtrlP}); m.botoes {
 		t.Fatal("ctrl+p de novo devia fechar")
@@ -90,7 +90,7 @@ func TestPaletaSemBuscaENumeros(t *testing.T) {
 		t.Fatal("com até 5 comandos a paleta não tem busca")
 	}
 	m = digitaPaleta(m, "multas")
-	if len(m.alvos()) != 3 || m.textoBusca() != "" {
+	if len(m.alvos()) != 5 || m.textoBusca() != "" {
 		t.Fatal("letras não deviam filtrar")
 	}
 	n, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'3'}})

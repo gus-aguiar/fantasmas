@@ -4,21 +4,32 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 )
 
 // Comando é um disparo da gaveta comandos: abre uma aba nova num workspace do Herdr achado pelo rótulo
-// e roda `claude "<Prompt>"` nela.
+// e roda `claude "<Prompt>"` nela. Com Linha, roda a linha de shell em vez do claude; sem Workspace,
+// usa o workspace onde a TUI está (HERDR_WORKSPACE_ID, senão GENGAR).
 type Comando struct {
-	ID, Rotulo, Workspace, Prompt, Prefixo, Descricao string
+	ID, Rotulo, Workspace, Prompt, Prefixo, Descricao, Linha string
 }
+
+const (
+	CmdFaxina = "faxina"
+	CmdSwap   = "swap"
+	// LinhaSwap é o que roda na aba do Esvaziar swap; o humano digita a senha do sudo lá.
+	LinhaSwap = "sudo swapoff -a && sudo swapon -a && free -h"
+)
 
 // ComandosHerdr é o catálogo, na ordem da gaveta.
 var ComandosHerdr = []Comando{
 	{ID: "dia-abrir", Rotulo: "/dia abrir", Workspace: "GENGAR", Prompt: "/dia abrir", Prefixo: "dia", Descricao: "começa o dia: Jira, Intralog, PRs e DayDreaming"},
 	{ID: "dia-fechar", Rotulo: "/dia fechar", Workspace: "GENGAR", Prompt: "/dia fechar", Prefixo: "dia", Descricao: "fecha o dia e faz a passagem"},
 	{ID: "saude-multas", Rotulo: "/saude-multas", Workspace: "saúde multas", Prompt: "/saude-multas", Prefixo: "saude", Descricao: "saúde do módulo de multas (só leitura)"},
+	{ID: CmdFaxina, Rotulo: "Faxina agora", Descricao: "fecha fantasminhas encerrados, serviços e daemons ociosos"},
+	{ID: CmdSwap, Rotulo: "Esvaziar swap", Prefixo: "swap", Linha: LinhaSwap, Descricao: "devolve o swap para a RAM (pede sua senha)"},
 }
 
 // ComandoPorID devolve o comando do catálogo.
@@ -72,7 +83,7 @@ func chaveRotulo(s string) string { return tiraAcento.Replace(strings.ToLower(st
 
 // Disparar abre a aba do comando no workspace dele, com cwd na raiz do Spark, e roda o claude nela.
 func Disparar(ctx context.Context, r Runner, raiz string, c Comando, agora time.Time) (Disparo, error) {
-	ws, err := WorkspacePorRotulo(ctx, r, c.Workspace)
+	ws, err := workspaceDo(ctx, r, c)
 	if err != nil {
 		return Disparo{}, err
 	}
@@ -95,8 +106,23 @@ func Disparar(ctx context.Context, r Runner, raiz string, c Comando, agora time.
 		return Disparo{}, fmt.Errorf("herdr tab create não devolveu o pane")
 	}
 	pane := v.Result.RootPane.ID
-	if _, err := r.Run(ctx, "herdr", "pane", "run", pane, fmt.Sprintf("claude %q", c.Prompt)); err != nil {
+	linha := c.Linha
+	if linha == "" {
+		linha = fmt.Sprintf("claude %q", c.Prompt)
+	}
+	if _, err := r.Run(ctx, "herdr", "pane", "run", pane, linha); err != nil {
 		return Disparo{}, err
 	}
 	return Disparo{ID: c.ID, Aba: v.Result.Tab.ID, Pane: pane, Nome: nome, Inicio: agora}, nil
+}
+
+// workspaceDo: o do rótulo do comando; sem rótulo, o da TUI (HERDR_WORKSPACE_ID) ou o GENGAR.
+func workspaceDo(ctx context.Context, r Runner, c Comando) (string, error) {
+	if c.Workspace == "" {
+		if id := strings.TrimSpace(os.Getenv("HERDR_WORKSPACE_ID")); id != "" {
+			return id, nil
+		}
+		return WorkspacePorRotulo(ctx, r, "GENGAR")
+	}
+	return WorkspacePorRotulo(ctx, r, c.Workspace)
 }

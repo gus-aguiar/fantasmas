@@ -126,6 +126,7 @@ const (
 type itemPaleta struct {
 	nome, desc, busca, estado string
 	ft                        estadoFt
+	apagado                   bool
 	cor                       lipgloss.Color
 	a                         alvo
 }
@@ -148,6 +149,25 @@ func itensPaleta(_ dados.Estado, ec estadoComandos) []itemPaleta {
 		if d, ok := ec.disparos[k.ID]; ok {
 			it.estado, it.ft, it.a.aba = rodandoHa(d, ec.agora), ftRodando, d.Aba
 		}
+		switch k.ID {
+		case dados.CmdFaxina:
+			switch {
+			case ec.faxinando:
+				it.estado, it.ft = "rodando…", ftRodando
+			case ec.faxinaRes != "" && ec.agora.Sub(ec.faxinaFim) < DuraResumoFaxina:
+				it.estado, it.ft, it.cor = ec.faxinaRes, ftTerminou, T.Ok
+				if ec.faxinaErro {
+					it.ft, it.cor = ftParado, T.Erro
+				}
+			}
+		case dados.CmdSwap:
+			switch {
+			case ec.mem != nil && ec.mem.SwapVazio():
+				it.estado, it.cor, it.apagado = "swap já vazio", T.Dim, true
+			case ec.mem != nil && !ec.mem.CabeNaRAM():
+				it.estado, it.cor = "pouca RAM livre", T.Erro
+			}
+		}
 		switch {
 		case ec.disparando == k.ID:
 			it.estado, it.ft = "abrindo…", ftRodando
@@ -160,8 +180,13 @@ func itensPaleta(_ dados.Estado, ec estadoComandos) []itemPaleta {
 }
 
 func (m Model) estadoCmds() estadoComandos {
-	return estadoComandos{disparos: m.disparos, armado: m.armadoCmd, disparando: m.disparando,
-		agora: m.agora(), pedindoDD: m.pedindoDD, atualizando: m.atualizando, armadoAtu: m.armadoAtu}
+	ec := estadoComandos{disparos: m.disparos, armado: m.armadoCmd, disparando: m.disparando,
+		agora: m.agora(), pedindoDD: m.pedindoDD, atualizando: m.atualizando, armadoAtu: m.armadoAtu,
+		faxinando: m.faxinando, faxinaErro: m.faxinaErro, faxinaRes: m.faxinaRes, faxinaFim: m.faxinaFim}
+	if mem, ok := m.memoria(); ok {
+		ec.mem = &mem
+	}
+	return ec
 }
 
 // itensFiltrados aplica a busca da paleta.
@@ -223,6 +248,9 @@ func (m Model) caixaPaleta(w int) []string {
 		}
 		esq := st(fb, T.Dim).Render(" "+fmt.Sprint(i+1)+" ") + st(fb, cg).Render(marca)
 		ns := st(fb, T.Texto)
+		if it.apagado {
+			ns = st(fb, T.Dim)
+		}
 		if sel {
 			ns = ns.Bold(true)
 		}

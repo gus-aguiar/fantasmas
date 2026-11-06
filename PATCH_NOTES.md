@@ -3,6 +3,12 @@
 O que mudou no `gengar` (TUI fantasmas) e no fluxo de missões e sidequests do Spark. A versão mais nova fica no topo.
 Cada entrada diz o que muda para quem usa; os detalhes técnicos ficam no histórico do git.
 
+## 2026-11-06 · Faxina e swap na paleta
+
+**Novo**
+- **Faxina agora (`4` na paleta):** roda a faxina na hora, em segundo plano: fecha fantasminhas encerrados, serviços e daemons ociosos. Mostra "rodando…" e, ao terminar, "N ações · ~X MB" por 2 minutos.
+- **Esvaziar swap (`5` na paleta):** abre uma aba no seu workspace do Herdr que devolve o swap para a RAM; você digita a senha do sudo lá. Só deixa rodar quando há RAM livre de sobra (senão pede a Faxina antes) e fica cinza quando o swap já está vazio.
+
 ## 2026-11-06 · Faxina de memória
 
 **Muda**

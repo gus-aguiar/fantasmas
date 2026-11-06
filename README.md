@@ -49,7 +49,7 @@ As teclas que mais importam estão abaixo. A lista completa abre com `?`.
 |---|---|
 | `1`–`5` ou `← →` | troca de aba (barra no rodapé): `1` agora (abre aqui), `2` missões, `3` PRs, `4` máquina, `5` configurações |
 | `↑ ↓` e `enter` | escolhe e abre/responde; numa missão, abre as sidequests e as decisões |
-| `ctrl+p` ou `b` | abre a paleta de comandos (Abrir o dia, Fechar o dia, Saúde de multas): `1`–`3` ou `enter`, duas vezes, dispara; `esc` fecha |
+| `ctrl+p` ou `b` | abre a paleta de comandos (Abrir o dia, Fechar o dia, Saúde de multas, Faxina agora, Esvaziar swap): `1`–`5` ou `enter`, duas vezes, dispara; `esc` fecha |
 | `?` | ajuda curta com a navegação; os atalhos de cada item aparecem à direita da linha selecionada |
 | `m` | abre uma missão nova (enter 2× confirma) |
 | `n` / `N` | lança uma sidequest (`N` abre também um gengar dedicado) |
@@ -59,7 +59,7 @@ As teclas que mais importam estão abaixo. A lista completa abre com `?`.
 
 ## Comandos (gaveta 5)
 
-`/dia abrir` e `/dia fechar` abrem uma aba nova no workspace do Herdr chamado **GENGAR**; `/saude-multas`, no workspace **saúde multas**. A aba nasce na raiz do Spark com o `claude` já rodando o comando e se chama `dia-MMDD-HHMM` ou `saude-MMDD-HHMM`. Cada disparo mostra há quanto tempo roda, e `g` leva até a aba. Os ajustes (tema, figura e variáveis) e as ações Reconectar MCPs e Atualizar app (`enter 2×`) ficam na gaveta `5`.
+`/dia abrir` e `/dia fechar` abrem uma aba nova no workspace do Herdr chamado **GENGAR**; `/saude-multas`, no workspace **saúde multas**. A aba nasce na raiz do Spark com o `claude` já rodando o comando e se chama `dia-MMDD-HHMM` ou `saude-MMDD-HHMM`. Cada disparo mostra há quanto tempo roda, e `g` leva até a aba. **Faxina agora** roda `scripts/delegate/faxina.py rodar --uma-vez` em segundo plano, sem aba, e mostra "N ações · ~X MB" por 2 min. **Esvaziar swap** abre uma aba no workspace onde a TUI está (`HERDR_WORKSPACE_ID`, senão GENGAR) com `sudo swapoff -a && sudo swapon -a && free -h`, onde você digita a senha; só dispara se a RAM disponível passar do swap usado + 2 GB (senão pede a Faxina antes) e fica cinza com o swap vazio (< 100 MB). Os ajustes (tema, figura e variáveis) e as ações Reconectar MCPs e Atualizar app (`enter 2×`) ficam na gaveta `5`.
 
 ## Missões e sidequests
 

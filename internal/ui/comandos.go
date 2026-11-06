@@ -63,7 +63,14 @@ type estadoComandos struct {
 	disparando                        string
 	agora                             time.Time
 	pedindoDD, atualizando, armadoAtu bool
+	faxinando, faxinaErro             bool
+	faxinaRes                         string
+	faxinaFim                         time.Time
+	mem                               *dados.Memoria
 }
+
+// DuraResumoFaxina é quanto o resumo da Faxina agora fica à direita do item.
+const DuraResumoFaxina = 2 * time.Minute
 
 const (
 	cmdDaydreaming = "daydreaming"
