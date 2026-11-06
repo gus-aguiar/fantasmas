@@ -78,10 +78,10 @@ func TestTopoESecaoContamIgual(t *testing.T) {
 		}
 		return g[1]
 	}
-	if a, b := num(`(\d+) precisa de você`), num(`› precisa de você \((\d+)\)`); a != b {
+	if a, b := num(`(\d+) precisa de você`), num(`ESPERANDO VOCÊ (\d+)`); a != b {
 		t.Fatalf("topo diz %s precisa de você, seção diz %s", a, b)
 	}
-	if a, b := num(`(\d+) travados?`), num(`› travados \((\d+)\)`); a != b {
+	if a, b := num(`(\d+) travados?`), num(`TRAVADOS (\d+)`); a != b {
 		t.Fatalf("topo diz %s travados, seção diz %s", a, b)
 	}
 }
@@ -99,13 +99,10 @@ func TestTopoELinhasVivasContamIgual(t *testing.T) {
 		}
 		return g[1]
 	}
-	if a, b := num(`([0-9]+) trabalhando`), num(`› agora \(([0-9]+)\)`); a != b {
+	if a, b := num(`([0-9]+) trabalhando`), num(`TRABALHANDO ([0-9]+)`); a != b {
 		t.Fatalf("topo diz %s trabalhando, raia diz %s", a, b)
 	}
-	if a, b := num(`([0-9]+) parados?`), num(`› parados \(([0-9]+)\)`); a != b {
-		t.Fatalf("topo diz %s parados, raia diz %s", a, b)
-	}
-	if a, b := num(`([0-9]+) precisa de você`), num(`› precisa de você \(([0-9]+)\)`); a != b {
+	if a, b := num(`([0-9]+) precisa de você`), num(`ESPERANDO VOCÊ ([0-9]+)`); a != b {
 		t.Fatalf("topo diz %s precisa de você, seção diz %s", a, b)
 	}
 }

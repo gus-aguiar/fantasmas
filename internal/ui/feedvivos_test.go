@@ -32,7 +32,7 @@ func TestAntigasRecolhidasEArquivarEmDoisPassos(t *testing.T) {
 	m.acoes.Arquivar = func(c string) error { arquivadas = append(arquivadas, c); return nil }
 	m.largura, m.altura = 96, 40
 	out := render(m, 96, 40)
-	if !strings.Contains(out, "antigos (1)") || strings.Contains(out, "pergunta velha?") {
+	if !strings.Contains(out, "Antigos 1") || strings.Contains(out, "pergunta velha?") {
 		t.Fatalf("antigas deveria vir recolhida:\n%s", out)
 	}
 	m = aperta(t, m, "a")
@@ -70,7 +70,7 @@ func TestCliqueNoTituloEArquivar(t *testing.T) {
 	m := modelo(comMortos(), &registro{})
 	m.acoes.Arquivar = func(c string) error { arquivadas = append(arquivadas, c); return nil }
 	m.largura, m.altura = 96, 40
-	x, y := onde(t, m, "antigos (1)", 0)
+	x, y := onde(t, m, "Antigos 1", 0)
 	m, _ = clique(t, m, x, y)
 	if !m.antigas {
 		t.Fatal("clique no título deveria abrir")
@@ -151,7 +151,7 @@ func TestLargurasSemCorte(t *testing.T) {
 		m.largura, m.altura = w, 40
 		cabeTudo(t, m, w, 40)
 		out := render(m, w, 40)
-		for _, s := range []string{"antigos (1)", BotaoArquivar} {
+		for _, s := range []string{"Antigos 1", BotaoArquivar} {
 			if !strings.Contains(out, s) {
 				t.Errorf("%d: sem %q:\n%s", w, s, out)
 			}

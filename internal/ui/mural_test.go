@@ -21,15 +21,15 @@ func avisosEx() []dados.Aviso {
 
 func TestMuralAusenteSemFaixa(t *testing.T) {
 	e := dados.Estado{At: time.Now()}
-	if s := textoAgora(e); strings.Contains(s, "mural") || strings.Contains(s, "◆") {
+	if s := textoAgora(e); strings.Contains(s, "MURAL") || strings.Contains(s, "◆") {
 		t.Fatalf("sem aviso a faixa não aparece:\n%s", s)
 	}
 	e.Mural = avisosEx()
 	s := textoAgora(e)
-	if !strings.Contains(s, "mural") || !strings.Contains(s, "◆ gengar-1030-0900 · 10:12  vou mexer") {
+	if !strings.Contains(s, "MURAL") || !strings.Contains(s, "◆ gengar-1030-0900 · 10:12  vou mexer") {
 		t.Fatalf("faixa faltando:\n%s", s)
 	}
-	if strings.Index(s, "mural") > strings.Index(s, "precisa de você") {
+	if strings.Index(s, "MURAL") > strings.Index(s, "ESPERANDO VOCÊ") {
 		t.Fatalf("mural vai antes de 'precisa de você':\n%s", s)
 	}
 }

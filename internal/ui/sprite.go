@@ -258,15 +258,15 @@ func CarregarSprite(gifBytes []byte, maxCol, maxLin int, fundo lipgloss.Color) (
 	return s, nil
 }
 
-// tamanhoSprite: no máximo 4 linhas, para o topo não comer a tela.
+// tamanhoSprite: 16x7 no largo; menor no médio e no estreito para o cartão do topo caber.
 func tamanhoSprite(largura int) (int, int) {
 	switch Faixa(largura) {
 	case "largo":
-		return 10, 4
+		return 16, 7
 	case "medio":
-		return 9, 4
+		return 14, 6
 	}
-	return 8, 4
+	return 12, 5
 }
 
 var (

@@ -127,7 +127,7 @@ func TestSpriteNaoInvadeCorpo(t *testing.T) {
 					if Gavetas[g].ID == "agora" && h >= 20 {
 						ls := strings.Split(ansi.Strip(m.Render(w, h)), "\n")
 						for y := 0; y < q.topo; y++ {
-							if strings.Contains(ls[y], "fantasminhas") {
+							if strings.Contains(ls[y], "TRABALHANDO") {
 								t.Fatalf("%dx%d: corpo no topo, linha %d", w, h, y)
 							}
 						}

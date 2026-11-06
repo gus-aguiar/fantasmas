@@ -133,9 +133,10 @@ type Model struct {
 	disparando string
 	relogio    func() time.Time
 
-	// botoes é o painel lateral de botões (tecla b); selGaveta guarda a seleção da gaveta enquanto ele está aberto.
+	// botoes é a paleta de comandos (ctrl+p ou b); selGaveta guarda a seleção da gaveta enquanto ele está aberto.
 	botoes    bool
 	selGaveta int
+	buscaCmd  *textinput.Model
 }
 
 // Novo já nasce coletando: o Init dispara a primeira coleta.
@@ -272,7 +273,7 @@ func (m Model) alturaLista() int {
 
 func (m Model) alvos() []alvo {
 	if m.botoes {
-		return m.corpoBotoes().alvos
+		return m.alvosPaleta()
 	}
 	return m.montarCorpo(m.larguraEfetiva(), m.alturaLista()).alvos
 }
@@ -581,7 +582,10 @@ func (m Model) atualizar(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m.coletar()
 	case tickQuadroMsg:
-		m.quadro++
+		// o gengar só anima com alguém trabalhando (ou durante a coleta); ocioso, fica parado
+		if m.coletando || trabalhando(m.estado) > 0 {
+			m.quadro++
+		}
 		return m, tickQuadro(m.quadro)
 	case daydreamingMsg:
 		m.pedindoDD = false
@@ -658,7 +662,7 @@ func (m Model) atualizar(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		if m.botoes {
-			return m.teclaBotoes(msg.String())
+			return m.teclaBotoes(msg)
 		}
 		if m.aberto != nil {
 			return m.teclaDetalhe(msg)
@@ -749,7 +753,7 @@ func (m Model) mouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 	case dentro(q.abrir):
 		_, u := m.atual()
 		return m.abrirURL(u), nil
-	case y == len(q.linhas)-1:
+	case y == q.abasY && len(q.abas) > 0:
 		for i, a := range q.abas {
 			if x >= a[0] && x < a[1] {
 				return m.fecharDetalhe().irGaveta(i), nil
@@ -868,7 +872,7 @@ func (m Model) tecla(k string) (tea.Model, tea.Cmd) {
 		return m.irAba(), nil
 	case "p":
 		return m.abrirURL(PainelURL), nil
-	case "b":
+	case "b", "ctrl+p":
 		return m.abrirBotoes(), nil
 	}
 	if len(k) == 1 && k[0] >= '1' && k[0] <= '9' && int(k[0]-'1') < len(Gavetas) {
@@ -898,7 +902,7 @@ func (m Model) montarCorpo(largura, altura int) *corpo {
 		desc, nome := c.desc, Gavetas[m.gaveta].Nome
 		c.desc = ""
 		topo := linha{item: -1, desenha: func(bg lipgloss.Color) string {
-			return st(bg, T.Acao).Render("› ") + st(bg, T.Sub).Bold(true).Render(nome) + st(bg, T.Dim).Render("  "+desc)
+			return st(bg, T.Secundario()).Bold(true).Render(strings.ToUpper(nome)) + st(bg, T.Dim).Render("  "+desc)
 		}}
 		branco := linha{item: -1, desenha: func(lipgloss.Color) string { return "" }}
 		c.linhas = append([]linha{topo, branco}, c.linhas...)
@@ -981,15 +985,15 @@ func (m Model) ajudaLinhas(largura int) []string {
 	ls := []string{
 		"teclado",
 		k("1-5  ← →", "gavetas: 1 agora · 2 missões · 3 PRs · 4 máquina · 5 configurações"),
-		k("b", "abre · fecha o painel de botões (/dia, /saude-multas, DayDreaming, MCPs, atualizar); esc fecha"),
+		k("ctrl+p  b", "paleta de comandos (abrir/fechar o dia, saúde de multas, DayDreaming, MCPs, atualizar); digite para buscar, esc fecha"),
 		k("↑ ↓  j k", "escolhe item ou opção"),
 		k("enter", "abre · responde · abre a missão (de novo recolhe)"),
-		k("enter 2×", "confirma Liberar merge e os botões do painel b"),
+		k("enter 2×", "confirma Liberar merge e os comandos da paleta"),
 		k("", "e Não vou fazer"),
 		k("/", "filtra a lista"),
 		k("esc", "volta · limpa o filtro (ou a missão)"),
 		k("o", "abre o link (abrir ↗)"),
-		k("g", "vai à aba (ir à aba →) · no painel b, à aba do disparo"),
+		k("g", "vai à aba (ir à aba →) · na paleta, à aba do disparo"),
 		k("p", "abre o painel do delegate"),
 		k("a", "agora: abre · recolhe os antigos"),
 		k("x 2×", "arquiva a pergunta antiga"),
@@ -1046,6 +1050,7 @@ type tela struct {
 	topo      int
 	dono      []int
 	abas      [][2]int
+	abasY     int
 	atualizar faixaX
 	voltar    faixaX
 	irAba     faixaX
@@ -1088,6 +1093,11 @@ func (m Model) montar(largura, altura int) tela {
 	if len(topo) > altura-1 {
 		topo = topo[:max(0, altura-1)]
 	}
+	if altura-1-len(topo) >= 4 {
+		ab, xs := rodapeAbas(Gavetas[m.gaveta].ID, largura)
+		q.abas, q.abasY = xs, len(topo)
+		topo = append(topo, ab, espacos(largura, T.Base))
+	}
 	q.topo = len(topo)
 	if area.ok && area.y+area.r <= q.topo {
 		q.img = area
@@ -1118,9 +1128,6 @@ func (m Model) montar(largura, altura int) tela {
 			for len(corpo) < hl {
 				corpo = append(corpo, espacos(largura, T.Base))
 			}
-			if m.botoes {
-				corpo = m.sobreporBotoes(corpo, largura)
-			}
 		}
 		if len(corpo) > h {
 			corpo = corpo[:h]
@@ -1145,16 +1152,15 @@ func (m Model) montar(largura, altura int) tela {
 		}
 		linhas = append(linhas, corpo...)
 	}
-	rod, abas := rodapeAbas(Gavetas[m.gaveta].ID, largura)
-	if m.botoes {
-		q.dono = nil
-	}
-	q.abas = abas
-	linhas = append(linhas, rod)
+	linhas = append(linhas, m.rodapeAtalhos(largura))
 	for i, l := range linhas {
 		if lipgloss.Width(l) > largura {
 			linhas[i] = encaixa(l, largura, T.Base)
 		}
+	}
+	if m.botoes {
+		q.dono, q.img = nil, areaImg{}
+		linhas = m.sobreporPaleta(linhas, largura, len(linhas))
 	}
 	q.linhas = linhas
 	if !m.ajuda {

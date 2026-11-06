@@ -173,13 +173,15 @@ func (g *Grafico) Encerrar() {
 	g.escrever(b.String())
 }
 
-// tamanhoImagem: 8x4, o teto de 4 linhas do topo.
+// tamanhoImagem: 16x8 no largo, proporcionalmente menor no médio e no estreito.
 func tamanhoImagem(largura int) (int, int) {
 	switch Faixa(largura) {
-	case "largo", "medio":
-		return 8, 4
+	case "largo":
+		return 16, 8
+	case "medio":
+		return 14, 7
 	}
-	return 8, 4
+	return 12, 6
 }
 
 // QuadrosPNG compõe os quadros do GIF, recorta como o sprite em células e codifica em PNG.

@@ -75,52 +75,66 @@ func Topo(e dados.Estado, largura, quadro int, coletando bool, status string) st
 // AlturaSemMascote: abaixo dela o mascote some e o topo fica numa linha.
 const AlturaSemMascote = 30
 
-// resumoTopo é "▲ N suas · ● N trabalhando" mais o alerta da máquina, só quando existe.
-func resumoTopo(e dados.Estado) (string, string) {
-	suas := 0
-	for _, i := range dados.MontarFeed(e) {
-		if i.Tipo == dados.TipoDecidir || i.Tipo == dados.TipoJuntar {
-			suas++
-		}
-	}
-	trab := 0
+// trabalhando conta os fantasminhas trabalhando agora.
+func trabalhando(e dados.Estado) int {
+	n := 0
 	if len(e.Linhas) > 0 {
 		for _, l := range e.Linhas {
 			if l.Estado == dados.Trabalhando {
-				trab++
+				n++
 			}
 		}
-	} else {
-		for _, t := range e.Tasks {
-			if strings.Contains(t.Detalhe, "working") {
-				trab++
-			}
+		return n
+	}
+	for _, t := range e.Tasks {
+		if strings.Contains(t.Detalhe, "working") {
+			n++
+		}
+	}
+	return n
+}
+
+// resumoTopo é "N precisa de você · N trabalhando" (contador zerado não aparece) e o alerta da máquina, se houver.
+func resumoTopo(e dados.Estado) (string, string) {
+	suas, trav := 0, 0
+	for _, i := range dados.MontarFeed(e) {
+		switch i.Tipo {
+		case dados.TipoDecidir, dados.TipoJuntar:
+			suas++
+		case dados.TipoTravado:
+			trav++
 		}
 	}
 	var ps []string
 	if suas > 0 {
-		ps = append(ps, fmt.Sprintf("▲ %d %s", suas, map[bool]string{true: "sua", false: "suas"}[suas == 1]))
+		ps = append(ps, fmt.Sprintf("%d precisa de você", suas))
 	}
-	if trab > 0 {
-		ps = append(ps, fmt.Sprintf("● %d trabalhando", trab))
+	if trav > 0 {
+		ps = append(ps, fmt.Sprintf("%d %s", trav, map[bool]string{true: "travado", false: "travados"}[trav == 1]))
+	}
+	if n := trabalhando(e); n > 0 {
+		ps = append(ps, fmt.Sprintf("%d trabalhando", n))
 	}
 	if len(ps) == 0 {
-		ps = append(ps, "✓ nada pedindo você")
+		ps = append(ps, "nada pedindo você")
 	}
 	alerta := ""
 	if as := alertasMaquina(e); len(as) > 0 {
-		alerta = "⚠ " + as[0]
+		alerta = "⚠ " + strings.Join(as, " · ")
 	}
 	return strings.Join(ps, " · "), alerta
 }
 
-// linhaTopo é a linha única do topo: resumo e alerta à esquerda, ↻ hora à direita.
+// DicaTopo é a linha discreta de atalhos do topo.
+const DicaTopo = DicaPaleta + " · r atualiza · ? ajuda · q sai"
+
+// linhaTopo é o topo de uma linha só (janela baixa): resumo e alerta à esquerda, ↻ hora à direita.
 func linhaTopo(e dados.Estado, w, quadro int, coletando bool, status string) string {
 	stl := func(c lipgloss.Color) lipgloss.Style { return fundo(T.Mantle).Foreground(c) }
 	resumo, alerta := resumoTopo(e)
 	esq := stl(T.Texto).Bold(true).Render(resumo)
 	if alerta != "" {
-		esq += stl(T.Dim).Render(" · ") + stl(T.Espera).Bold(true).Render(alerta)
+		esq += stl(T.Dim).Render(" · ") + stl(T.EstadoAviso()).Render(alerta)
 	}
 	if status != "" {
 		esq += stl(T.Dim).Render("   ") + stl(T.Sub).Render(status)
@@ -139,16 +153,27 @@ func linhaTopo(e dados.Estado, w, quadro int, coletando bool, status string) str
 	return esq + espacos(w-lipgloss.Width(esq)-lipgloss.Width(dir), T.Mantle) + dir
 }
 
-// topoArea desenha o topo; com img, reserva em branco a área da imagem e devolve onde ela fica.
-// O mascote tem no máximo 4 linhas e some abaixo de AlturaSemMascote.
+// topoArea desenha o topo: gengar em tamanho cheio à esquerda e, ao lado, título, resumo, alerta
+// (só se houver) e a linha de atalhos. Com img, reserva em branco a área da imagem.
 func topoArea(e dados.Estado, largura, altura, quadro int, coletando bool, status string, img bool) ([]string, areaImg) {
 	if largura <= 0 {
 		return []string{""}, areaImg{}
 	}
-	if altura < AlturaSemMascote || Faixa(largura) == "minimo" {
+	f := Faixa(largura)
+	if altura < AlturaSemMascote || f == "minimo" {
 		return []string{espacos(1, T.Mantle) + linhaTopo(e, largura-2, quadro, coletando, status) + espacos(1, T.Mantle)}, areaImg{}
 	}
-	gap := 2
+	stl := func(c lipgloss.Color) lipgloss.Style { return fundo(T.Mantle).Foreground(c) }
+	glifo, quando := "↻", "atualizado "+hora(e)
+	if coletando {
+		glifo, quando = []string{"◐", "◓", "◑", "◒"}[((quadro%4)+4)%4], "atualizando…"
+	}
+	resumo, alerta := resumoTopo(e)
+	amplo := f == "largo" || f == "medio"
+	gap := 4
+	if !amplo {
+		gap = 2
+	}
 	arte, artCol, artLin := QuadroMascote, MascoteColunas, MascoteLinhas
 	if img {
 		artCol, artLin = tamanhoImagem(largura)
@@ -158,21 +183,49 @@ func topoArea(e dados.Estado, largura, altura, quadro int, coletando bool, statu
 		arte = func(i int, _ lipgloss.Color) []string { return sp.Quadro(i) }
 		artCol, artLin = sp.Colunas, sp.Linhas
 	}
-	a := arte(quadro, T.Mantle)
-	if len(a) > 4 {
-		a = a[:4]
+	maxCard := max(1, largura-2-artCol-gap)
+
+	l1 := stl(T.Acento()).Bold(true).Render("fantasmas") + stl(T.Dim).Render("  "+glifo+" "+quando)
+	l2 := stl(T.Texto).Render(resumo)
+	dica := stl(T.Dim).Render(DicaTopo)
+	if status != "" {
+		dica = stl(T.Texto).Render(status)
 	}
-	artLin = min(artLin, 4)
-	alt := artLin
-	a = centraV(a, artCol, alt)
-	w := max(1, largura-2-artCol-gap)
-	cartao := centraV([]string{linhaTopo(e, w, quadro, coletando, status)}, w, alt)
+	bruto := []string{l1, "", l2}
+	if alerta != "" {
+		bruto = append(bruto, stl(T.EstadoAviso()).Render(alerta))
+	}
+	bruto = append(bruto, "", dica)
+	if artLin < len(bruto) {
+		bruto = []string{l1, l2}
+		if alerta != "" {
+			bruto = append(bruto, stl(T.EstadoAviso()).Render(alerta))
+		}
+		bruto = append(bruto, dica)
+	}
+	cardW := 0
+	for i, l := range bruto {
+		if lipgloss.Width(l) > maxCard {
+			l = ansi.Truncate(l, maxCard, "…")
+			bruto[i] = l
+		}
+		cardW = max(cardW, lipgloss.Width(l))
+	}
+	a := arte(quadro, T.Mantle)
 	g := espacos(gap, T.Mantle)
+	alt := max(artLin, len(bruto))
+	a = centraV(a, artCol, alt)
+	cartao := centraV(bruto, 0, alt)
 	linhas := make([]string, alt)
 	for i := range linhas {
-		linhas[i] = linhaFundo(espacos(1, T.Mantle)+a[i]+g+linhaFundo(cartao[i], w, false), largura, false)
+		linhas[i] = linhaFundo(espacos(1, T.Mantle)+a[i]+g+linhaFundo(cartao[i], cardW, false), largura, amplo)
 	}
-	return linhas, areaImg{x: 1, y: 0, c: artCol, r: artLin, ok: img}
+	area := areaImg{y: (alt - artLin) / 2, c: artCol, r: artLin, ok: img}
+	if sobra := largura - (1 + artCol + gap + cardW); amplo && sobra > 0 {
+		area.x = sobra / 2
+	}
+	area.x++
+	return linhas, area
 }
 
 // TopoCompacto é a linha única do topo com o detalhe aberto: voltar à esquerda, estado à direita.
@@ -211,60 +264,56 @@ func centraV(ls []string, w, alt int) []string {
 	return out
 }
 
-func rotulo(g Gaveta, ativa bool, nivel int) string {
-	switch {
-	case nivel == 0:
-		return g.Tecla + " " + g.Nome
-	case nivel == 1, nivel == 2 && ativa:
-		return g.Nome
-	}
-	return g.Tecla
-}
+// NomeAba é o rótulo curto de cada gaveta na linha de abas.
+var NomeAba = map[string]string{"agora": "Agora", "missoes": "Missões", "prs": "PRs", "maquina": "Máquina", "configuracoes": "Config"}
 
-// Rodape é sempre uma linha: usa o rótulo mais rico que cabe.
+// Rodape devolve a linha de abas (nome mantido por compatibilidade).
 func Rodape(ativa string, largura int) string {
 	s, _ := rodapeAbas(ativa, largura)
 	return s
 }
 
-// rodapeAbas devolve o rodapé e o intervalo [x0, x1) de cada aba, para o clique.
+// rodapeAbas é a linha de abas como texto: "1 Agora · 2 Missões · …", a ativa em acento e negrito,
+// o dígito sempre no acento. Devolve também o intervalo [x0, x1) de cada aba, para o clique.
 func rodapeAbas(ativa string, largura int) (string, [][2]int) {
 	if largura <= 0 {
 		return "", nil
 	}
-	tentativas := [][2]int{{0, 1}, {1, 1}, {2, 1}, {3, 1}, {3, 0}}
-	var s string
-	var abas [][2]int
-	for _, t := range tentativas {
-		nivel, gap := t[0], t[1]
+	for _, curto := range []bool{false, true} {
 		var b strings.Builder
-		abas = abas[:0]
-		x := 0
-		for _, g := range Gavetas {
+		var abas [][2]int
+		x := 2
+		b.WriteString(espacos(2, T.Base))
+		for i, g := range Gavetas {
 			on := g.ID == ativa
-			var r string
-			if on {
-				r = fundo(T.Acao).Foreground(T.Mantle).Bold(true).Render(" " + rotulo(g, on, nivel) + " ")
-			} else {
-				r = fundo(T.Mantle).Foreground(T.Dim).Render(rotulo(g, on, nivel))
+			if i > 0 {
+				sep := " · "
+				if curto {
+					sep = "  "
+				}
+				b.WriteString(st(T.Base, T.Dim).Render(sep))
+				x += lipgloss.Width(sep)
 			}
-			w := lipgloss.Width(r) + 2*gap
+			nome := NomeAba[g.ID]
+			if curto && !on {
+				nome = ""
+			}
+			r := st(T.Base, T.Acento()).Render(g.Tecla)
+			if nome != "" {
+				cor := st(T.Base, T.Dim)
+				if on {
+					cor = st(T.Base, T.Acento()).Bold(true)
+				}
+				r += cor.Render(" " + nome)
+			}
+			w := lipgloss.Width(r)
 			abas = append(abas, [2]int{x, x + w})
 			x += w
-			b.WriteString(espacos(gap, T.Mantle) + r + espacos(gap, T.Mantle))
+			b.WriteString(r)
 		}
-		s = b.String()
-		if lipgloss.Width(s) <= largura {
-			break
+		if x <= largura || curto {
+			return encaixa(b.String(), largura, T.Base), abas
 		}
 	}
-	if dica := fundo(T.Mantle).Foreground(T.Dim).Render("  " + DicaBotoes); lipgloss.Width(s)+lipgloss.Width(dica) <= largura {
-		s += dica
-	}
-	esq := max(0, (largura-lipgloss.Width(s))/2)
-	for i := range abas {
-		abas[i][0] += esq
-		abas[i][1] += esq
-	}
-	return linhaFundo(s, largura, true), abas
+	return "", nil
 }

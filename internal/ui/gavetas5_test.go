@@ -51,11 +51,11 @@ func TestTopoUmaLinhaEMascoteSome(t *testing.T) {
 		t.Fatalf("abaixo de %d linhas o topo tem %d", AlturaSemMascote, len(ls))
 	}
 	p := render(m, 140, 20)
-	if !strings.Contains(p, "▲ 1 sua") || strings.Contains(p, "r atualiza") {
+	if !strings.Contains(p, "1 precisa de você") || strings.Contains(p, "r atualiza") {
 		t.Fatalf("topo:\n%s", p)
 	}
-	if ls, _ = m.linhasTopo(140, 42); len(ls) > 4 {
-		t.Fatalf("mascote com %d linhas", len(ls))
+	if ls, _ = m.linhasTopo(140, 42); spriteFn(140) != nil && len(ls) < spriteFn(140).Linhas {
+		t.Fatalf("gengar devia vir cheio: topo com %d linhas", len(ls))
 	}
 }
 
@@ -86,7 +86,7 @@ func TestCaidoAntigoVaiParaAntigos(t *testing.T) {
 	e := fixture()
 	e.Caidos = []dados.Caido{{Nome: "c-velho", Pane: "p1", SessionID: "s", Em: e.At.Add(-72 * time.Hour)}}
 	m := modelo(e, &registro{})
-	if p := render(m, 140, 40); strings.Contains(p, "c-velho") || !strings.Contains(p, "antigos (") {
+	if p := render(m, 140, 40); strings.Contains(p, "c-velho") || !strings.Contains(p, "Antigos ") {
 		t.Fatalf("caído velho em destaque:\n%s", p)
 	}
 	m.antigas = true

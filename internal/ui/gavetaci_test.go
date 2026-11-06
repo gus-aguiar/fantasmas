@@ -25,7 +25,7 @@ func corpoPRs(e dados.Estado, w int) (*corpo, []string) {
 func TestPRsComCITudoVerde(t *testing.T) {
 	e := dados.Estado{Travados: []dados.Travado{{Repo: "PrologWebReact", Number: 1, CI: "SUCCESS", Motivo: "aprovado · mergear"}, {Repo: "PrologFlutter", Number: 2, CI: "SUCCESS", Motivo: "aprovado · mergear"}}}
 	_, ls := corpoPRs(e, 120)
-	if !strings.HasPrefix(ls[0], "› PRs (2)  CI: ✓ 2") {
+	if !strings.HasPrefix(ls[0], "PRs 2  CI: ✓ 2") {
 		t.Errorf("título: %q", ls[0])
 	}
 	for _, l := range ls[2:] {
@@ -38,7 +38,7 @@ func TestPRsComCITudoVerde(t *testing.T) {
 func TestPRsSemPR(t *testing.T) {
 	_, ls := corpoPRs(dados.Estado{}, 70)
 	// título, branco e a caixa do vazio: borda, 2 de folga, texto, 2 de folga, borda
-	if len(ls) != 9 || ls[0] != "› PRs (0)" || !strings.Contains(ls[2], "╭") || !strings.Contains(ls[5], "○  nenhum PR aberto") || !strings.Contains(ls[8], "╯") {
+	if len(ls) != 9 || ls[0] != "PRs" || !strings.Contains(ls[2], "╭") || !strings.Contains(ls[5], "○  nenhum PR aberto") || !strings.Contains(ls[8], "╯") {
 		t.Errorf("%q", ls)
 	}
 }
@@ -51,7 +51,7 @@ func TestPRsComCIVermelhoRodandoEVerdes(t *testing.T) {
 		{Repo: "PrologE2E", Number: 4, Motivo: "aguardando revisão"},
 	}}
 	c, ls := corpoPRs(e, 120)
-	if !strings.HasPrefix(ls[0], "› PRs (4)  CI: ✗ 1 · ◐ 1 · ✓ 1 · – 1") {
+	if !strings.HasPrefix(ls[0], "PRs 4  CI: ✗ 1 · ◐ 1 · ✓ 1 · – 1") {
 		t.Errorf("título: %q", ls[0])
 	}
 	quer := map[string]string{"WebReact #3650": "✗ lint, vitest", "WebService #812": "◐ rodando", "Flutter #3": "✓ verde", "E2E #4": "– sem CI"}

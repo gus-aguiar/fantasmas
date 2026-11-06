@@ -39,7 +39,8 @@ func main() {
 	demo := flag.Bool("demo", false, "usa o estado de demonstração (só com --uma-vez)")
 	demoVerde := flag.Bool("demo-verde", false, "demonstração com todos os PRs de CI verde (só com --uma-vez)")
 	gaveta := flag.String("gaveta", "", "gaveta inicial: agora|missoes|prs|maquina|configuracoes (aceita os nomes antigos crew, ambiente, worktrees e comandos) (só com --uma-vez)")
-	botoes := flag.Bool("botoes", false, "abre o painel de botões (só com --uma-vez)")
+	botoes := flag.Bool("botoes", false, "apelido de --paleta")
+	paleta := flag.Bool("paleta", false, "abre a paleta de comandos (só com --uma-vez)")
 	missao := flag.String("missao", "", "foca a missão pelo slug (só com --uma-vez)")
 	pipe := flag.Int("pipe", 0, "abre o detalhe da sidequest N (só com --uma-vez)")
 	acharRaiz := flag.Bool("achar-raiz", false, "procura a raiz do Spark na home, salva em configurações (FANTASMAS_RAIZ) e sai; o setup.sh usa")
@@ -178,7 +179,7 @@ func main() {
 		if *missao != "" {
 			m = m.ComMissao(*missao)
 		}
-		if *botoes {
+		if *botoes || *paleta {
 			m = m.ComBotoes()
 		}
 		fmt.Println(m.Render(w, h))

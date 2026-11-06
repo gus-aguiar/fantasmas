@@ -165,3 +165,11 @@ func matiz(c lipgloss.Color) (h, s float64) {
 	}
 	return h, s
 }
+
+// Tokens semânticos: um acento (foco, aba ativa, seleção) e três estados. Cor só para estado e
+// foco; texto secundário vai em Secundario. As views novas usam só estes.
+func (t Tokens) Acento() lipgloss.Color      { return t.Acao }
+func (t Tokens) EstadoOk() lipgloss.Color    { return t.Ok }
+func (t Tokens) EstadoAviso() lipgloss.Color { return t.Espera }
+func (t Tokens) EstadoErro() lipgloss.Color  { return t.Erro }
+func (t Tokens) Secundario() lipgloss.Color  { return t.Dim }

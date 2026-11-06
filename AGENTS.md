@@ -57,7 +57,7 @@ bin/fantasmas --uma-vez --demo --gaveta missoes --pipe 13
 
 - `--demo` e `--demo-verde` usam um estado fixo (`ui.EstadoDemo`) e não precisam de workspace.
 - Sem `--demo`, o comando faz uma coleta real.
-- Gavetas válidas: `agora missoes prs maquina configuracoes`; os nomes antigos seguem como apelido (`crew` → agora, `ambiente` e `worktrees` → maquina, `comandos` → configuracoes, em `apelidosGaveta`). `--botoes` abre o painel de botões no quadro. Um nome inválido sai com código 2.
+- Gavetas válidas: `agora missoes prs maquina configuracoes`; os nomes antigos seguem como apelido (`crew` → agora, `ambiente` e `worktrees` → maquina, `comandos` → configuracoes, em `apelidosGaveta`). `--paleta` (ou `--botoes`) abre a paleta de comandos no quadro. Um nome inválido sai com código 2.
 - Para ver um tema sem mexer no arquivo do usuário: `FANTASMAS_AJUSTES=/tmp/a.json FANTASMAS_TEMA=orca bin/fantasmas --uma-vez --cor --demo --gaveta configuracoes`.
 
 ### Teclas principais
@@ -65,24 +65,25 @@ bin/fantasmas --uma-vez --demo --gaveta missoes --pipe 13
 A lista completa fica no `?` dentro do app, e a fonte é `ajudaLinhas` em `internal/ui/model.go`.
 
 - `← →`/`h l`/`1-5`: troca de gaveta. São 5 (`Gavetas` em `moldura.go`):
-  - `1` **agora** (abre aqui): "precisa de você" numa lista só, com selo `decisão`/`liberação`; abaixo, travados, fantasminhas (trabalhando, parados, caídos recentes), mural, acompanhando e "antigos" (perguntas velhas e caídos de mais de um dia), a um `enter` ou `a`;
+  - `1` **agora** (abre aqui): ESPERANDO VOCÊ (decisão/liberação), TRAVADOS, TRABALHANDO, PARADOS (com os caídos recentes) e o mural; acompanhando e antigos (perguntas velhas e caídos de mais de um dia) ficam recolhidos numa linha "▸ Acompanhando N   ▸ Antigos N", aberta com `enter` ou `a`;
   - `2` **missões**: cartas enxutas (nome, ▲ suas, o que o gengar faz agora, PR vermelho); `enter` abre a missão (foco) com cards, contagens, sidequests e decisões, e de novo recolhe;
   - `3` **PRs**: não-rascunho com o CI; os rascunhos ficam numa linha que abre com `enter` ou `d`;
   - `4` **máquina**: máquina, ambiente e worktrees; uma linha quando tudo está verde (enter abre), aberta quando há alerta;
   - `5` **configurações**: só os ajustes (tema, figura e variáveis `FANTASMAS_*`).
-- `b`: abre e fecha o **painel de botões** (`internal/ui/painel.go`), à direita e por cima da gaveta, sem trocá-la; `esc` também fecha. Largura fixa `LarguraBotoes` (34); abaixo de 80 colunas ocupa a tela. Dentro: `/dia abrir`, `/dia fechar`, `/saude-multas`, DayDreaming, reconectar MCPs (só o resumo da última rodada) e atualizar app, todos com `enter 2×` (`armadoCmd`). Aberto, as teclas vão para ele (`teclaBotoes`) e a seleção da gaveta é guardada em `selGaveta`. O estado não persiste; o rodapé mostra `b botões`.
+- `ctrl+p` ou `b`: abre a **paleta de comandos** (`internal/ui/painel.go`), caixa centralizada de `LarguraPaleta` (58) colunas por cima da tela esmaecida, sem trocar de gaveta; `esc` (ou `ctrl+p`) fecha. Busca com `bubbles/textinput` filtrando por grupo, nome e descrição; com a busca vazia, `b g j k q` seguem como atalho, senão viram texto. Grupos DIA (Abrir o dia, Fechar o dia), MULTAS (Saúde de multas) e SISTEMA (DayDreaming, Reconectar MCPs, Atualizar app), todos com `enter 2×` (`armadoCmd`) e o estado à direita ("rodando há N min"); `g` vai à aba do disparo. Aberta, as teclas vão para ela (`teclaBotoes`) e a seleção da gaveta é guardada em `selGaveta`. `--paleta` (ou `--botoes`) abre no modo quadro.
 - `↑ ↓`/`j k`: escolhe um item. `enter`: abre ou responde. `esc`: volta e tira o foco da missão.
-- **Topo:** uma linha, `▲ N suas · ● N trabalhando` mais o alerta da máquina só quando existe (`resumoTopo`). O mascote tem no máximo 4 linhas e some abaixo de `AlturaSemMascote` (30) linhas. Contador zerado não aparece (`secaoN`).
+- **Topo** (`topoArea`): gengar em tamanho cheio à esquerda e, ao lado, "fantasmas ↻ atualizado HH:MM", o resumo `N precisa de você · N travados · N trabalhando` (contador zerado não aparece, `resumoTopo`), o alerta da máquina só quando existe e a linha de atalhos `DicaTopo`. Abaixo de `AlturaSemMascote` (30) linhas, vira uma linha só. O gengar só anima com alguém trabalhando (ou durante a coleta). Logo abaixo, a linha de abas em texto (`rodapeAbas`: "1 Agora · 2 Missões · 3 PRs · 4 Máquina · 5 Config", clicável) e uma linha em branco. O rodapé é o help curto do contexto (`bubbles/help`, `atalhosContexto` em `atalhos.go`, até 5 atalhos); `?` mostra o completo.
+- **Visual:** cor só para estado e foco, pelos tokens semânticos de `tema.go` (`Acento`, `EstadoOk`, `EstadoAviso`, `EstadoErro`, `Secundario`). Seções com cabeçalho esmaecido em caixa alta e contador (`secaoN`), listas em colunas (`colunas` em `lista.go`: glifo, título, metadados à direita, corte com `…`).
 - `/`: filtra. `r`: coleta agora. `q`: sai.
 - `o`: abre o link. `g`: foca a aba no herdr. `p`: abre o painel do delegate (`http://127.0.0.1:7480/`).
 - Ações destrutivas exigem a tecla duas vezes (estado "armado"):
   - `x 2×`: arquiva a pergunta;
   - `R 2×`: retoma um fantasminha caído;
-  - `U 2×`: atualiza o app (também no painel de botões);
-  - `enter 2×`: qualquer botão do painel `b` (`armadoCmd`);
+  - `U 2×`: atualiza o app (também na paleta);
+  - `enter 2×`: qualquer comando da paleta (`armadoCmd`);
   - `A`/`S`/`T 2×`: avança, pula ou faz retry de uma etapa da sidequest (no detalhe dela).
 - Gaveta missões: a carta aberta (`enter`) mostra as sidequests da missão (um bloco por etapa) e as decisões; as sem missão saem em "SIDEQUESTS SOLTAS". `n` lança uma sidequest (na missão em foco, senão solta; com uma missão em foco vale em qualquer gaveta), `N` faz o mesmo e abre o gengar dedicado, `e` edita o YAML, `m` abre uma missão (`missao-abrir.sh`, enter 2× confirma), `v` veta uma decisão tomada pela regra (enter 2× confirma) e `enter` numa sidequest abre o detalhe. Merge (`juntar`) é sempre humano: a TUI não aprova.
-- Outras: `D` pede uma rodada do DayDreaming e `M` reconecta os MCPs, de qualquer gaveta e sem confirmação; no painel `b` os mesmos botões pedem `enter 2×`.
+- Outras: `D` pede uma rodada do DayDreaming e `M` reconecta os MCPs, de qualquer gaveta e sem confirmação; na paleta os mesmos comandos pedem `enter 2×`.
 - **Comandos do Herdr** (`dados.ComandosHerdr`, `dados.Disparar`): acham o workspace pelo rótulo em `herdr workspace list` (GENGAR ou "saúde multas", sem caixa nem acento), criam a aba com `herdr tab create --workspace <id> --cwd <raiz> --label dia-MMDD-HHMM --no-focus` e rodam `herdr pane run <pane> claude "/dia abrir"`. Tudo pelo `dados.Runner`. O disparo fica na linha com "rodando há N min" e `g` foca a aba (`herdr tab focus`).
 
 ## De onde vêm os dados
@@ -160,7 +161,8 @@ internal/ui/            Model do Bubble Tea, gavetas, detalhe, tema, sprite
   moldura.go            lista de Gavetas, topo e rodapé
   ajustes.go            ajustes (gaveta configurações)
   comandos.go           gaveta máquina (com ambiente e worktrees) e botões do painel
-  painel.go             painel lateral de botões (tecla b)
+  painel.go             paleta de comandos (ctrl+p ou b)
+  atalhos.go            rodapé de atalhos do contexto (bubbles/help)
   tema.go               temas (roxo, orca, terminal) e UsarTema
   figuras.go            catálogo de figuras, UsarFigura, PNG → GIF
   gavetas.go missoes.go sidequests.go detalhe.go ...   uma tela por arquivo

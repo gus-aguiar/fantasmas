@@ -82,16 +82,17 @@ func (c *corpo) branco() { c.texto(func(lipgloss.Color) string { return "" }) }
 
 func (c *corpo) secao(titulo, extra string) { c.secaoN(titulo, -1, extra) }
 
-// secaoN é o título de seção com a contagem entre parênteses (zero não aparece), seguido de uma
-// linha em branco antes do conteúdo. A primeira seção da gaveta leva também a descrição dela.
+// secaoN é o cabeçalho de seção esmaecido em caixa alta com o contador (zero não aparece), seguido
+// de uma linha em branco. A primeira seção da gaveta leva também a descrição dela.
 func (c *corpo) secaoN(titulo string, n int, extra string) {
+	titulo = strings.ReplaceAll(strings.ToUpper(titulo), "PRS", "PRs")
 	if n > 0 {
-		titulo += fmt.Sprintf(" (%d)", n)
+		titulo += fmt.Sprintf(" %d", n)
 	}
 	desc := c.desc
 	c.desc = ""
 	c.texto(func(bg lipgloss.Color) string {
-		s := st(bg, T.Acao).Render("› ") + st(bg, T.Sub).Bold(true).Render(titulo)
+		s := st(bg, T.Secundario()).Bold(true).Render(titulo)
 		if desc != "" {
 			s += st(bg, T.Dim).Render("  " + desc)
 		}
@@ -157,24 +158,44 @@ func (c *corpo) item(a alvo, fs ...func(bg lipgloss.Color) string) {
 	}
 }
 
-// linhaLista é o porte de gavetas/lista.tsx: glifo, nome, estado e detalhe dim.
-func (c *corpo) linhaLista(a alvo, glifo string, cor lipgloss.Color, nome, estado string, corEstado lipgloss.Color, detalhe string) {
-	estreito := c.largura < 70
-	wNome, wEstado := 28, 14
-	if estreito {
-		wNome, wEstado = 20, 11
+// colunas é a linha de lista: glifo colorido, título na cor normal e metadados em cinza alinhados
+// à direita; o que não cabe é cortado com "…".
+func colunas(bg lipgloss.Color, largura int, glifo string, cor lipgloss.Color, titulo, meta string) string {
+	esq := st(bg, cor).Render(glifo + " ")
+	resto := largura - lipgloss.Width(esq)
+	if resto <= 0 {
+		return ansi.Truncate(esq, largura, "")
 	}
-	wDet := c.largura - 4 - wNome - wEstado
+	wMeta := 0
+	if meta != "" && resto > 20 {
+		wMeta = min(lipgloss.Width(meta), resto*45/100)
+	}
+	wTit := resto - wMeta
+	if wMeta > 0 {
+		wTit -= 2
+	}
+	tit := Corte(titulo, wTit)
+	s := esq + st(bg, T.Texto).Render(tit)
+	if wMeta > 0 {
+		m := Corte(meta, wMeta)
+		s += espacos(resto-lipgloss.Width(tit)-lipgloss.Width(m), bg) + st(bg, T.Secundario()).Render(m)
+	}
+	return s
+}
+
+// linhaLista desenha um item em colunas: glifo, nome, e estado · detalhe à direita.
+func (c *corpo) linhaLista(a alvo, glifo string, cor lipgloss.Color, nome, estado string, _ lipgloss.Color, detalhe string) {
 	if !c.passa(nome, estado, detalhe, a.url) {
 		return
 	}
-	c.item(a, func(bg lipgloss.Color) string {
-		s := st(bg, cor).Render(glifo+" ") + st(bg, T.Texto).Render(Col(nome, wNome)) + st(bg, corEstado).Render(Col(estado, wEstado))
-		if !estreito && wDet > 6 {
-			s += st(bg, T.Dim).Render(Corte(detalhe, wDet))
+	var meta []string
+	for _, p := range []string{estado, detalhe} {
+		if p != "" {
+			meta = append(meta, p)
 		}
-		return s
-	})
+	}
+	w := c.largura - 2
+	c.item(a, func(bg lipgloss.Color) string { return colunas(bg, w, glifo, cor, nome, juntar(meta)) })
 }
 
 func juntar(partes []string) string { return strings.Join(partes, " · ") }

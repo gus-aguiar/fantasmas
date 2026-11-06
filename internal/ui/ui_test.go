@@ -82,14 +82,14 @@ func TestRodape56SoTeclaNasInativas(t *testing.T) {
 }
 
 func TestRodape110TeclaENome(t *testing.T) {
-	if !strings.Contains(ansi.Strip(Rodape("agora", 110)), "2 missões") {
+	if !strings.Contains(ansi.Strip(Rodape("agora", 110)), "2 Missões") {
 		t.Fatal("sem 2 missões")
 	}
 }
 
 func TestRodape96SoNomes(t *testing.T) {
 	r := ansi.Strip(Rodape("agora", 96))
-	if !strings.Contains(r, "missões") || !strings.Contains(r, "configurações") {
+	if !strings.Contains(r, "Missões") || !strings.Contains(r, "Config") {
 		t.Fatalf("%q", r)
 	}
 }
@@ -122,7 +122,7 @@ func TestTopoLinhas(t *testing.T) {
 
 func TestTopoConteudo(t *testing.T) {
 	s := ansi.Strip(Topo(estadoEx(), 96, 0, false, ""))
-	for _, esperado := range []string{"atualizado 09:05", "r atualiza · p painel · ? ajuda · q sai", "pesados: mvn", "1 precisa de você"} {
+	for _, esperado := range []string{"atualizado 09:05", DicaTopo, "pesados: mvn", "1 precisa de você"} {
 		if !strings.Contains(s, esperado) {
 			t.Fatalf("falta %q em %q", esperado, s)
 		}
@@ -167,7 +167,7 @@ func TestTodaGavetaTemDescricao(t *testing.T) {
 		m := modelo(fixture(), &registro{}).irGaveta(i)
 		achou := false
 		for _, l := range strings.Split(render(m, 140, 40), "\n") {
-			if strings.Contains(l, "› ") && strings.Contains(l, g.Descricao) {
+			if strings.Contains(l, g.Descricao) {
 				achou = true
 			}
 		}

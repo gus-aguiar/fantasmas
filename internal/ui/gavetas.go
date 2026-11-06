@@ -28,6 +28,9 @@ func alvoDoFeed(i dados.ItemFeed) alvo {
 	return a
 }
 
+// glifoFeed: ▲ pede você, ✗ travado, ● em andamento, ◌ só leitura.
+var glifoFeed = map[dados.TipoFeed]string{dados.TipoDecidir: "▲", dados.TipoJuntar: "▲", dados.TipoTravado: "✗", dados.TipoEsperar: "●", dados.TipoLer: "◌"}
+
 // seloFeed distingue, na lista "precisa de você", decisão de liberação.
 var seloFeed = map[dados.TipoFeed]string{dados.TipoDecidir: "decisão", dados.TipoJuntar: "liberação"}
 
@@ -38,8 +41,9 @@ func (c *corpo) itemFeed(i dados.ItemFeed, a alvo) {
 		verbo = s
 	}
 	if c.largura >= 70 {
+		w := c.largura - 2
 		c.item(a, func(bg lipgloss.Color) string {
-			return st(bg, cor).Render("▌ "+Col(verbo, 10)) + st(bg, T.Texto).Bold(true).Render(i.Sujeito) + st(bg, T.Sub).Render("  "+i.Texto)
+			return colunas(bg, w, glifoFeed[i.Tipo], cor, i.Sujeito+"  "+i.Texto, verbo)
 		})
 		return
 	}
@@ -115,11 +119,8 @@ func gavetaAgora(c *corpo, e dados.Estado, altura int) {
 	if c.largura < 70 {
 		porItem = 2
 	}
-	reservadas := 1 + len(vivas) + len(parados) + len(recentes)
+	reservadas := 4 + len(vivas) + len(parados) + len(recentes)
 	if len(travados) > 0 {
-		reservadas += 3
-	}
-	if len(acomp) > 0 {
 		reservadas += 3
 	}
 	cabem := max(2, (altura-reservadas)/porItem)
@@ -143,7 +144,7 @@ func gavetaAgora(c *corpo, e dados.Estado, altura int) {
 
 	usados := 0
 	if len(praVoce) > 0 || c.filtro == "" {
-		c.secaoN("precisa de você", len(praVoce), "")
+		c.secaoN("esperando você", len(praVoce), "")
 		if len(praVoce) == 0 {
 			c.vazioIcone("✓", T.Ok, "nada pedindo você agora")
 		} else {
@@ -156,23 +157,27 @@ func gavetaAgora(c *corpo, e dados.Estado, altura int) {
 		usados += lista(travados, cabem-usados)
 	}
 
-	// fantasminhas: trabalhando primeiro, depois os parados e os caídos recentes
+	// fantasminhas: trabalhando numa seção; parados e caídos recentes noutra
 	tarefas := len(e.Linhas) == 0 && len(e.Tasks) > 0
-	if len(vivas)+len(parados)+len(recentes) > 0 || tarefas {
+	if len(vivas) > 0 || tarefas {
+		espaco()
+		c.secaoN("trabalhando", len(vivas), "")
+		for _, l := range vivas {
+			c.linhaViva(l)
+		}
+		if tarefas {
+			linhasTasks(c, e)
+		}
+	}
+	if len(parados)+len(recentes) > 0 {
 		espaco()
 		extra := ""
 		if len(recentes) > 0 {
 			extra = "R 2× retoma caído"
 		}
-		c.secao("fantasminhas", extra)
-		for _, l := range vivas {
-			c.linhaViva(l)
-		}
+		c.secaoN("parados", len(parados)+len(recentes), extra)
 		for _, l := range parados {
 			c.linhaViva(l)
-		}
-		if tarefas {
-			linhasTasks(c, e)
 		}
 		for _, x := range recentes {
 			linhaCaido(c, x)
@@ -189,39 +194,47 @@ func gavetaAgora(c *corpo, e dados.Estado, altura int) {
 		}
 	}
 
-	if len(acomp) > 0 {
-		espaco()
-		c.secaoN("acompanhando", len(acomp), "")
-		lista(acomp, cabem-usados)
-	}
-
 	var antigas []dados.ItemFeed
 	for _, i := range dados.MontarAntigas(e) {
 		if c.casa(i.Sujeito, i.Texto) {
 			antigas = append(antigas, i)
 		}
 	}
-	if n := len(antigas) + len(velhos); n > 0 {
+	// acompanhando e antigos ficam recolhidos numa linha; enter (ou a) abre os dois
+	nAnt := len(antigas) + len(velhos)
+	if len(acomp)+nAnt > 0 {
 		espaco()
-		dica := "enter abre"
-		if c.antigasAbertas {
-			dica = "enter recolhe"
-		}
 		aberta := c.antigasAbertas
 		c.item(alvo{antigas: true}, func(bg lipgloss.Color) string {
 			seta := "▸ "
 			if aberta {
 				seta = "▾ "
 			}
-			return st(bg, T.Acao).Render(seta) + st(bg, T.Sub).Bold(true).Render(fmt.Sprintf("antigos (%d)", n)) + st(bg, T.Dim).Render("  "+dica)
-		})
-		if c.antigasAbertas {
-			for _, i := range antigas {
-				c.passa(i.Sujeito, i.Texto)
-				c.itemFeed(i, alvo{pergunta: i.Pergunta.Chave, arquivar: i.Pergunta.Chave})
+			var ps []string
+			if len(acomp) > 0 {
+				ps = append(ps, st(bg, T.Acento()).Render(seta)+st(bg, T.Sub).Render(fmt.Sprintf("Acompanhando %d", len(acomp))))
 			}
-			for _, x := range velhos {
-				linhaCaido(c, x)
+			if nAnt > 0 {
+				ps = append(ps, st(bg, T.Acento()).Render(seta)+st(bg, T.Sub).Render(fmt.Sprintf("Antigos %d", nAnt)))
+			}
+			return strings.Join(ps, espacos(3, bg))
+		})
+		if aberta {
+			if len(acomp) > 0 {
+				c.branco()
+				c.secaoN("acompanhando", len(acomp), "")
+				lista(acomp, cabem-usados)
+			}
+			if nAnt > 0 {
+				c.branco()
+				c.secaoN("antigos", nAnt, "x 2× arquiva")
+				for _, i := range antigas {
+					c.passa(i.Sujeito, i.Texto)
+					c.itemFeed(i, alvo{pergunta: i.Pergunta.Chave, arquivar: i.Pergunta.Chave})
+				}
+				for _, x := range velhos {
+					linhaCaido(c, x)
+				}
 			}
 		}
 	}
@@ -281,7 +294,7 @@ func linhaCaido(c *corpo, x dados.Caido) {
 	if !x.Em.IsZero() {
 		det += " · " + x.Em.Format("02/01 15:04")
 	}
-	c.linhaLista(alvo{retomar: x.Nome}, "↻", T.Acao, x.Nome, "caído", T.Espera, det+" · pane "+x.Pane)
+	c.linhaLista(alvo{retomar: x.Nome}, "✗", T.EstadoErro(), x.Nome, "caído", T.Espera, det+" · pane "+x.Pane)
 }
 
 // linhasTasks é a lista de fantasminhas sem linha viva (fonte sem transcripts): só os não entregues.

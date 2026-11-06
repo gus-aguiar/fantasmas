@@ -59,7 +59,7 @@ func TestRaiaVaziaSome(t *testing.T) {
 			e.Linhas = append(e.Linhas, l)
 		}
 	}
-	if s := textoAgora(e); strings.Contains(s, "parados") {
+	if s := textoAgora(e); strings.Contains(s, "PARADOS") {
 		t.Fatalf("raia vazia apareceu:\n%s", s)
 	}
 }
@@ -68,7 +68,7 @@ func TestRaiasOrdem(t *testing.T) {
 	e := EstadoDemo(time.Date(2026, 10, 30, 10, 0, 0, 0, time.Local))
 	e.Linhas = linhasEx()
 	s := textoAgora(e)
-	a, b, c := strings.Index(s, "precisa de você"), strings.Index(s, "› agora"), strings.Index(s, "parados")
+	a, b, c := strings.Index(s, "ESPERANDO VOCÊ"), strings.Index(s, "TRABALHANDO"), strings.Index(s, "PARADOS")
 	if a < 0 || b < 0 || c < 0 || !(a < b && b < c) {
 		t.Fatalf("ordem errada (%d, %d, %d):\n%s", a, b, c, s)
 	}

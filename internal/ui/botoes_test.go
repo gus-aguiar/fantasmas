@@ -18,13 +18,13 @@ func TestSettingsTemBotoes(t *testing.T) {
 	}
 	m := Novo(nil, Acoes{}, time.Minute).ComEstado(e).ComBotoes()
 	tela := ansi.Strip(m.Render(70, 30))
-	for _, s := range []string{"botões", "DayDreaming", "trabalhando", "última 23/10 09:05", "reconectando…", "1/4 sessões"} {
+	for _, s := range []string{"Comandos", "DayDreaming", "trabalhando", "última 23/10 09:05", "reconectando…", "1/4 sessões"} {
 		if !strings.Contains(tela, s) {
 			t.Errorf("falta %q", s)
 		}
 	}
 	maq := ansi.Strip(m.fecharBotoes().irGaveta(indiceGaveta("maquina")).Render(110, 30))
-	if strings.Contains(maq, "DayDreaming") || strings.Contains(maq, "reconectar MCPs") {
+	if strings.Contains(maq, "DayDreaming") || strings.Contains(maq, "Reconectar MCPs") {
 		t.Errorf("máquina deveria ser só monitoramento:\n%s", maq)
 	}
 }
@@ -36,8 +36,8 @@ func TestAtualizarPedeSegundoU(t *testing.T) {
 		return dados.Resultado{Novos: 2, Trocou: true, Binario: "/x/bin/fantasmas"}, nil
 	}}
 	m := Novo(nil, ac, time.Minute).ComEstado(dados.Estado{At: time.Now()})
-	if !strings.Contains(ansi.Strip(m.ComBotoes().Render(70, 30)), "atualizar app") {
-		t.Fatal("falta o item no painel de botões")
+	if !strings.Contains(ansi.Strip(m.ComBotoes().Render(70, 30)), "Atualizar app") {
+		t.Fatal("falta o item na paleta")
 	}
 	n, cmd := m.tecla("U")
 	m = n.(Model)

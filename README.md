@@ -49,13 +49,13 @@ As teclas que mais importam estão abaixo. A lista completa abre com `?`.
 |---|---|
 | `1`–`5` ou `← →` | troca de gaveta: `1` agora (abre aqui), `2` missões, `3` PRs, `4` máquina, `5` configurações |
 | `↑ ↓` e `enter` | escolhe e abre/responde; numa missão, abre as sidequests e as decisões |
-| `b` | abre e fecha o painel de botões à direita (`esc` também fecha) |
-| `enter 2×` | no painel `b`, dispara `/dia abrir`, `/dia fechar`, `/saude-multas`, DayDreaming, MCPs ou atualizar |
+| `ctrl+p` ou `b` | abre a paleta de comandos no centro da tela: digite para buscar, `↑ ↓` escolhe, `esc` fecha (com a busca vazia, `b` também fecha) |
+| `enter 2×` | na paleta, dispara Abrir o dia, Fechar o dia, Saúde de multas, DayDreaming, Reconectar MCPs ou Atualizar app |
 | `?` | ajuda com todas as teclas |
 | `m` | abre uma missão nova (enter 2× confirma) |
 | `n` / `N` | lança uma sidequest (`N` abre também um gengar dedicado) |
 | `v` | veta uma decisão que o sistema tomou sozinho (enter 2× confirma) |
-| `g` | vai para a aba do agente no Herdr (no painel `b`, para a aba do comando disparado) |
+| `g` | vai para a aba do agente no Herdr (na paleta, para a aba do comando disparado) |
 | `r` / `q` | atualiza agora / sai |
 
 ## Comandos (gaveta 5)
