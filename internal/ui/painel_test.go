@@ -31,10 +31,18 @@ func TestPaletaAbreComCtrlPEB(t *testing.T) {
 		t.Fatalf("ctrl+p devia abrir a paleta sem trocar de gaveta (aberta=%v, %s)", m.botoes, Gavetas[m.gaveta].ID)
 	}
 	p := render(m, 140, 40)
-	for _, s := range []string{"Comandos", "DIA", "Abrir o dia", "MULTAS", "Saúde de multas", "SISTEMA", "DayDreaming", "enter executa · esc fecha"} {
+	for _, s := range []string{"Comandos", "Abrir o dia", "Fechar o dia", "Saúde de multas", "esc fecha"} {
 		if !strings.Contains(p, s) {
 			t.Fatalf("paleta sem %q:\n%s", s, p)
 		}
+	}
+	for _, s := range []string{"DayDreaming", "Reconectar MCPs", "Atualizar app", "SISTEMA", "buscar comando"} {
+		if strings.Contains(p, s) {
+			t.Fatalf("paleta ainda com %q:\n%s", s, p)
+		}
+	}
+	if n := len(m.alvos()); n != 3 {
+		t.Fatalf("paleta devia ter 3 comandos: %d", n)
 	}
 	if m = manda(m, tea.KeyMsg{Type: tea.KeyCtrlP}); m.botoes {
 		t.Fatal("ctrl+p de novo devia fechar")
@@ -55,8 +63,8 @@ func TestPaletaCentralizadaComFundoEsmaecido(t *testing.T) {
 	ls := strings.Split(m.Render(140, 40), "\n")
 	topo := -1
 	for i, l := range ls {
-		if strings.Contains(ansi.Strip(l), "╭─ Comandos") {
-			topo = i
+		if strings.Contains(ansi.Strip(l), "Comandos") && topo < 0 {
+			topo = i - 3
 		}
 		if lipgloss.Width(l) > 140 {
 			t.Fatalf("linha %d estoura", i)
@@ -71,23 +79,47 @@ func TestPaletaCentralizadaComFundoEsmaecido(t *testing.T) {
 	}
 }
 
-func TestPaletaBuscaFiltra(t *testing.T) {
+func TestPaletaSemBuscaENumeros(t *testing.T) {
+	var pedidos []string
 	m := tecla(modelo(fixture(), &registro{}), "b")
+	m.acoes.Disparar = func(id string) (dados.Disparo, error) {
+		pedidos = append(pedidos, id)
+		return dados.Disparo{ID: id, Aba: "w2:t9", Inicio: time.Now()}, nil
+	}
+	if m.buscaCmd != nil {
+		t.Fatal("com até 5 comandos a paleta não tem busca")
+	}
 	m = digita(m, "multas")
-	as := m.alvos()
-	if len(as) != 1 || as[0].comando != "saude-multas" {
-		t.Fatalf("busca 'multas' devia deixar só Saúde de multas: %+v", as)
+	if len(m.alvos()) != 3 || m.textoBusca() != "" {
+		t.Fatal("letras não deviam filtrar")
 	}
+	n, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'3'}})
+	m = n.(Model)
+	if cmd != nil || m.armadoCmd != "saude-multas" || len(pedidos) != 0 {
+		t.Fatalf("primeiro 3 devia só armar: %q", m.armadoCmd)
+	}
+	if !strings.Contains(render(m, 140, 40), "enter de novo confirma") {
+		t.Fatal("item armado sem aviso")
+	}
+	n, cmd = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'3'}})
+	if cmd == nil {
+		t.Fatal("segundo 3 devia disparar")
+	}
+	n.(Model).Update(cmd())
+	if len(pedidos) != 1 || pedidos[0] != "saude-multas" {
+		t.Fatalf("pedidos %v", pedidos)
+	}
+	m = tecla(tecla(m, "1"), "2")
+	if m.armadoCmd != "dia-fechar" {
+		t.Fatalf("2 depois de 1 devia armar o 2, não disparar o 1: %q", m.armadoCmd)
+	}
+}
+
+func TestPaletaDescricaoSoNoSelecionado(t *testing.T) {
+	m := modelo(fixture(), &registro{}).ComBotoes()
 	p := render(m, 140, 40)
-	if strings.Contains(p, "Abrir o dia") || !strings.Contains(p, "Saúde de multas") {
-		t.Fatalf("filtro não aplicado:\n%s", p)
-	}
-	// com texto na busca, b vira letra e não fecha
-	if m = digita(m, "b"); !m.botoes {
-		t.Fatal("b com busca preenchida devia ir para a busca")
-	}
-	if !strings.Contains(render(m, 140, 40), "nada bate") {
-		t.Fatal("busca sem resultado devia avisar")
+	if !strings.Contains(p, "/dia abrir · começa o dia") || strings.Contains(p, "fecha o dia e faz") {
+		t.Fatalf("descrição devia vir só abaixo do selecionado:\n%s", p)
 	}
 }
 
@@ -148,16 +180,16 @@ func TestPaletaEnterDuasVezes(t *testing.T) {
 	}
 }
 
-func TestConfiguracoesSoAjustes(t *testing.T) {
+func TestConfiguracoesTemAcoes(t *testing.T) {
 	m, _, _ := modeloAjustes(t, nil)
-	p := render(m, 110, 50)
-	for _, s := range []string{"/dia abrir", "/saude-multas", "Reconectar MCPs", "Atualizar app"} {
-		if strings.Contains(p, s) {
-			t.Fatalf("configurações com o comando %q:\n%s", s, p)
+	p := render(m, 110, 60)
+	for _, s := range []string{"FANTASMAS_TEMA", "AÇÕES", "Reconectar MCPs", "Atualizar app"} {
+		if !strings.Contains(p, s) {
+			t.Fatalf("configurações sem %q:\n%s", s, p)
 		}
 	}
-	if !strings.Contains(p, "FANTASMAS_TEMA") {
-		t.Fatalf("configurações sem ajustes:\n%s", p)
+	if strings.Contains(p, "/dia abrir") || strings.Contains(p, "DayDreaming") {
+		t.Fatalf("configurações com comando da paleta:\n%s", p)
 	}
 }
 

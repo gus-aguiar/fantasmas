@@ -11,21 +11,29 @@ import (
 	"github.com/charmbracelet/x/ansi"
 )
 
-func TestSettingsTemBotoes(t *testing.T) {
+func TestAcoesDeSistemaNaGaveta5(t *testing.T) {
 	e := dados.Estado{At: time.Now(),
-		Daydreamer: dados.Daydreamer{Nome: "c-sonho", Status: "working", Ultima: time.Date(2026, 10, 23, 9, 5, 0, 0, time.Local)},
-		MCP:        dados.ProgressoMCP{Inicio: time.Now(), Total: 4, Rodando: true, Sessoes: []dados.SessaoMCP{{Pane: "p", Nome: "g", Detalhe: "ok", Tom: "ok"}}},
+		MCP: dados.ProgressoMCP{Inicio: time.Now(), Total: 4, Rodando: true, Sessoes: []dados.SessaoMCP{{Pane: "p", Nome: "g", Detalhe: "ok", Tom: "ok"}}},
 	}
-	m := Novo(nil, Acoes{}, time.Minute).ComEstado(e).ComBotoes()
-	tela := ansi.Strip(m.Render(70, 30))
-	for _, s := range []string{"Comandos", "DayDreaming", "trabalhando", "última 23/10 09:05", "reconectando…", "1/4 sessões"} {
+	m := Novo(nil, Acoes{}, time.Minute).ComEstado(e).irGaveta(indiceGaveta("configuracoes"))
+	tela := ansi.Strip(m.Render(110, 40))
+	for _, s := range []string{"Reconectar MCPs", "reconectando…", "1/4 sessões", "Atualizar app"} {
 		if !strings.Contains(tela, s) {
-			t.Errorf("falta %q", s)
+			t.Errorf("falta %q:\n%s", s, tela)
 		}
 	}
-	maq := ansi.Strip(m.fecharBotoes().irGaveta(indiceGaveta("maquina")).Render(110, 30))
-	if strings.Contains(maq, "DayDreaming") || strings.Contains(maq, "Reconectar MCPs") {
-		t.Errorf("máquina deveria ser só monitoramento:\n%s", maq)
+	if p := ansi.Strip(m.ComBotoes().Render(110, 40)); strings.Contains(p, "Reconectar MCPs") || strings.Contains(p, "DayDreaming") {
+		t.Errorf("paleta não devia ter ações de sistema:\n%s", p)
+	}
+	for m.sel = 0; m.sel < len(m.alvos()) && m.alvos()[m.sel].comando != cmdMCP; m.sel++ {
+	}
+	if !strings.Contains(ansi.Strip(m.Render(110, 40)), "enter 2× executa") {
+		t.Error("linha selecionada sem a dica enter 2×")
+	}
+	n, _ := m.tecla("enter")
+	m = n.(Model)
+	if m.armadoCmd != cmdMCP {
+		t.Fatal("primeiro enter devia armar")
 	}
 }
 
@@ -36,8 +44,8 @@ func TestAtualizarPedeSegundoU(t *testing.T) {
 		return dados.Resultado{Novos: 2, Trocou: true, Binario: "/x/bin/fantasmas"}, nil
 	}}
 	m := Novo(nil, ac, time.Minute).ComEstado(dados.Estado{At: time.Now()})
-	if !strings.Contains(ansi.Strip(m.ComBotoes().Render(70, 30)), "Atualizar app") {
-		t.Fatal("falta o item na paleta")
+	if !strings.Contains(ansi.Strip(m.irGaveta(indiceGaveta("configuracoes")).Render(110, 50)), "Atualizar app") {
+		t.Fatal("falta o item na gaveta 5")
 	}
 	n, cmd := m.tecla("U")
 	m = n.(Model)

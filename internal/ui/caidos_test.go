@@ -67,3 +67,33 @@ func TestRetomarErroViraToast(t *testing.T) {
 		t.Fatalf("toast=%q", m.toast)
 	}
 }
+
+func TestDicaSoNaLinhaSelecionada(t *testing.T) {
+	m, _ := comCaido("sid-1")
+	if out := render(m, 96, 40); strings.Contains(out, "retoma caído") {
+		t.Fatalf("dica não devia ir no título da seção:\n%s", out)
+	}
+	m.sel = 0
+	if m.alvos()[0].retomar != "" {
+		t.Skip("caído é o primeiro item")
+	}
+	if out := render(m, 96, 40); strings.Contains(out, "R 2× retoma") {
+		t.Fatalf("dica do caído fora da linha selecionada:\n%s", out)
+	}
+}
+
+func TestDicaPorTipo(t *testing.T) {
+	casos := map[string]alvo{
+		"enter responder · g ir à aba · o abrir": {pergunta: "q", aba: "a", url: "u"},
+		"g ir à aba":             {aba: "a"},
+		"R 2× retoma":            {retomar: "c"},
+		"enter detalhes · g aba": {missao: "m"},
+		"o abrir":                {url: "u", dica: "o abrir"},
+		"enter expande":          {antigas: true},
+	}
+	for want, a := range casos {
+		if got := dicaItem(a); got != want {
+			t.Errorf("dicaItem(%+v) = %q, quero %q", a, got, want)
+		}
+	}
+}

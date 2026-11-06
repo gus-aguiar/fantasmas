@@ -171,11 +171,7 @@ func gavetaAgora(c *corpo, e dados.Estado, altura int) {
 	}
 	if len(parados)+len(recentes) > 0 {
 		espaco()
-		extra := ""
-		if len(recentes) > 0 {
-			extra = "R 2× retoma caído"
-		}
-		c.secaoN("parados", len(parados)+len(recentes), extra)
+		c.secaoN("parados", len(parados)+len(recentes), "")
 		for _, l := range parados {
 			c.linhaViva(l)
 		}
@@ -362,7 +358,7 @@ func gavetaPRs(c *corpo, e dados.Estado) {
 		}
 		titulo := regexp.MustCompile(`^\[[^\]]+\]\s*`).ReplaceAllString(x.Title, "")
 		gci, cci, tci := colunaCI(x)
-		c.linhaPR(alvo{url: x.URL}, glifo, cor, nomePR(x), x.Motivo, gci, cci, tci, titulo)
+		c.linhaPR(alvo{url: x.URL, dica: "o abrir"}, glifo, cor, nomePR(x), x.Motivo, gci, cci, tci, titulo)
 	}
 }
 

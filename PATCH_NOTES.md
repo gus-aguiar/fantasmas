@@ -3,6 +3,15 @@
 O que mudou no `gengar` (TUI fantasmas) e no fluxo de missões e sidequests do Spark. A versão mais nova fica no topo.
 Cada entrada diz o que muda para quem usa; os detalhes técnicos ficam no histórico do git.
 
+## 2026-11-06 · Paleta enxuta
+
+**Muda**
+- **Paleta só com o que você usa:** Abrir o dia, Fechar o dia e Saúde de multas. Sem busca e sem grupos; `1`–`3` disparam (aperte duas vezes, como o `enter`). O DayDreaming saiu (o `/dia` já o atualiza).
+- **Paleta com cara de fantasminha:** cabeçalho com um fantasminha roxo, borda roxa arredondada, cada comando com um fantasminha que fica azul enquanto roda ("rodando há N min" à direita) e a descrição só abaixo do selecionado.
+- **Reconectar MCPs e Atualizar app foram para a gaveta 5,** na seção "AÇÕES", com `enter 2×`.
+- **Atalhos onde você usa:** a linha selecionada mostra à direita, em cinza, o que dá para fazer nela ("enter responder · g ir à aba · o abrir", "g ir à aba", "R 2× retoma", "enter detalhes · g aba", "o abrir", "enter expande"). Sai o "R 2× retoma caído" do título de PARADOS e os botões "ir à aba →"/"abrir ↗" das listas (no detalhe continuam).
+- **`?` enxuto:** só navegação, `ctrl+p`, `r` e `q`.
+
 ## 2026-11-06 · Visual
 
 **Corrigido**

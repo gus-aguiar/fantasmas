@@ -24,6 +24,8 @@ type alvo struct {
 	decisao bool
 	// alterna abre ou recolhe uma parte da gaveta (rascunhos, maquina); comando é um disparo da gaveta comandos
 	alterna, comando string
+	// dica troca o atalho padrão mostrado na linha selecionada (ver dicaItem)
+	dica string
 }
 
 // linha do corpo; item é o índice do alvo dono da linha, ou -1.

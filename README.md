@@ -49,9 +49,8 @@ As teclas que mais importam estão abaixo. A lista completa abre com `?`.
 |---|---|
 | `1`–`5` ou `← →` | troca de aba (barra no rodapé): `1` agora (abre aqui), `2` missões, `3` PRs, `4` máquina, `5` configurações |
 | `↑ ↓` e `enter` | escolhe e abre/responde; numa missão, abre as sidequests e as decisões |
-| `ctrl+p` ou `b` | abre a paleta de comandos no centro da tela: digite para buscar, `↑ ↓` escolhe, `esc` fecha (com a busca vazia, `b` também fecha) |
-| `enter 2×` | na paleta, dispara Abrir o dia, Fechar o dia, Saúde de multas, DayDreaming, Reconectar MCPs ou Atualizar app |
-| `?` | ajuda com todas as teclas |
+| `ctrl+p` ou `b` | abre a paleta de comandos (Abrir o dia, Fechar o dia, Saúde de multas): `1`–`3` ou `enter`, duas vezes, dispara; `esc` fecha |
+| `?` | ajuda curta com a navegação; os atalhos de cada item aparecem à direita da linha selecionada |
 | `m` | abre uma missão nova (enter 2× confirma) |
 | `n` / `N` | lança uma sidequest (`N` abre também um gengar dedicado) |
 | `v` | veta uma decisão que o sistema tomou sozinho (enter 2× confirma) |
@@ -60,7 +59,7 @@ As teclas que mais importam estão abaixo. A lista completa abre com `?`.
 
 ## Comandos (gaveta 5)
 
-`/dia abrir` e `/dia fechar` abrem uma aba nova no workspace do Herdr chamado **GENGAR**; `/saude-multas`, no workspace **saúde multas**. A aba nasce na raiz do Spark com o `claude` já rodando o comando e se chama `dia-MMDD-HHMM` ou `saude-MMDD-HHMM`. Cada disparo mostra há quanto tempo roda, e `g` leva até a aba. Os ajustes (tema, figura e variáveis) ficam no fim da mesma gaveta.
+`/dia abrir` e `/dia fechar` abrem uma aba nova no workspace do Herdr chamado **GENGAR**; `/saude-multas`, no workspace **saúde multas**. A aba nasce na raiz do Spark com o `claude` já rodando o comando e se chama `dia-MMDD-HHMM` ou `saude-MMDD-HHMM`. Cada disparo mostra há quanto tempo roda, e `g` leva até a aba. Os ajustes (tema, figura e variáveis) e as ações Reconectar MCPs e Atualizar app (`enter 2×`) ficam na gaveta `5`.
 
 ## Missões e sidequests
 

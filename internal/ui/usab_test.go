@@ -272,26 +272,20 @@ func TestIrAbaEAbrirNoFeed(t *testing.T) {
 	m := modelo(comAba(fixture()), r)
 	m.largura, m.altura = 96, 40
 	out := render(m, 96, 40)
-	if !strings.Contains(out, "ir à aba →") || strings.Contains(out, "abrir ↗") {
-		t.Fatalf("botões errados no decidir:\n%s", out)
+	if !strings.Contains(out, "enter responder · g ir à aba") || strings.Contains(out, "o abrir") {
+		t.Fatalf("dica errada no decidir:\n%s", out)
 	}
 	m = aperta(t, m, "g")
 	if len(r.abas) != 1 || r.abas[0] != "aba-1" {
 		t.Fatalf("g: %v", r.abas)
 	}
-	x, y := onde(t, m, "ir à aba →", 0)
-	m, _ = clique(t, m, x, y)
-	if len(r.abas) != 2 || m.aberto != nil {
-		t.Fatalf("clique no botão: abas=%v aberto=%v", r.abas, m.aberto != nil)
-	}
 	m = aperta(t, m, "j")
-	if out := render(m, 96, 40); !strings.Contains(out, "abrir ↗") {
-		t.Fatalf("juntar sem abrir ↗:\n%s", out)
+	if out := render(m, 96, 40); !strings.Contains(out, "o abrir") {
+		t.Fatalf("juntar sem a dica o abrir:\n%s", out)
 	}
-	x, y = onde(t, m, "abrir ↗", 0)
-	m, _ = clique(t, m, x, y)
+	m = aperta(t, m, "o")
 	if len(r.urls) != 1 || !strings.Contains(r.urls[0], "pull/77") {
-		t.Fatalf("abrir ↗: %v", r.urls)
+		t.Fatalf("o: %v", r.urls)
 	}
 	for _, w := range []int{46, 56, 96} {
 		cabeTudo(t, m, w, 30)
@@ -333,13 +327,18 @@ func TestIrAbaEAbrirNoDetalhe(t *testing.T) {
 	}
 }
 
-func TestAjudaCobreTudo(t *testing.T) {
+func TestAjudaEnxuta(t *testing.T) {
 	m := modelo(fixture(), &registro{})
 	m = aperta(t, m, "?")
 	out := render(m, 96, 60)
-	for _, s := range []string{"filtra", "tab", "1-9", "ir à aba", "abrir ↗", "confirma"} {
+	for _, s := range []string{"1-5", "← →", "↑ ↓", "enter", "esc", "ctrl+p", "atualiza agora", "sai", "nas linhas selecionadas aparecem os atalhos"} {
 		if !strings.Contains(out, s) {
 			t.Errorf("ajuda sem %q", s)
+		}
+	}
+	for _, s := range []string{"R 2×", "U 2×", "DayDreaming", "no detalhe", "mouse"} {
+		if strings.Contains(out, s) {
+			t.Errorf("ajuda ainda com %q", s)
 		}
 	}
 }

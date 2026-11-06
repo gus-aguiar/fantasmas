@@ -235,7 +235,7 @@ func TestAjudaAbreEFecha(t *testing.T) {
 	m.largura, m.altura = 96, 40
 	m = tecla(m, "?")
 	out := render(m, 96, 40)
-	for _, s := range []string{"clique", "enter", "esc", "? fecha"} {
+	for _, s := range []string{"enter", "esc", "? fecha"} {
 		if !strings.Contains(out, s) {
 			t.Fatalf("ajuda sem %q:\n%s", s, out)
 		}

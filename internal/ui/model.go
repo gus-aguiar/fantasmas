@@ -896,6 +896,7 @@ func (m Model) montarCorpo(largura, altura int) *corpo {
 		gavetaMaquinaToda(c, e, m.maqAberta)
 	case "configuracoes":
 		gavetaAjustes(c, m.acoes.Ajustes)
+		gavetaAcoes(c, e, m.estadoCmds())
 	}
 	if c.desc != "" {
 		// gaveta sem seção (ex.: missões desligada): a descrição vira o título do topo
@@ -970,7 +971,12 @@ func (m Model) corpoLinhas(largura, altura int) ([]string, []int) {
 		s := espacos(1, bg) + l.desenha(bg)
 		if sel && i == ini && l.item < len(c.alvos) {
 			a := c.alvos[l.item]
-			if b := botoesItem(bg, a, m.armadoArq); b != "" && largura-lipgloss.Width(b)-3 >= 16 {
+			b := botoesItem(bg, a, m.armadoArq)
+			if d := dicaItem(a); d != "" {
+				// a dica de teclado substitui os botões ir à aba / abrir
+				b = st(bg, T.Dim).Render(d)
+			}
+			if b != "" && largura-lipgloss.Width(b)-3 >= 16 {
 				s = encaixa(s, largura-lipgloss.Width(b)-3, bg) + espacos(2, bg) + b
 			}
 		}
@@ -984,43 +990,15 @@ func (m Model) ajudaLinhas(largura int) []string {
 	k := func(t, d string) string { return Col("  "+t, 16) + d }
 	ls := []string{
 		"teclado",
-		k("1-5  ← →", "abas (rodapé): 1 agora · 2 missões · 3 PRs · 4 máquina · 5 configurações"),
-		k("ctrl+p  b", "paleta de comandos (abrir/fechar o dia, saúde de multas, DayDreaming, MCPs, atualizar); digite para buscar, esc fecha"),
-		k("↑ ↓  j k", "escolhe item ou opção"),
-		k("enter", "abre · responde · abre a missão (de novo recolhe)"),
-		k("enter 2×", "confirma Liberar merge e os comandos da paleta"),
-		k("", "e Não vou fazer"),
-		k("/", "filtra a lista"),
-		k("esc", "volta · limpa o filtro (ou a missão)"),
-		k("o", "abre o link (abrir ↗)"),
-		k("g", "vai à aba (ir à aba →) · na paleta, à aba do disparo"),
-		k("p", "abre o painel do delegate"),
-		k("a", "agora: abre · recolhe os antigos"),
-		k("x 2×", "arquiva a pergunta antiga"),
-		k("R 2×", "retoma fantasminha caído"),
-		k("d", "PRs: mostra · esconde rascunhos"),
-		k("n N e · m · v", "missões: nova sidequest (N com gengar; com foco, em qualquer gaveta) · YAML · nova missão · veto (enter 2×)"),
-		k("A S T 2×", "detalhe da sidequest: avança, pula, retry"),
-		k("D", "pede rodada do DayDreaming"),
-		k("M", "reconecta os MCPs de todas as sessões"),
-		k("U 2×", "atualiza o fantasmas (pull, build, reabre)"),
+		k("1-5  ← →", "abas: 1 agora · 2 missões · 3 PRs · 4 máquina · 5 configurações"),
+		k("↑ ↓", "escolhe o item"),
+		k("enter", "abre · responde"),
+		k("esc", "volta"),
+		k("ctrl+p", "comandos"),
 		k("r", "atualiza agora"),
 		k("q", "sai"),
 		"",
-		"no detalhe",
-		k("1-9", "escolhe a opção N"),
-		k("tab", "foco: texto ↔ opções"),
-		k("pgup pgdn", "rola o texto"),
-		k("d", "mostra o diagrama"),
-		"",
-		"mouse",
-		k("clique", "no item: abre"),
-		k("clique", "na opção: responde"),
-		k("clique", "na aba: troca de gaveta"),
-		k("clique", "↻ atualiza · ‹ voltar"),
-		k("clique", "ir à aba → · abrir ↗"),
-		k("clique", "antigas: abre · arquivar ✕"),
-		k("roda", "rola a lista ou o texto"),
+		"nas linhas selecionadas aparecem os atalhos de cada item",
 		"",
 		"? fecha · qualquer tecla ou clique também",
 	}
@@ -1031,10 +1009,10 @@ func (m Model) ajudaLinhas(largura int) []string {
 	for i, l := range ls {
 		cor := T.Sub
 		switch {
-		case l == "teclado" || l == "mouse" || l == "no detalhe":
+		case l == "teclado":
 			out[i] = encaixa(espacos(2, T.Base)+rotuloSecao(l), largura, T.Base)
 			continue
-		case strings.HasPrefix(l, "?"):
+		case strings.HasPrefix(l, "?") || strings.HasPrefix(l, "nas linhas"):
 			cor = T.Dim
 		}
 		out[i] = encaixa(espacos(2, T.Base)+st(T.Base, cor).Render(l), largura, T.Base)

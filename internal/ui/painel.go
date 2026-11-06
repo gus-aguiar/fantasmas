@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"fmt"
 	"strings"
 
 	"fantasmas/internal/dados"
@@ -15,6 +16,15 @@ import (
 const (
 	LarguraPaleta = 58
 	DicaPaleta    = "ctrl+p comandos"
+	// MaxSemBusca: até tantos comandos a paleta não mostra o campo de busca.
+	MaxSemBusca = 5
+)
+
+// cores da estética dos fantasminhas do painel do delegate
+var (
+	corFtCorpo   = lipgloss.Color("#a66bff")
+	corFtOlho    = lipgloss.Color("#ff3355")
+	corFtRodando = lipgloss.Color("#67d4f0")
 )
 
 func larguraPaleta(largura int) int { return max(24, min(LarguraPaleta, largura-4)) }
@@ -23,15 +33,18 @@ func larguraPaleta(largura int) int { return max(24, min(LarguraPaleta, largura-
 func (m Model) ComBotoes() Model { return m.abrirBotoes() }
 
 func (m Model) abrirBotoes() Model {
-	ti := textinput.New()
-	ti.Prompt = ""
-	ti.Placeholder = "buscar comando"
-	ti.TextStyle = st(T.Surface, T.Texto)
-	ti.PlaceholderStyle = st(T.Surface, T.Dim)
-	ti.Cursor.Style = lipgloss.NewStyle().Foreground(T.Acento())
-	ti.Cursor.TextStyle = st(T.Surface, T.Texto)
-	ti.Focus()
-	m.selGaveta, m.sel, m.botoes, m.armadoCmd, m.buscaCmd = m.sel, 0, true, "", &ti
+	m.selGaveta, m.sel, m.botoes, m.armadoCmd, m.buscaCmd = m.sel, 0, true, "", nil
+	if len(dados.ComandosHerdr) > MaxSemBusca {
+		ti := textinput.New()
+		ti.Prompt = ""
+		ti.Placeholder = "buscar comando"
+		ti.TextStyle = st(T.Surface, T.Texto)
+		ti.PlaceholderStyle = st(T.Surface, T.Dim)
+		ti.Cursor.Style = lipgloss.NewStyle().Foreground(T.Acento())
+		ti.Cursor.TextStyle = st(T.Surface, T.Texto)
+		ti.Focus()
+		m.buscaCmd = &ti
+	}
 	return m
 }
 
@@ -47,8 +60,8 @@ func (m Model) textoBusca() string {
 	return m.buscaCmd.Value()
 }
 
-// teclaBotoes: com a paleta aberta, as teclas ficam com ela. Com a busca vazia, b g j k q
-// seguem como atalho; qualquer outra letra (ou estas, depois da primeira) vai para a busca.
+// teclaBotoes: com a paleta aberta, as teclas ficam com ela. 1-N dispara o comando N (2× confirma);
+// com a busca vazia (ou sem busca), b g j k q seguem como atalho.
 func (m Model) teclaBotoes(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	k := msg.String()
 	armadoCmd := m.armadoCmd
@@ -68,6 +81,16 @@ func (m Model) teclaBotoes(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.enterCmd()
 	}
 	if vazia {
+		if len(k) == 1 && k[0] >= '1' && k[0] <= '9' {
+			if i := int(k[0] - '1'); i < len(m.alvosPaleta()) {
+				if i == m.sel {
+					m.armadoCmd = armadoCmd
+				}
+				m.sel = i
+				return m.enterCmd()
+			}
+			return m, nil
+		}
 		switch k {
 		case "b":
 			return m.fecharBotoes(), nil
@@ -90,72 +113,50 @@ func (m Model) teclaBotoes(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m.mover(0), cmd
 }
 
-// itemPaleta é uma linha da paleta: grupo, nome, estado à direita e o alvo do disparo.
+// estadoFt é o estado do fantasminha de um comando: parado, rodando ou terminou.
+type estadoFt int
+
+const (
+	ftParado estadoFt = iota
+	ftRodando
+	ftTerminou
+)
+
+// itemPaleta é uma linha da paleta: nome, descrição, estado à direita e o alvo do disparo.
 type itemPaleta struct {
-	grupo, nome, busca, estado string
-	cor                        lipgloss.Color
-	a                          alvo
+	nome, desc, busca, estado string
+	ft                        estadoFt
+	cor                       lipgloss.Color
+	a                         alvo
 }
 
-var nomeComando = map[string][2]string{
-	"dia-abrir":    {"DIA", "Abrir o dia"},
-	"dia-fechar":   {"DIA", "Fechar o dia"},
-	"saude-multas": {"MULTAS", "Saúde de multas"},
+var nomeComando = map[string]string{
+	"dia-abrir":    "Abrir o dia",
+	"dia-fechar":   "Fechar o dia",
+	"saude-multas": "Saúde de multas",
 }
 
-// itensPaleta monta os comandos com o estado de agora; a lógica de disparo é a de sempre.
-func itensPaleta(e dados.Estado, ec estadoComandos) []itemPaleta {
+// itensPaleta monta os comandos do Herdr com o estado de agora; a lógica de disparo é a de sempre.
+func itensPaleta(_ dados.Estado, ec estadoComandos) []itemPaleta {
 	var out []itemPaleta
-	confirma := func(id string) bool { return ec.armado == id }
 	for _, k := range dados.ComandosHerdr {
-		gn, ok := nomeComando[k.ID]
+		nome, ok := nomeComando[k.ID]
 		if !ok {
-			gn = [2]string{"SISTEMA", k.Rotulo}
+			nome = k.Rotulo
 		}
-		it := itemPaleta{grupo: gn[0], nome: gn[1], busca: k.Rotulo + " " + k.Descricao, estado: k.Rotulo, cor: T.Secundario(), a: alvo{comando: k.ID}}
+		it := itemPaleta{nome: nome, desc: k.Rotulo + " · " + k.Descricao, busca: k.Rotulo + " " + k.Descricao, cor: T.Dim, a: alvo{comando: k.ID}}
 		if d, ok := ec.disparos[k.ID]; ok {
-			it.estado, it.cor, it.a.aba = rodandoHa(d, ec.agora), T.Andamento, d.Aba
+			it.estado, it.ft, it.a.aba = rodandoHa(d, ec.agora), ftRodando, d.Aba
 		}
 		switch {
 		case ec.disparando == k.ID:
-			it.estado, it.cor = "abrindo…", T.Andamento
-		case confirma(k.ID):
+			it.estado, it.ft = "abrindo…", ftRodando
+		case ec.armado == k.ID:
 			it.estado, it.cor = "enter de novo confirma", T.EstadoAviso()
 		}
 		out = append(out, it)
 	}
-	semTecla := func(s string) string {
-		if i := strings.LastIndex(s, " · "); i >= 0 {
-			return s[:i]
-		}
-		return s
-	}
-	junta := func(a, b string) string {
-		if a == "" {
-			return b
-		}
-		return a + " · " + b
-	}
-	_, cor, est, det := botaoDaydreaming(e.Daydreamer, ec.pedindoDD)
-	dd := itemPaleta{grupo: "SISTEMA", nome: "DayDreaming", busca: "daydreaming sonho", estado: junta(est, semTecla(det)), cor: cor, a: alvo{comando: cmdDaydreaming}}
-	if cor == T.Dim || cor == T.Ok {
-		dd.cor = T.Secundario()
-	}
-	_, cor, est, det = botaoMCP(e.MCP)
-	mcp := itemPaleta{grupo: "SISTEMA", nome: "Reconectar MCPs", busca: "mcp reconectar", estado: junta(est, semTecla(det)), cor: cor, a: alvo{comando: cmdMCP}}
-	if cor == T.Dim || cor == T.Ok {
-		mcp.cor = T.Secundario()
-	}
-	atu := itemPaleta{grupo: "SISTEMA", nome: "Atualizar app", busca: "atualizar app fantasmas", estado: "git pull, build e reabre", cor: T.Secundario(), a: alvo{comando: cmdAtualizar}}
-	if ec.atualizando {
-		atu.estado, atu.cor = "atualizando…", T.Andamento
-	}
-	for _, it := range []*itemPaleta{&dd, &mcp, &atu} {
-		if confirma(it.a.comando) || (it.a.comando == cmdAtualizar && ec.armadoAtu) {
-			it.estado, it.cor = "enter de novo confirma", T.EstadoAviso()
-		}
-	}
-	return append(out, dd, mcp, atu)
+	return out
 }
 
 func (m Model) estadoCmds() estadoComandos {
@@ -168,7 +169,7 @@ func (m Model) itensFiltrados() []itemPaleta {
 	f := normaliza(m.textoBusca())
 	var out []itemPaleta
 	for _, it := range itensPaleta(m.estado, m.estadoCmds()) {
-		if f == "" || strings.Contains(normaliza(it.grupo+" "+it.nome+" "+it.busca), f) {
+		if f == "" || strings.Contains(normaliza(it.nome+" "+it.busca), f) {
 			out = append(out, it)
 		}
 	}
@@ -183,61 +184,86 @@ func (m Model) alvosPaleta() []alvo {
 	return as
 }
 
-// caixaPaleta desenha a caixa centralizável: título na borda, busca, grupos e rodapé.
+// miniFantasma é o fantasminha do cabeçalho, desenhado em células (3 linhas × 5 colunas).
+func miniFantasma(bg lipgloss.Color) []string {
+	c := st(bg, corFtCorpo)
+	olho := lipgloss.NewStyle().Background(corFtCorpo).Foreground(corFtOlho)
+	return []string{
+		c.Render("▗▄▄▄▖"),
+		c.Render("█") + olho.Render("▘") + c.Render("█") + olho.Render("▘") + c.Render("█"),
+		c.Render("▀▝▀▘▀"),
+	}
+}
+
+// caixaPaleta desenha a caixa: fantasminha e título, comandos com glifo de estado e rodapé.
 func (m Model) caixaPaleta(w int) []string {
 	bg := T.Surface
-	iw := w - 2 - 4 // bordas e padding 2 de cada lado
-	borda := st(bg, T.Acento())
+	const pad = 3
+	iw := w - 2 - 2*pad
+	borda := st(bg, corFtCorpo)
 	lado := func(s string, fundo lipgloss.Color) string {
-		return borda.Render("│") + espacos(2, fundo) + encaixa(s, iw, fundo) + espacos(2, fundo) + borda.Render("│")
+		return borda.Render("│") + espacos(pad, bg) + encaixa(s, iw, fundo) + espacos(pad, bg) + borda.Render("│")
 	}
 	vazio := lado("", bg)
-	titulo := " Comandos "
-	topo := borda.Render("╭─") + st(bg, T.Acento()).Bold(true).Render(titulo) + borda.Render(strings.Repeat("─", max(0, w-3-lipgloss.Width(titulo)))+"╮")
-	out := []string{topo, vazio}
-	busca := st(bg, T.Acento()).Render("› ")
+	out := []string{borda.Render("╭" + strings.Repeat("─", w-2) + "╮"), vazio}
+	ft := miniFantasma(bg)
+	itens := m.itensFiltrados()
+	sub := "1–" + fmt.Sprint(len(itens)) + " dispara · enter 2× confirma"
+	cab := []string{"", st(bg, T.Texto).Bold(true).Render("Comandos"), st(bg, T.Dim).Render(sub)}
+	for i := range ft {
+		out = append(out, lado(ft[i]+espacos(2, bg)+cab[i], bg))
+	}
+	out = append(out, vazio)
 	if m.buscaCmd != nil {
 		ti := *m.buscaCmd
 		ti.Width = max(1, iw-3)
-		busca += ti.View()
+		out = append(out, lado(st(bg, T.Acento()).Render("› ")+ti.View(), bg), vazio)
 	}
-	out = append(out, lado(busca, bg), vazio)
-	itens := m.itensFiltrados()
-	grupo := ""
 	for i, it := range itens {
-		if it.grupo != grupo {
-			if grupo != "" {
-				out = append(out, vazio)
-			}
-			grupo = it.grupo
-			out = append(out, lado(st(bg, T.Secundario()).Faint(true).Bold(true).Render(it.grupo), bg))
-		}
 		fb := bg
-		marca := espacos(2, fb)
-		if i == m.sel {
+		sel := i == m.sel
+		if sel {
 			fb = T.Sel
-			marca = st(fb, T.Acento()).Render("▌ ")
+		}
+		cg := T.Dim
+		switch it.ft {
+		case ftRodando:
+			cg = corFtRodando
+		case ftTerminou:
+			cg = T.Ok
+		}
+		esq := st(fb, cg).Render(" ᗣ ") + st(fb, T.Dim).Render(fmt.Sprint(i+1)+" ")
+		ns := st(fb, T.Texto)
+		if sel {
+			ns = ns.Bold(true)
+		}
+		cor := it.cor
+		if it.ft == ftRodando && cor == T.Dim {
+			cor = T.Secundario()
 		}
 		dir := ""
 		if it.estado != "" {
-			dir = st(fb, it.cor).Render(Corte(it.estado, max(4, iw-2-lipgloss.Width(it.nome)-3)))
+			dir = st(fb, cor).Render(Corte(it.estado, max(4, iw-lipgloss.Width(esq)-lipgloss.Width(it.nome)-3)) + " ")
 		}
-		nome := st(fb, T.Texto).Render(Corte(it.nome, iw-2))
-		meio := iw - 2 - lipgloss.Width(nome) - lipgloss.Width(dir)
-		s := marca + nome + espacos(meio, fb) + dir
-		if meio < 1 {
-			s = marca + nome
+		nome := ns.Render(Corte(it.nome, max(1, iw-lipgloss.Width(esq)-1)))
+		meio := iw - lipgloss.Width(esq) - lipgloss.Width(nome) - lipgloss.Width(dir)
+		s := esq + nome
+		if meio >= 1 {
+			s += espacos(meio, fb) + dir
 		}
 		out = append(out, lado(s, fb))
+		if sel && it.desc != "" {
+			out = append(out, lado(espacos(5, bg)+st(bg, T.Dim).Render(Corte(it.desc, max(1, iw-5))), bg))
+		}
 	}
 	if len(itens) == 0 {
 		out = append(out, lado(st(bg, T.Secundario()).Render("nada bate com “"+strings.TrimSpace(m.textoBusca())+"”"), bg))
 	}
-	rodape := "enter executa · esc fecha"
+	rodape := "esc fecha"
 	if a, ok := m.selecionado(); ok && a.aba != "" {
-		rodape = "enter executa · g vai à aba · esc fecha"
+		rodape = "g vai à aba · esc fecha"
 	}
-	out = append(out, vazio, lado(st(bg, T.Secundario()).Render(rodape), bg), vazio)
+	out = append(out, vazio, lado(st(bg, T.Dim).Render(rodape), bg), vazio)
 	out = append(out, borda.Render("╰"+strings.Repeat("─", w-2)+"╯"))
 	return out
 }

@@ -169,13 +169,14 @@ func TestLargurasSemCorte(t *testing.T) {
 	}
 }
 
-func TestAjudaTemAXD(t *testing.T) {
+func TestAntigosDicaNaLinha(t *testing.T) {
 	m := modelo(fixture(), &registro{})
-	m = aperta(t, m, "?")
-	out := render(m, 96, 60)
-	for _, s := range []string{"antigas", "arquiva", "rascunhos"} {
-		if !strings.Contains(out, s) {
-			t.Errorf("ajuda sem %q", s)
-		}
+	for m.sel = 0; m.sel < len(m.alvos()) && !m.alvos()[m.sel].antigas; m.sel++ {
+	}
+	if m.sel >= len(m.alvos()) {
+		t.Skip("fixture sem a linha recolhida")
+	}
+	if out := render(m, 96, 60); !strings.Contains(out, "enter expande") {
+		t.Errorf("linha recolhida sem a dica:\n%s", out)
 	}
 }

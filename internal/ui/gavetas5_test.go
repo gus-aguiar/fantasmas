@@ -138,7 +138,7 @@ func TestComandoPedeEnterDuasVezes(t *testing.T) {
 func TestMCPSemSublista(t *testing.T) {
 	e := fixture()
 	e.MCP = dados.ProgressoMCP{Inicio: e.At, Sessoes: []dados.SessaoMCP{{Nome: "sessao-a", Tom: "ok"}, {Nome: "sessao-b", Tom: "ok"}}}
-	p := render(modelo(e, &registro{}).ComBotoes(), 70, 40)
+	p := render(modelo(e, &registro{}).irGaveta(indiceGaveta("configuracoes")), 110, 60)
 	if strings.Contains(p, "sessao-a") || !strings.Contains(p, "2 ok") {
 		t.Fatalf("reconectar MCPs devia ser uma linha só:\n%s", p)
 	}
