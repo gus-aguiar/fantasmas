@@ -478,6 +478,15 @@ func gavetaMaquina(c *corpo, e dados.Estado) {
 		}
 		c.linhaLista(alvo{}, glifo, cor, l.Rotulo, "", cor, l.Detalhe)
 	}
+	linhaFaxina(c, e)
+}
+
+// linhaFaxina é a última rodada da faxina de memória (scripts/delegate/faxina.py); as ações ficam no painel.
+func linhaFaxina(c *corpo, e dados.Estado) {
+	if e.Faxina == nil {
+		return
+	}
+	c.linhaLista(alvo{}, "♻", T.Dim, e.Faxina.Linha(), "", T.Dim, "")
 }
 
 // gavetaWorktrees lista onde cada branch está aberto no disco: o Spark e os repos dentro dele

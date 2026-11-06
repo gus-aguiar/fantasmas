@@ -148,6 +148,7 @@ func (c *Coletor) Coletar(ctx context.Context) Estado {
 		MCP:        LerProgressoMCP(c.Raiz, time.Now()),
 		Agentes:    ags,
 		Mural:      MuralDe(filepath.Join(c.Raiz, ".delegate", "_mural.jsonl"), time.Now(), 3),
+		Faxina:     FaxinaDe(c.Raiz),
 	}
 	if ddb != nil {
 		e.Tasks, e.Esperando, e.Opcoes, e.Mural = ddb.Tasks, ddb.Esperando, ddb.Opcoes, ddb.Mural

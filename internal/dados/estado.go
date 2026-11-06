@@ -54,4 +54,6 @@ type Estado struct {
 	// DecisoesSoltas são as decisões de sidequest sem missão.
 	DecisoesSoltas []Decisao
 	Coordenadores  map[string]LinhaViva
+	// Faxina é a última rodada da faxina de memória que agiu; nil sem .tmp/faxina-ultima.json.
+	Faxina *Faxina
 }

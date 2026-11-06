@@ -40,6 +40,7 @@ func gavetaMaquinaToda(c *corpo, e dados.Estado, aberta bool) {
 		c.item(alvo{alterna: "maquina"}, func(bg lipgloss.Color) string {
 			return st(bg, T.Ok).Render("● ") + st(bg, T.Texto).Render("máquina") + st(bg, T.Dim).Render("  "+resumo+" · enter abre")
 		})
+		linhaFaxina(c, e)
 		return
 	}
 	if aberta && len(alertas) == 0 {

@@ -3,6 +3,11 @@
 O que mudou no `gengar` (TUI fantasmas) e no fluxo de missões e sidequests do Spark. A versão mais nova fica no topo.
 Cada entrada diz o que muda para quem usa; os detalhes técnicos ficam no histórico do git.
 
+## 2026-11-06 · Faxina de memória
+
+**Muda**
+- **Faxina na gaveta 4:** a máquina mostra "Faxina: HH:MM · N ações · ~X MB liberados", a última rodada da faxina automática do Spark (serviços esquecidos, daemons Gradle/Kotlin ociosos e fantasminhas done). A lista das ações fica no painel do delegate.
+
 ## 2026-11-06 · Paleta enxuta
 
 **Muda**

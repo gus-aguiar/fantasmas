@@ -97,6 +97,7 @@ A coleta é `dados.Coletor.Coletar` (`internal/dados/coleta.go`), e tudo nela ro
 | `shared/mods/control-panel/scripts/{local.sh,coleta.sh worktrees,maquina.sh}` | serviços, worktrees e máquina. A máquina vem sempre do `assets/maquina.sh` embutido (memória, swap, pressão, OOM, carga, sessões, disco), não do script do Spark; a trava de pesados só entra com `.delegate/` na raiz. Polling: roda a cada coleta |
 | `shared/skills/delegate-painel/painel.py` | entrega das respostas (sem ele, a resposta só é gravada) |
 | `.delegate/` (incluindo `_mural.jsonl`) | tasks, mural e daydreamer |
+| `.tmp/faxina-ultima.json` | linha da faxina de memória na gaveta máquina (`dados.FaxinaDe`) |
 | `herdr agent list` | agentes vivos e focar aba |
 | `gh api graphql` | PRs e CI do usuário logado no `gh` |
 | `~/.claude` (ou `FANTASMAS_CLAUDE_DIR`) | transcripts para a "linha viva" e o contexto de cada agente |
