@@ -15,6 +15,7 @@ Cada entrada diz o que muda para quem usa; os detalhes técnicos ficam no histó
 ## 2026-11-06 · Visual
 
 **Corrigido**
+- A paleta de comandos mostra só o que cada comando faz, sem o comando e sem o fantasminha no topo.
 - A gaveta de missões (e qualquer outra) não fica mais em branco quando o que um fantasminha está fazendo traz quebra de linha (ex.: texto de IA de várias linhas no comentário do Jira).
 
 **Muda**

@@ -144,7 +144,7 @@ func itensPaleta(_ dados.Estado, ec estadoComandos) []itemPaleta {
 		if !ok {
 			nome = k.Rotulo
 		}
-		it := itemPaleta{nome: nome, desc: k.Rotulo + " · " + k.Descricao, busca: k.Rotulo + " " + k.Descricao, cor: T.Dim, a: alvo{comando: k.ID}}
+		it := itemPaleta{nome: nome, desc: k.Descricao, busca: k.Rotulo + " " + k.Descricao, cor: T.Dim, a: alvo{comando: k.ID}}
 		if d, ok := ec.disparos[k.ID]; ok {
 			it.estado, it.ft, it.a.aba = rodandoHa(d, ec.agora), ftRodando, d.Aba
 		}
@@ -184,17 +184,6 @@ func (m Model) alvosPaleta() []alvo {
 	return as
 }
 
-// miniFantasma é o fantasminha do cabeçalho, desenhado em células (3 linhas × 5 colunas).
-func miniFantasma(bg lipgloss.Color) []string {
-	c := st(bg, corFtCorpo)
-	olho := lipgloss.NewStyle().Background(corFtCorpo).Foreground(corFtOlho)
-	return []string{
-		c.Render("▗▄▄▄▖"),
-		c.Render("█") + olho.Render("▘") + c.Render("█") + olho.Render("▘") + c.Render("█"),
-		c.Render("▀▝▀▘▀"),
-	}
-}
-
 // caixaPaleta desenha a caixa: fantasminha e título, comandos com glifo de estado e rodapé.
 func (m Model) caixaPaleta(w int) []string {
 	bg := T.Surface
@@ -206,13 +195,9 @@ func (m Model) caixaPaleta(w int) []string {
 	}
 	vazio := lado("", bg)
 	out := []string{borda.Render("╭" + strings.Repeat("─", w-2) + "╮"), vazio}
-	ft := miniFantasma(bg)
 	itens := m.itensFiltrados()
 	sub := "1–" + fmt.Sprint(len(itens)) + " dispara · enter 2× confirma"
-	cab := []string{"", st(bg, T.Texto).Bold(true).Render("Comandos"), st(bg, T.Dim).Render(sub)}
-	for i := range ft {
-		out = append(out, lado(ft[i]+espacos(2, bg)+cab[i], bg))
-	}
+	out = append(out, lado(st(bg, T.Texto).Bold(true).Render("Comandos"), bg), lado(st(bg, T.Dim).Render(sub), bg))
 	out = append(out, vazio)
 	if m.buscaCmd != nil {
 		ti := *m.buscaCmd
@@ -232,7 +217,11 @@ func (m Model) caixaPaleta(w int) []string {
 		case ftTerminou:
 			cg = T.Ok
 		}
-		esq := st(fb, cg).Render(" ᗣ ") + st(fb, T.Dim).Render(fmt.Sprint(i+1)+" ")
+		marca := "  "
+		if it.ft != ftParado {
+			marca = "● "
+		}
+		esq := st(fb, T.Dim).Render(" "+fmt.Sprint(i+1)+" ") + st(fb, cg).Render(marca)
 		ns := st(fb, T.Texto)
 		if sel {
 			ns = ns.Bold(true)
@@ -252,8 +241,9 @@ func (m Model) caixaPaleta(w int) []string {
 			s += espacos(meio, fb) + dir
 		}
 		out = append(out, lado(s, fb))
-		if sel && it.desc != "" {
-			out = append(out, lado(espacos(5, bg)+st(bg, T.Dim).Render(Corte(it.desc, max(1, iw-5))), bg))
+		// cada comando diz o que faz, sem o comando em si (pedido de 06/11)
+		if it.desc != "" {
+			out = append(out, lado(espacos(5, fb)+st(fb, T.Dim).Render(Corte(it.desc, max(1, iw-5))), fb))
 		}
 	}
 	if len(itens) == 0 {

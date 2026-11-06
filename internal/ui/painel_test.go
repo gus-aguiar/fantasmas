@@ -17,7 +17,7 @@ func manda(m Model, msg tea.Msg) Model {
 	return n.(Model)
 }
 
-func digita(m Model, s string) Model {
+func digitaPaleta(m Model, s string) Model {
 	for _, r := range s {
 		m = manda(m, tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{r}})
 	}
@@ -89,7 +89,7 @@ func TestPaletaSemBuscaENumeros(t *testing.T) {
 	if m.buscaCmd != nil {
 		t.Fatal("com até 5 comandos a paleta não tem busca")
 	}
-	m = digita(m, "multas")
+	m = digitaPaleta(m, "multas")
 	if len(m.alvos()) != 3 || m.textoBusca() != "" {
 		t.Fatal("letras não deviam filtrar")
 	}
@@ -115,17 +115,20 @@ func TestPaletaSemBuscaENumeros(t *testing.T) {
 	}
 }
 
-func TestPaletaDescricaoSoNoSelecionado(t *testing.T) {
+func TestPaletaMostraOQueCadaUmFazSemComando(t *testing.T) {
 	m := modelo(fixture(), &registro{}).ComBotoes()
 	p := render(m, 140, 40)
-	if !strings.Contains(p, "/dia abrir · começa o dia") || strings.Contains(p, "fecha o dia e faz") {
-		t.Fatalf("descrição devia vir só abaixo do selecionado:\n%s", p)
+	if !strings.Contains(p, "começa o dia") || !strings.Contains(p, "fecha o dia e faz") {
+		t.Fatalf("cada comando devia mostrar o que faz:\n%s", p)
+	}
+	if strings.Contains(p, "/dia abrir") || strings.Contains(p, "ᗣ") {
+		t.Fatalf("paleta não mostra o comando nem fantasma:\n%s", p)
 	}
 }
 
 func TestPaletaEscFecha(t *testing.T) {
 	m := tecla(modelo(fixture(), &registro{}), "b")
-	m = digita(m, "dia")
+	m = digitaPaleta(m, "dia")
 	if m = manda(m, tea.KeyMsg{Type: tea.KeyEsc}); m.botoes || m.textoBusca() != "" {
 		t.Fatal("esc devia fechar a paleta e limpar a busca")
 	}
