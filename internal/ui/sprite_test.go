@@ -89,7 +89,7 @@ func TestSpriteInvalidoUsaFallback(t *testing.T) {
 	defer func() { spriteFn = antes }()
 	spriteFn = func(int) *Sprite { s, _ := CarregarSprite([]byte("nada"), 16, 8, T.Mantle); return s }
 	topo := Topo(estadoEx(), 96, 0, false, "")
-	if n := len(strings.Split(topo, "\n")); n != MascoteLinhas {
+	if n := len(strings.Split(topo, "\n")); n != min(MascoteLinhas, 4) {
 		t.Fatalf("fallback com %d linhas", n)
 	}
 	if !strings.Contains(topo, QuadroMascote(0, T.Mantle)[1]) || passoDe(0) != passoQuadro {

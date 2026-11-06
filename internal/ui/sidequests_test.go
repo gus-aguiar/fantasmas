@@ -111,7 +111,7 @@ func telaSQ(m Model, w int) string { return ansi.Strip(m.Render(w, 60)) }
 
 func TestSemGavetaPipes(t *testing.T) {
 	ids := strings.Join(IDsGavetas(), ",")
-	if ids != "missoes,agora,crew,prs,ambiente,maquina,worktrees,configuracoes" {
+	if ids != "agora,missoes,prs,maquina,comandos" {
 		t.Fatalf("ordem=%s", ids)
 	}
 	if GavetaValida("pipes") {
@@ -241,13 +241,13 @@ func TestTeclaNComFocoEmOutraGaveta(t *testing.T) {
 	r := &runnerPipes{}
 	m := comPipes(estadoSQ(), r)
 	m.missao = "multas-custos"
-	m = m.irGaveta(indiceGaveta("crew"))
+	m = m.irGaveta(indiceGaveta("agora"))
 	m = preencheImplementar(tecla(m, "n"))
 	if c := r.calls[len(r.calls)-1]; !strings.HasSuffix(c, "--workspace w20") {
 		t.Fatalf("n na gaveta crew com foco: %s", c)
 	}
 	r = &runnerPipes{}
-	m = comPipes(estadoSQ(), r).irGaveta(indiceGaveta("crew"))
+	m = comPipes(estadoSQ(), r).irGaveta(indiceGaveta("agora"))
 	if m = tecla(m, "n"); m.form != nil {
 		t.Fatal("sem foco, n fora da gaveta missões não lança")
 	}

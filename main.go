@@ -38,7 +38,7 @@ func main() {
 	cor := flag.Bool("cor", false, "força cor de 24 bits (só com --uma-vez)")
 	demo := flag.Bool("demo", false, "usa o estado de demonstração (só com --uma-vez)")
 	demoVerde := flag.Bool("demo-verde", false, "demonstração com todos os PRs de CI verde (só com --uma-vez)")
-	gaveta := flag.String("gaveta", "", "gaveta inicial: missoes|agora|crew|prs|ambiente|maquina|worktrees|configuracoes (só com --uma-vez)")
+	gaveta := flag.String("gaveta", "", "gaveta inicial: agora|missoes|prs|maquina|comandos (aceita os nomes antigos crew, ambiente, worktrees e configuracoes) (só com --uma-vez)")
 	missao := flag.String("missao", "", "foca a missão pelo slug (só com --uma-vez)")
 	pipe := flag.Int("pipe", 0, "abre o detalhe da sidequest N (só com --uma-vez)")
 	acharRaiz := flag.Bool("achar-raiz", false, "procura a raiz do Spark na home, salva em configurações (FANTASMAS_RAIZ) e sai; o setup.sh usa")
@@ -114,6 +114,15 @@ func main() {
 				return dados.Resultado{}, err
 			}
 			return dados.Atualizar(context.Background(), runner, repo)
+		},
+		Disparar: func(id string) (dados.Disparo, error) {
+			c, ok := dados.ComandoPorID(id)
+			if !ok {
+				return dados.Disparo{}, fmt.Errorf("comando desconhecido: %s", id)
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+			defer cancel()
+			return dados.Disparar(ctx, runner, *raiz, c, time.Now())
 		},
 		Pipes:  &dados.Pipes{R: runner, Raiz: *raiz, Script: dados.ScriptDdb(*raiz)},
 		Editar: func(arq string) *exec.Cmd { return ui.ComandoEditor(os.Getenv("FANTASMAS_EDITOR"), arq) },
@@ -286,7 +295,7 @@ func configurarRaiz(l lojaRaiz, achar func() []string, home string, entrada io.R
 	switch {
 	case len(rs) == 0:
 		diz("não achei a raiz do Spark na home (até %d níveis)", profBuscaRaiz)
-		diz("defina em configurações (8 → %s) ou rode: gengar --raiz <pasta do Spark>", chave)
+		diz("defina em comandos (5 → %s) ou rode: gengar --raiz <pasta do Spark>", chave)
 		return 0
 	case len(rs) > 1 && interativo:
 		diz("achei %d raízes do Spark (da mais ativa para a menos ativa):", len(rs))
@@ -424,16 +433,8 @@ func comandoAbrir(goos, editor, alvo string) []string {
 	return []string{"cmd", "/c", "start", "", alvo}
 }
 
-// gavetaInicial: a flag --gaveta manda; sem ela, FANTASMAS_FONTE=ddb abre em "missoes". Vazio = a primeira.
-func gavetaInicial(flag string, getenv func(string) string) string {
-	if flag != "" {
-		return flag
-	}
-	if getenv("FANTASMAS_FONTE") == "ddb" {
-		return "missoes"
-	}
-	return ""
-}
+// gavetaInicial: a flag --gaveta manda; sem ela, abre na primeira (agora), com ou sem FANTASMAS_FONTE=ddb.
+func gavetaInicial(flag string, _ func(string) string) string { return flag }
 
 // validarGaveta recusa nome desconhecido em vez de cair calado na primeira gaveta.
 func validarGaveta(id string) error {

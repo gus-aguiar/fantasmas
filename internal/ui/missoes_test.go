@@ -19,9 +19,9 @@ func modeloMissoes() Model {
 	return m
 }
 
-func TestGavetaMissoesEhAPrimeira(t *testing.T) {
-	if Gavetas[0].ID != "missoes" || Gavetas[0].Tecla != "0" {
-		t.Fatalf("primeira=%+v", Gavetas[0])
+func TestGavetaMissoesEhASegunda(t *testing.T) {
+	if Gavetas[1].ID != "missoes" || Gavetas[1].Tecla != "2" {
+		t.Fatalf("segunda=%+v", Gavetas[1])
 	}
 }
 
@@ -40,7 +40,7 @@ func TestCartaEmTodasAsLarguras(t *testing.T) {
 			t.Fatalf("w=%d sem missão ou principal:\n%s", w, p)
 		}
 		if w >= 96 {
-			for _, s := range []string{"multas-custos", "g-multas-custos", "PL-19597", "trabalhando", "PR vermelho", "gengar-1030-0900"} {
+			for _, s := range []string{"multas-custos", "g-multas-custos", "▲ 1 sua", "PR vermelho", "gengar-1030-0900"} {
 				if !strings.Contains(p, s) {
 					t.Errorf("w=%d sem %q:\n%s", w, s, p)
 				}
@@ -56,14 +56,14 @@ func TestEnterFocaMissaoEFiltraGavetas(t *testing.T) {
 		t.Fatal("enter deveria focar a missão")
 	}
 	nome := nomeMissao(m.estado, m.missao)
-	if Gavetas[m.gaveta].ID != "agora" {
-		t.Fatalf("enter deveria ir ao agora, veio %s", Gavetas[m.gaveta].ID)
+	if Gavetas[m.gaveta].ID != "missoes" {
+		t.Fatalf("enter deveria abrir a missão ali mesmo, veio %s", Gavetas[m.gaveta].ID)
 	}
 	p := ansi.Strip(m.Render(140, 42))
-	if !strings.Contains(p, "◆ "+nome) {
-		t.Fatalf("sem selo:\n%s", p)
+	if !strings.Contains(p, "◆ "+nome) || !strings.Contains(p, "PL-19597") || !strings.Contains(p, "▾ aberta") {
+		t.Fatalf("sem selo ou sem a missão aberta:\n%s", p)
 	}
-	m = m.irGaveta(indiceGaveta("crew"))
+	m = m.irGaveta(indiceGaveta("agora"))
 	p = ansi.Strip(m.Render(140, 42))
 	dentro, fora := 0, 0
 	for _, l := range m.estado.Linhas {
@@ -87,7 +87,7 @@ func TestEnterFocaMissaoEFiltraGavetas(t *testing.T) {
 }
 
 func TestEscEZeroLimpamMissao(t *testing.T) {
-	for _, k := range []string{"esc", "0"} {
+	for _, k := range []string{"esc"} {
 		m := tecla(modeloMissoes(), "enter")
 		if m.missao == "" {
 			t.Fatal("sem foco")

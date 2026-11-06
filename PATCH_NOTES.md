@@ -3,6 +3,27 @@
 O que mudou no `gengar` (TUI fantasmas) e no fluxo de missões e sidequests do Spark. A versão mais nova fica no topo.
 Cada entrada diz o que muda para quem usa; os detalhes técnicos ficam no histórico do git.
 
+## 2026-11-06 · Cinco gavetas e comandos
+
+**Muda**
+- **As gavetas passam de 8 para 5**, nas teclas `1` a `5` (e `← →`): `1` agora, `2` missões, `3` PRs, `4` máquina, `5` comandos. O app abre sempre no agora, mesmo com `FANTASMAS_FONTE=ddb`. `?` mostra todas as teclas.
+- **Agora** junta o que era "agora" e "fantasminhas": "precisa de você" é uma lista só, com o selo `decisão` ou `liberação`; abaixo ficam os travados e os fantasminhas trabalhando, parados e caídos recentes.
+- **Missões** mostram cartas enxutas: nome, ▲ suas, o que o gengar faz agora e PR vermelho. `enter` abre a missão com cards, contagens, sidequests e decisões (veto incluso); `enter` de novo recolhe. Antes, `enter` levava à gaveta agora.
+- **Máquina** junta máquina, ambiente e worktrees. Com tudo verde, fica numa linha que abre com `enter`; com alerta, já abre inteira.
+- **PRs:** a linha dos rascunhos ocultos agora abre com `enter` (o `d` segue valendo).
+- **Topo numa linha:** `▲ N suas · ● N trabalhando`, mais o alerta da máquina só quando existe. O gengar do topo tem no máximo 4 linhas e some em janela com menos de 30 linhas.
+- `--gaveta` aceita os nomes novos (`agora missoes prs maquina comandos`); os antigos (`crew`, `ambiente`, `worktrees`, `configuracoes`) continuam valendo.
+
+**Novo**
+- **Gaveta comandos (`5`):** `/dia abrir` e `/dia fechar` abrem uma aba nova no workspace GENGAR do Herdr, e `/saude-multas` no workspace "saúde multas", já rodando o `claude` com o comando, na raiz do Spark. Cada um pede `enter 2×`, mostra "rodando há N min" e `g` vai até a aba. DayDreaming, reconectar MCPs e atualizar app também estão lá, e os ajustes (tema, figura, variáveis) ficam no fim.
+
+**Sai**
+- As dicas do topo e o rodapé de dicas das missões (a ajuda `?` cobre).
+- Contadores zerados, como o "fantasminhas (0)" que contradizia a lista.
+- A sublista de sessões do "reconectar MCPs": fica só o resumo da última rodada.
+- Caídos de mais de um dia saem do destaque e vão para "antigos", a um `enter`.
+- A tecla `0` (missões agora é `2`; `esc` tira o foco da missão).
+
 ## 2026-11-04 · Missões e sidequests
 
 **Novo**

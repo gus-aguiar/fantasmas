@@ -14,7 +14,6 @@ type alvo struct {
 	arquivar                      string
 	retomar                       string
 	antigas                       bool
-	acao                          string
 	pipe                          int
 	missao                        string
 	ajuste                        string
@@ -23,6 +22,8 @@ type alvo struct {
 	vetoEtapa, vetoDe string
 	// decisao marca a linha de decisão (vetável ou não), para o v responder mesmo sem etapa
 	decisao bool
+	// alterna abre ou recolhe uma parte da gaveta (rascunhos, maquina); comando é um disparo da gaveta comandos
+	alterna, comando string
 }
 
 // linha do corpo; item é o índice do alvo dono da linha, ou -1.
@@ -81,10 +82,10 @@ func (c *corpo) branco() { c.texto(func(lipgloss.Color) string { return "" }) }
 
 func (c *corpo) secao(titulo, extra string) { c.secaoN(titulo, -1, extra) }
 
-// secaoN é o título de seção com a contagem entre parênteses (n < 0 = sem contagem), seguido de uma
+// secaoN é o título de seção com a contagem entre parênteses (zero não aparece), seguido de uma
 // linha em branco antes do conteúdo. A primeira seção da gaveta leva também a descrição dela.
 func (c *corpo) secaoN(titulo string, n int, extra string) {
-	if n >= 0 {
+	if n > 0 {
 		titulo += fmt.Sprintf(" (%d)", n)
 	}
 	desc := c.desc

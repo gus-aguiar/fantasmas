@@ -106,7 +106,7 @@ func TestValidarGaveta(t *testing.T) {
 		t.Fatal("gaveta válida recusada")
 	}
 	err := validarGaveta("fantasminhas")
-	if err == nil || !strings.Contains(err.Error(), "crew") || !strings.Contains(err.Error(), "agora") {
+	if err == nil || !strings.Contains(err.Error(), "comandos") || !strings.Contains(err.Error(), "agora") {
 		t.Fatalf("erro sem lista de válidas: %v", err)
 	}
 }
@@ -179,8 +179,13 @@ func TestGavetaInicial(t *testing.T) {
 	if g := gavetaInicial("", env("")); g != "" {
 		t.Fatalf("sem a variável deve manter o padrão (agora), veio %q", g)
 	}
-	if g := gavetaInicial("", env("ddb")); g != "missoes" || !ui.GavetaValida(g) {
-		t.Fatalf("com FANTASMAS_FONTE=ddb deve abrir em missoes, veio %q", g)
+	if g := gavetaInicial("", env("ddb")); g != "" {
+		t.Fatalf("com FANTASMAS_FONTE=ddb também abre no agora, veio %q", g)
+	}
+	for _, g := range []string{"agora", "missoes", "prs", "maquina", "comandos", "crew", "ambiente", "worktrees", "configuracoes"} {
+		if !ui.GavetaValida(g) {
+			t.Fatalf("--gaveta %s deveria valer", g)
+		}
 	}
 	if g := gavetaInicial("prs", env("ddb")); g != "prs" {
 		t.Fatalf("a flag --gaveta manda, veio %q", g)

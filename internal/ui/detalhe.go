@@ -176,7 +176,7 @@ func (m Model) respondeu(r respondeuMsg) Model {
 }
 
 func (m Model) alturaCorpo() int {
-	topo, _ := m.linhasTopo(m.larguraEfetiva())
+	topo, _ := m.linhasTopo(m.larguraEfetiva(), m.alturaEfetiva())
 	return max(1, m.alturaEfetiva()-1-len(topo))
 }
 

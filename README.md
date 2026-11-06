@@ -47,17 +47,23 @@ As teclas que mais importam estão abaixo. A lista completa abre com `?`.
 
 | Tecla | Faz |
 |---|---|
-| `0`–`7` ou `← →` | troca de gaveta: `0` missões, `1` agora, `2` fantasminhas, `3` PRs, `4` ambiente, `5` máquina, `6` worktrees, `7` configurações |
-| `↑ ↓` e `enter` | escolhe e abre/responde |
+| `1`–`5` ou `← →` | troca de gaveta: `1` agora (abre aqui), `2` missões, `3` PRs, `4` máquina, `5` comandos |
+| `↑ ↓` e `enter` | escolhe e abre/responde; numa missão, abre as sidequests e as decisões |
+| `enter 2×` | na gaveta `5`, dispara `/dia abrir`, `/dia fechar`, `/saude-multas`, DayDreaming, MCPs ou atualizar |
+| `?` | ajuda com todas as teclas |
 | `m` | abre uma missão nova (enter 2× confirma) |
 | `n` / `N` | lança uma sidequest (`N` abre também um gengar dedicado) |
 | `v` | veta uma decisão que o sistema tomou sozinho (enter 2× confirma) |
-| `g` | vai para a aba do agente no Herdr |
+| `g` | vai para a aba do agente no Herdr (na gaveta `5`, para a aba do comando disparado) |
 | `r` / `q` | atualiza agora / sai |
+
+## Comandos (gaveta 5)
+
+`/dia abrir` e `/dia fechar` abrem uma aba nova no workspace do Herdr chamado **GENGAR**; `/saude-multas`, no workspace **saúde multas**. A aba nasce na raiz do Spark com o `claude` já rodando o comando e se chama `dia-MMDD-HHMM` ou `saude-MMDD-HHMM`. Cada disparo mostra há quanto tempo roda, e `g` leva até a aba. Os ajustes (tema, figura e variáveis) ficam no fim da mesma gaveta.
 
 ## Missões e sidequests
 
-- **Missão** é para o que é direto. Cada missão é uma workspace do Herdr com um gengar coordenador, os cards do Jira e um objetivo. Na gaveta `0`, cada missão é uma carta.
+- **Missão** é para o que é direto. Cada missão é uma workspace do Herdr com um gengar coordenador, os cards do Jira e um objetivo. Na gaveta `2`, cada missão é uma carta enxuta; `enter` abre as sidequests e as decisões dela.
 - **Sidequest** é para o que tem vários passos encadeados, como implementar → homologar → pronto, ou um bugfix. Na carta, cada sidequest aparece como uma linha com um bloco por etapa:
   - verde: feita;
   - azul: rodando;

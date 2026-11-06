@@ -16,15 +16,12 @@ func TestSettingsTemBotoes(t *testing.T) {
 		Daydreamer: dados.Daydreamer{Nome: "c-sonho", Status: "working", Ultima: time.Date(2026, 10, 23, 9, 5, 0, 0, time.Local)},
 		MCP:        dados.ProgressoMCP{Inicio: time.Now(), Total: 4, Rodando: true, Sessoes: []dados.SessaoMCP{{Pane: "p", Nome: "g", Detalhe: "ok", Tom: "ok"}}},
 	}
-	m := Novo(nil, Acoes{}, time.Minute).ComEstado(e).irGaveta(indiceGaveta("configuracoes"))
+	m := Novo(nil, Acoes{}, time.Minute).ComEstado(e).irGaveta(indiceGaveta("comandos"))
 	tela := ansi.Strip(m.Render(110, 30))
-	for _, s := range []string{"ações", "atualizar DayDreaming", "trabalhando", "última 23/10 09:05", "reconectando…", "1/4 sessões"} {
+	for _, s := range []string{"comandos", "DayDreaming", "trabalhando", "última 23/10 09:05", "reconectando…", "1/4 sessões"} {
 		if !strings.Contains(tela, s) {
 			t.Errorf("falta %q", s)
 		}
-	}
-	if wt := ansi.Strip(m.irGaveta(indiceGaveta("worktrees")).Render(110, 30)); strings.Contains(wt, "atualizar") {
-		t.Errorf("worktrees deveria ter só os worktrees:\n%s", wt)
 	}
 	maq := ansi.Strip(m.irGaveta(indiceGaveta("maquina")).Render(110, 30))
 	if strings.Contains(maq, "DayDreaming") || strings.Contains(maq, "reconectar MCPs") {
@@ -38,9 +35,9 @@ func TestAtualizarPedeSegundoU(t *testing.T) {
 		chamou++
 		return dados.Resultado{Novos: 2, Trocou: true, Binario: "/x/bin/fantasmas"}, nil
 	}}
-	m := Novo(nil, ac, time.Minute).ComEstado(dados.Estado{At: time.Now()}).irGaveta(indiceGaveta("configuracoes"))
-	if !strings.Contains(ansi.Strip(m.Render(110, 30)), "atualizar app fantasmas") {
-		t.Fatal("falta o item nas ações de configurações")
+	m := Novo(nil, ac, time.Minute).ComEstado(dados.Estado{At: time.Now()}).irGaveta(indiceGaveta("comandos"))
+	if !strings.Contains(ansi.Strip(m.Render(110, 30)), "atualizar app") {
+		t.Fatal("falta o item na gaveta comandos")
 	}
 	n, cmd := m.tecla("U")
 	m = n.(Model)

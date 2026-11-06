@@ -32,7 +32,7 @@ func TestAntigasRecolhidasEArquivarEmDoisPassos(t *testing.T) {
 	m.acoes.Arquivar = func(c string) error { arquivadas = append(arquivadas, c); return nil }
 	m.largura, m.altura = 96, 40
 	out := render(m, 96, 40)
-	if !strings.Contains(out, "antigas (1)") || strings.Contains(out, "pergunta velha?") {
+	if !strings.Contains(out, "antigos (1)") || strings.Contains(out, "pergunta velha?") {
 		t.Fatalf("antigas deveria vir recolhida:\n%s", out)
 	}
 	m = aperta(t, m, "a")
@@ -70,7 +70,7 @@ func TestCliqueNoTituloEArquivar(t *testing.T) {
 	m := modelo(comMortos(), &registro{})
 	m.acoes.Arquivar = func(c string) error { arquivadas = append(arquivadas, c); return nil }
 	m.largura, m.altura = 96, 40
-	x, y := onde(t, m, "antigas (1)", 0)
+	x, y := onde(t, m, "antigos (1)", 0)
 	m, _ = clique(t, m, x, y)
 	if !m.antigas {
 		t.Fatal("clique no título deveria abrir")
@@ -128,9 +128,9 @@ func TestRascunhosOcultos(t *testing.T) {
 	e.Travados[1].Title = "rascunho-x"
 	m := modelo(e, &registro{})
 	m.largura, m.altura = 96, 40
-	m = aperta(t, m, "4")
+	m = aperta(t, m, "3")
 	out := render(m, 96, 40)
-	if strings.Contains(out, "rascunho-x") || !strings.Contains(out, "1 rascunhos ocultos · d mostra") {
+	if strings.Contains(out, "rascunho-x") || !strings.Contains(out, "1 rascunhos ocultos · enter ou d mostra") {
 		t.Fatalf("rascunho deveria estar oculto:\n%s", out)
 	}
 	m = aperta(t, m, "d")
@@ -151,7 +151,7 @@ func TestLargurasSemCorte(t *testing.T) {
 		m.largura, m.altura = w, 40
 		cabeTudo(t, m, w, 40)
 		out := render(m, w, 40)
-		for _, s := range []string{"antigas (1)", BotaoArquivar} {
+		for _, s := range []string{"antigos (1)", BotaoArquivar} {
 			if !strings.Contains(out, s) {
 				t.Errorf("%d: sem %q:\n%s", w, s, out)
 			}
@@ -160,10 +160,10 @@ func TestLargurasSemCorte(t *testing.T) {
 	e := fixture()
 	e.Travados[0].Draft = true
 	p := modelo(e, &registro{})
-	p = aperta(t, p, "4")
+	p = aperta(t, p, "3")
 	for _, w := range []int{46, 56, 96} {
 		cabeTudo(t, p, w, 30)
-		if !strings.Contains(render(p, w, 30), "rascunhos ocultos · d mostra") {
+		if !strings.Contains(render(p, w, 30), "rascunhos ocultos") {
 			t.Errorf("%d: aviso de rascunho cortado", w)
 		}
 	}

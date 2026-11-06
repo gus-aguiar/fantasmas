@@ -31,6 +31,8 @@ type Acoes struct {
 	ProgressoMCP   func() dados.ProgressoMCP
 	// configurações → atualizar app fantasmas: git pull + build + troca do binário
 	Atualizar func() (dados.Resultado, error)
+	// gaveta comandos: abre a aba do /dia ou do /saude-multas no Herdr
+	Disparar func(id string) (dados.Disparo, error)
 	// gaveta pipes
 	Pipes  OpsPipes
 	Editar func(arquivo string) *exec.Cmd
@@ -47,6 +49,11 @@ type daydreamingMsg struct {
 	err   error
 }
 type tickMCPMsg struct{}
+type disparouMsg struct {
+	dados.Disparo
+	id  string
+	err error
+}
 type atualizouMsg struct {
 	dados.Resultado
 	err error
@@ -119,6 +126,12 @@ type Model struct {
 
 	// missao é o slug da missão em foco ("" = todas).
 	missao string
+
+	maqAberta  bool
+	disparos   map[string]dados.Disparo
+	armadoCmd  string
+	disparando string
+	relogio    func() time.Time
 }
 
 // Novo já nasce coletando: o Init dispara a primeira coleta.
@@ -192,8 +205,11 @@ func (m Model) coletar() (Model, tea.Cmd) {
 	return m, m.comecarCom(ctx)
 }
 
-// GavetaValida diz se id é uma gaveta conhecida.
+// GavetaValida diz se id é uma gaveta conhecida (nome novo ou apelido antigo).
 func GavetaValida(id string) bool {
+	if _, ok := apelidosGaveta[id]; ok {
+		return true
+	}
 	for _, g := range Gavetas {
 		if g.ID == id {
 			return true
@@ -212,6 +228,9 @@ func IDsGavetas() []string {
 }
 
 func indiceGaveta(id string) int {
+	if novo, ok := apelidosGaveta[id]; ok {
+		id = novo
+	}
 	for i, g := range Gavetas {
 		if g.ID == id {
 			return i
@@ -374,9 +393,21 @@ func (m Model) enter() Model {
 	case a.antigas:
 		m.antigas = !m.antigas
 		return m
+	case a.alterna == "rascunhos":
+		m.rascunhos = !m.rascunhos
+		return m.mover(0)
+	case a.alterna == "maquina":
+		m.maqAberta = !m.maqAberta
+		m.sel = 0
+		return m
 	case a.missao != "":
-		m.missao = a.missao
-		return m.irGaveta(indiceGaveta("agora"))
+		// enter na carta abre (foca) a missão; de novo, recolhe
+		if m.missao == a.missao {
+			m.missao = ""
+		} else {
+			m.missao = a.missao
+		}
+		return m
 	case a.pipe != 0:
 		return m.abrirPipe(a.pipe)
 	case a.pergunta != "":
@@ -393,23 +424,45 @@ func (m Model) enterCmd() (tea.Model, tea.Cmd) {
 		if a.ajuste != "" {
 			return m.acionarAjuste(a.ajuste)
 		}
-		switch a.acao {
-		case acaoDaydreaming:
-			return m.daydreaming()
-		case acaoMCP:
-			return m.reconectarMCPs()
-		case acaoAtualizar:
-			return m.atualizarApp()
+		if a.comando != "" {
+			return m.acionarComando(a.comando)
 		}
 	}
 	return m.enter(), nil
 }
 
-const (
-	acaoDaydreaming = "daydreaming"
-	acaoMCP         = "mcp"
-	acaoAtualizar   = "atualizar"
-)
+func (m Model) agora() time.Time {
+	if m.relogio != nil {
+		return m.relogio()
+	}
+	return time.Now()
+}
+
+// acionarComando segue o padrão armado: o primeiro enter arma, o segundo dispara.
+func (m Model) acionarComando(id string) (tea.Model, tea.Cmd) {
+	if m.armadoCmd != id {
+		m.armadoCmd = id
+		m.status = "enter de novo confirma"
+		return m, nil
+	}
+	m.armadoCmd = ""
+	m.status = ""
+	switch id {
+	case cmdDaydreaming:
+		return m.daydreaming()
+	case cmdMCP:
+		return m.reconectarMCPs()
+	case cmdAtualizar:
+		m.armadoAtu = true
+		return m.atualizarApp()
+	}
+	if _, ok := dados.ComandoPorID(id); !ok || m.acoes.Disparar == nil || m.disparando != "" {
+		return m, nil
+	}
+	m.disparando = id
+	f := m.acoes.Disparar
+	return m, func() tea.Msg { d, err := f(id); return disparouMsg{d, id, err} }
+}
 
 // Reiniciar devolve o binário novo a executar depois que o Run() termina ("" = nada).
 func (m Model) Reiniciar() string { return m.reiniciar }
@@ -533,6 +586,20 @@ func (m Model) atualizar(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m, toast := m.mostrarToast(msg.texto, T.Ok)
 		m2, col := m.coletar()
 		return m2, tea.Batch(toast, col)
+	case disparouMsg:
+		m.disparando = ""
+		k, _ := dados.ComandoPorID(msg.id)
+		if msg.err != nil {
+			m.status = k.Rotulo + ": " + msg.err.Error()
+			return m.mostrarToast(m.status, T.Erro)
+		}
+		ds := map[string]dados.Disparo{}
+		for k, v := range m.disparos {
+			ds[k] = v
+		}
+		ds[msg.id] = msg.Disparo
+		m.disparos = ds
+		return m.mostrarToast(k.Rotulo+" aberto na aba "+msg.Nome+" · g vai à aba", T.Ok)
 	case tickMCPMsg:
 		f := m.acoes.ProgressoMCP
 		return m, func() tea.Msg { return progressoMCPMsg{f()} }
@@ -704,15 +771,15 @@ func (m Model) mouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 
 func (m Model) tecla(k string) (tea.Model, tea.Cmd) {
 	armadoArq, armadoRet, armadoAtu := m.armadoArq, m.armadoRet, m.armadoAtu
-	armadoGengar := m.armadoGengar
-	m.armadoArq, m.armadoRet, m.armadoAtu, m.armadoGengar = "", "", false, false
+	armadoGengar, armadoCmd := m.armadoGengar, m.armadoCmd
+	m.armadoArq, m.armadoRet, m.armadoAtu, m.armadoGengar, m.armadoCmd = "", "", false, false, ""
 	switch k {
 	case "U":
 		m.armadoAtu = armadoAtu
 		return m.atualizarApp()
 	case "enter":
-		if a, ok := m.selecionado(); ok && a.acao == acaoAtualizar {
-			m.armadoAtu = armadoAtu
+		if a, ok := m.selecionado(); ok && a.comando != "" {
+			m.armadoCmd = armadoCmd
 		}
 		return m.enterCmd()
 	case "R":
@@ -769,10 +836,6 @@ func (m Model) tecla(k string) (tea.Model, tea.Cmd) {
 		}
 		m.busca, m.sel = "", 0
 		return m, nil
-	case "0":
-		// 0 é a gaveta missões e volta a todas as missões (tira o foco)
-		m.missao = ""
-		return m.irGaveta(indiceGaveta("missoes")), nil
 	case "r":
 		return m.coletar()
 	case "left", "h":
@@ -796,8 +859,8 @@ func (m Model) tecla(k string) (tea.Model, tea.Cmd) {
 	case "p":
 		return m.abrirURL(PainelURL), nil
 	}
-	if len(k) == 1 && k[0] >= '0' && k[0] <= '9' && int(k[0]-'0') < len(Gavetas) {
-		return m.irGaveta(int(k[0] - '0')), nil
+	if len(k) == 1 && k[0] >= '1' && k[0] <= '9' && int(k[0]-'1') < len(Gavetas) {
+		return m.irGaveta(int(k[0] - '1')), nil
 	}
 	return m, nil
 }
@@ -811,18 +874,13 @@ func (m Model) montarCorpo(largura, altura int) *corpo {
 		gavetaMissoes(c, m.estado, m.missao)
 	case "agora":
 		gavetaAgora(c, e, altura)
-	case "crew":
-		gavetaCrew(c, e)
 	case "prs":
 		gavetaPRs(c, e)
-	case "ambiente":
-		gavetaAmbiente(c, e)
 	case "maquina":
-		gavetaMaquina(c, e)
-	case "worktrees":
-		gavetaWorktrees(c, e)
-	case "configuracoes":
-		gavetaSettings(c, e, m.acoes.Ajustes, m.pedindoDD, m.atualizando, m.armadoAtu)
+		gavetaMaquinaToda(c, e, m.maqAberta)
+	case "comandos":
+		gavetaComandos(c, e, m.acoes.Ajustes, estadoComandos{disparos: m.disparos, armado: m.armadoCmd, disparando: m.disparando,
+			agora: m.agora(), pedindoDD: m.pedindoDD, atualizando: m.atualizando, armadoAtu: m.armadoAtu})
 	}
 	if c.desc != "" {
 		// gaveta sem seção (ex.: missões desligada): a descrição vira o título do topo
@@ -859,8 +917,8 @@ func esqueleto(largura, altura int) []string {
 
 // corpoLinhas devolve as linhas visíveis da gaveta e, para cada uma, o item dono (ou -1).
 func (m Model) corpoLinhas(largura, altura int) ([]string, []int) {
-	// a gaveta configurações não depende da coleta: aparece já na abertura.
-	if m.estado.At.IsZero() && Gavetas[m.gaveta].ID != "configuracoes" {
+	// a gaveta comandos não depende da coleta: aparece já na abertura.
+	if m.estado.At.IsZero() && Gavetas[m.gaveta].ID != "comandos" {
 		ls := esqueleto(largura, altura)
 		dono := make([]int, len(ls))
 		for i := range dono {
@@ -911,21 +969,21 @@ func (m Model) ajudaLinhas(largura int) []string {
 	k := func(t, d string) string { return Col("  "+t, 16) + d }
 	ls := []string{
 		"teclado",
+		k("1-5  ← →", "gavetas: 1 agora · 2 missões · 3 PRs · 4 máquina · 5 comandos"),
 		k("↑ ↓  j k", "escolhe item ou opção"),
-		k("enter", "abre · responde · foca a missão"),
-		k("enter 2×", "confirma Liberar merge"),
+		k("enter", "abre · responde · abre a missão (de novo recolhe)"),
+		k("enter 2×", "confirma Liberar merge e os comandos da gaveta 5"),
 		k("", "e Não vou fazer"),
-		k("← → 0-7", "troca de gaveta · 0 missões (todas) · 7 configurações"),
 		k("/", "filtra a lista"),
 		k("esc", "volta · limpa o filtro (ou a missão)"),
 		k("o", "abre o link (abrir ↗)"),
-		k("g", "vai à aba (ir à aba →)"),
+		k("g", "vai à aba (ir à aba →) · na gaveta 5, à aba do comando"),
 		k("p", "abre o painel do delegate"),
-		k("a", "abre · recolhe as antigas"),
+		k("a", "agora: abre · recolhe os antigos"),
 		k("x 2×", "arquiva a pergunta antiga"),
-		k("R 2×", "retoma fantasminha caído (crew)"),
+		k("R 2×", "retoma fantasminha caído"),
 		k("d", "PRs: mostra · esconde rascunhos"),
-		k("n N e · m · v", "nova sidequest (N com gengar; com foco, em qualquer gaveta) · YAML · missão e veto com enter 2×"),
+		k("n N e · m · v", "missões: nova sidequest (N com gengar; com foco, em qualquer gaveta) · YAML · nova missão · veto (enter 2×)"),
 		k("A S T 2×", "detalhe da sidequest: avança, pula, retry"),
 		k("D", "pede rodada do DayDreaming"),
 		k("M", "reconecta os MCPs de todas as sessões"),
@@ -984,12 +1042,12 @@ type tela struct {
 	img       areaImg
 }
 
-func (m Model) linhasTopo(largura int) ([]string, areaImg) {
+func (m Model) linhasTopo(largura, altura int) ([]string, areaImg) {
 	status := Corte(m.status, largura)
 	if m.aberto != nil || m.ajuda || m.pipe != 0 || m.form != nil {
 		return []string{TopoCompacto(m.estado, largura, m.quadro, m.coletando, status)}, areaImg{}
 	}
-	ls, area := topoArea(m.estado, largura, m.quadro, m.coletando, status, m.img != nil)
+	ls, area := topoArea(m.estado, largura, altura, m.quadro, m.coletando, status, m.img != nil)
 	if m.missao != "" {
 		ls = append(ls, seloMissao(m.estado, m.missao, largura))
 	}
@@ -1014,7 +1072,7 @@ func (m Model) montar(largura, altura int) tela {
 	if largura <= 0 || altura <= 0 {
 		return q
 	}
-	topo, area := m.linhasTopo(largura)
+	topo, area := m.linhasTopo(largura, altura)
 	if len(topo) > altura-1 {
 		topo = topo[:max(0, altura-1)]
 	}
@@ -1022,7 +1080,7 @@ func (m Model) montar(largura, altura int) tela {
 	if area.ok && area.y+area.r <= q.topo {
 		q.img = area
 	}
-	q.atualizar = achar(topo, "↻ atualizado", largura)
+	q.atualizar = achar(topo, "↻", largura)
 	if m.aberto != nil || m.ajuda || m.pipe != 0 || m.form != nil {
 		q.voltar = achar(topo, Voltar, largura)
 	}

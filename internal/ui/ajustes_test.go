@@ -32,7 +32,7 @@ func modeloAjustes(t *testing.T, shell map[string]string) (Model, *config.Loja, 
 	m := modelo(fixture(), &registro{})
 	m.acoes.Ajustes = l
 	m.largura, m.altura = 110, 50
-	return tecla(m, "7"), l, arq
+	return tecla(m, "5"), l, arq
 }
 
 // selAjuste é a posição do ajuste entre os itens da aba (os botões de ações vêm antes).
@@ -49,7 +49,7 @@ func selAjuste(t *testing.T, m Model, chave string) int {
 
 func TestOitoAbreSettings(t *testing.T) {
 	m, _, _ := modeloAjustes(t, nil)
-	if Gavetas[m.gaveta].ID != "configuracoes" {
+	if Gavetas[m.gaveta].ID != "comandos" {
 		t.Fatalf("gaveta %s", Gavetas[m.gaveta].ID)
 	}
 	out := render(m, 110, 50)

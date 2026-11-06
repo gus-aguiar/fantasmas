@@ -119,15 +119,15 @@ func TestSpriteNaoInvadeCorpo(t *testing.T) {
 					if q.img.ok && q.img.y+q.img.r > q.topo {
 						t.Fatalf("img=%v gaveta %d %dx%d: área %+v passa do topo (%d linhas)", img, g, w, h, q.img, q.topo)
 					}
-					if !img && Faixa(w) != "minimo" {
-						if sp := spriteFn(w); sp != nil && q.topo < min(sp.Linhas, h-1) {
+					if !img && Faixa(w) != "minimo" && h >= AlturaSemMascote {
+						if sp := spriteFn(w); sp != nil && q.topo < min(sp.Linhas, 4, h-1) {
 							t.Fatalf("gaveta %d %dx%d: topo com %d linhas < sprite %d", g, w, h, q.topo, sp.Linhas)
 						}
 					}
-					if Gavetas[g].ID == "crew" && h >= 20 {
+					if Gavetas[g].ID == "agora" && h >= 20 {
 						ls := strings.Split(ansi.Strip(m.Render(w, h)), "\n")
 						for y := 0; y < q.topo; y++ {
-							if strings.Contains(ls[y], "ativos") {
+							if strings.Contains(ls[y], "fantasminhas") {
 								t.Fatalf("%dx%d: corpo no topo, linha %d", w, h, y)
 							}
 						}
@@ -194,7 +194,7 @@ func TestCliqueComFiltroAbertoNaoDeixaDigitando(t *testing.T) {
 }
 
 func soTopo(m Model, w int) []string {
-	ls, _ := m.linhasTopo(w)
+	ls, _ := m.linhasTopo(w, 40)
 	return ls
 }
 

@@ -113,7 +113,7 @@ func (m Model) estadoVisto() dados.Estado {
 func seloMissao(e dados.Estado, slug string, largura int) string {
 	cor := corMissao(slug)
 	s := fundo(T.Mantle).Foreground(cor).Bold(true).Render(" ◆ "+nomeMissao(e, slug)) +
-		fundo(T.Mantle).Foreground(T.Dim).Render("   só esta missão · esc ou 0 mostra todas")
+		fundo(T.Mantle).Foreground(T.Dim).Render("   só esta missão · esc mostra todas")
 	return linhaFundo(s, largura, false)
 }
 
@@ -191,18 +191,13 @@ func gavetaMissoes(c *corpo, e dados.Estado, foco string) {
 	c.branco()
 	ms := append([]dados.Missao(nil), e.Missoes...)
 	sort.SliceStable(ms, func(i, j int) bool { return estadoMissao(ms[i]) < estadoMissao(ms[j]) })
-	abertas, suas := 0, 0
+	abertas := 0
 	for _, m := range ms {
 		if m.Estado != "concluida" {
 			abertas++
 		}
-		suas += m.Contagem.Pendentes
 	}
-	extra := "enter foca · g vai ao gengar"
-	if suas > 0 {
-		extra = fmt.Sprintf("%d esperando você · ", suas) + extra
-	}
-	c.secaoN("missões", abertas, extra)
+	c.secaoN("missões", abertas, "")
 	if len(ms) == 0 {
 		c.vazio("nenhuma missão aberta · m abre uma missão")
 	}
@@ -215,6 +210,9 @@ func gavetaMissoes(c *corpo, e dados.Estado, foco string) {
 			c.branco()
 		}
 		carta(c, e, m, m.Slug == foco, w)
+		if m.Slug != foco {
+			continue
+		}
 		faixa := func(bg lipgloss.Color) string { return st(bg, corMissao(m.Slug)).Render("▌ ") + espacos(2, bg) }
 		for _, r := range daMissao[m.Slug] {
 			c.linhaSidequestEm(r, r.Pipeline, faixa, w)
@@ -234,10 +232,6 @@ func gavetaMissoes(c *corpo, e dados.Estado, foco string) {
 		}
 		c.decisoes(e, e.DecisoesSoltas, sem, w)
 	}
-	c.branco()
-	c.texto(func(bg lipgloss.Color) string {
-		return st(bg, T.Dim).Render(Corte(rodapeMissoes(len(ms), len(e.Sidequests), len(soltas), c.largura >= 70), w))
-	})
 }
 
 // sidequestsPorMissao separa as sidequests por missão; a que não acha missão vai para as soltas, nunca some.
@@ -264,23 +258,6 @@ func sidequestsPorMissao(e dados.Estado, ms []dados.Missao) (map[string][]dados.
 		}
 	}
 	return por, soltas
-}
-
-func rodapeMissoes(nm, ns, nsoltas int, largo bool) string {
-	plural := func(n int, um, varios string) string {
-		if n == 1 {
-			return fmt.Sprintf("%d %s", n, um)
-		}
-		return fmt.Sprintf("%d %s", n, varios)
-	}
-	s := plural(nm, "missão", "missões") + " · " + plural(ns, "sidequest", "sidequests")
-	if nsoltas > 0 {
-		s += " (" + plural(nsoltas, "solta", "soltas") + ")"
-	}
-	if largo {
-		s += " · n nova sidequest · m nova missão"
-	}
-	return s
 }
 
 func (c *corpo) linhaSidequestEm(r dados.Sidequest, nome string, faixa func(bg lipgloss.Color) string, w int) {
@@ -433,31 +410,21 @@ func carta(c *corpo, e dados.Estado, m dados.Missao, emFoco bool, w int) {
 		a.url = m.Prototipo
 	}
 	faixa := func(bg lipgloss.Color) string { return st(bg, acento).Render("▌ ") }
-	largo := w >= 70
 	l1 := func(bg lipgloss.Color) string {
 		nomeCor := T.Texto
 		if r == missaoConcluida {
 			nomeCor = T.Sub
 		}
-		esq := faixa(bg) + st(bg, cg).Render(g+" ") + st(bg, nomeCor).Bold(true).Render(m.Nome) + espacos(2, bg)
-		orig := m.Origem
-		if m.OrigemRef != "" && m.OrigemRef != m.Origem {
-			orig += " · " + m.OrigemRef
+		esq := faixa(bg) + st(bg, cg).Render(g+" ") + st(bg, nomeCor).Bold(true).Render(m.Nome)
+		if n := m.Contagem.Pendentes; n > 0 {
+			esq += espacos(2, bg) + st(bg, T.Espera).Bold(true).Render(fmt.Sprintf("▲ %d %s", n, map[bool]string{true: "sua", false: "suas"}[n == 1]))
 		}
-		if orig != "" {
-			esq += chip(acento, T.Mantle, orig)
-		}
-		if largo {
-			for _, k := range m.Cards {
-				esq += espacos(1, bg) + chip(T.Chip, T.ChipTexto, k)
-			}
-		}
-		// sem alinhar à direita: o selecionado ganha os botões ali sem cortar a carta.
-		if m.Workspace != "" {
-			esq += st(bg, T.Dim).Render("  " + m.Workspace)
+		if m.Contagem.PrsVermelhos != nil && *m.Contagem.PrsVermelhos > 0 {
+			n := *m.Contagem.PrsVermelhos
+			esq += espacos(2, bg) + st(bg, T.Erro).Bold(true).Render(fmt.Sprintf("✗ %d %s", n, map[bool]string{true: "PR vermelho", false: "PRs vermelhos"}[n == 1]))
 		}
 		if emFoco {
-			esq += st(bg, acento).Bold(true).Render("  ◆ em foco")
+			esq += st(bg, acento).Bold(true).Render("  ▾ aberta")
 		}
 		if lipgloss.Width(esq) > w {
 			esq = ansi.Truncate(esq, w, "…")
@@ -468,10 +435,32 @@ func carta(c *corpo, e dados.Estado, m dados.Missao, emFoco bool, w int) {
 		l, vivo := e.Coordenadores[m.Gengar]
 		return encaixa(faixa(bg)+espacos(2, bg)+linhaGengar(m.Gengar, l, vivo, acento, w-4, bg), w, bg)
 	}
-	l3 := func(bg lipgloss.Color) string {
-		return ladoALado(faixa(bg)+espacos(2, bg)+contagens(m.Contagem, bg, largo), st(bg, T.Dim).Render(haQuanto(m.UltimaAtividade, e.At)), w, bg)
+	if !emFoco {
+		c.item(a, l1, l2)
+		return
 	}
-	c.item(a, l1, l2, l3)
+	// aberta: origem, cards, contagens e há quanto, antes das sidequests e decisões
+	l3 := func(bg lipgloss.Color) string {
+		esq := faixa(bg) + espacos(2, bg)
+		orig := m.Origem
+		if m.OrigemRef != "" && m.OrigemRef != m.Origem {
+			orig += " · " + m.OrigemRef
+		}
+		if orig != "" {
+			esq += chip(acento, T.Mantle, orig)
+		}
+		for _, k := range m.Cards {
+			esq += espacos(1, bg) + chip(T.Chip, T.ChipTexto, k)
+		}
+		if m.Workspace != "" {
+			esq += st(bg, T.Dim).Render("  " + m.Workspace)
+		}
+		return encaixa(esq, w, bg)
+	}
+	l4 := func(bg lipgloss.Color) string {
+		return ladoALado(faixa(bg)+espacos(2, bg)+contagens(m.Contagem, bg, w >= 70), st(bg, T.Dim).Render(haQuanto(m.UltimaAtividade, e.At)), w, bg)
+	}
+	c.item(a, l1, l2, l3, l4)
 }
 
 func contagens(k dados.Contagem, bg lipgloss.Color, largo bool) string {

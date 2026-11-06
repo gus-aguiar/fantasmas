@@ -14,7 +14,7 @@ func comCaido(sid string) (Model, *[]dados.Caido) {
 	var chamadas []dados.Caido
 	m := modelo(e, &registro{})
 	m.acoes.Retomar = func(c dados.Caido) error { chamadas = append(chamadas, c); return nil }
-	m.gaveta = indiceGaveta("crew")
+	m.gaveta = indiceGaveta("agora")
 	m.largura, m.altura = 96, 40
 	for m.sel = 0; m.sel < len(m.alvos()); m.sel++ {
 		if m.alvos()[m.sel].retomar != "" {
@@ -27,7 +27,7 @@ func comCaido(sid string) (Model, *[]dados.Caido) {
 func TestGavetaCrewMostraCaidos(t *testing.T) {
 	m, _ := comCaido("sid-1")
 	out := render(m, 96, 40)
-	if !strings.Contains(out, "caídos (1)") || !strings.Contains(out, "R retoma") || !strings.Contains(out, "c-pl-9") {
+	if !strings.Contains(out, "caído") || !strings.Contains(out, "R 2× retoma") || !strings.Contains(out, "c-pl-9") {
 		t.Fatalf("raia dos caídos ausente:\n%s", out)
 	}
 }

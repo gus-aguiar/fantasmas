@@ -8,12 +8,17 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"time"
 )
 
 const maxCaidos = 8
 
 // Caido é um fantasminha que tem meta mas não está vivo no Herdr.
-type Caido struct{ Nome, Pane, SessionID, Pasta string }
+type Caido struct {
+	Nome, Pane, SessionID, Pasta string
+	// Em é a hora do meta; caído de dias atrás vai para "antigos" na tela.
+	Em time.Time
+}
 
 var reSeguro = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._:-]*$`)
 
@@ -47,7 +52,7 @@ func CaidosDe(raiz string, vivos map[string]bool, limite int) []Caido {
 		if st, err := os.Stat(p); err == nil {
 			em = st.ModTime().UnixNano()
 		}
-		achados = append(achados, item{Caido{Nome: nome, Pane: kv["pane"], SessionID: kv["session_id"], Pasta: filepath.Dir(p)}, em})
+		achados = append(achados, item{Caido{Nome: nome, Pane: kv["pane"], SessionID: kv["session_id"], Pasta: filepath.Dir(p), Em: time.Unix(0, em)}, em})
 	}
 	sort.Slice(achados, func(i, j int) bool { return achados[i].em > achados[j].em })
 	var out []Caido

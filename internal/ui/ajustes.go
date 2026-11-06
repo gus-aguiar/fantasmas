@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"fantasmas/internal/config"
-	"fantasmas/internal/dados"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -44,9 +43,8 @@ func mostravel(o config.Opcao, valor string) string {
 	return valor
 }
 
-func gavetaSettings(c *corpo, e dados.Estado, ops OpsAjustes, pedindoDD, atualizando, armadoAtu bool) {
-	secaoAcoes(c, e, pedindoDD, atualizando, armadoAtu)
-	c.branco()
+// gavetaAjustes é o fim da gaveta comandos: tema, figura e variáveis.
+func gavetaAjustes(c *corpo, ops OpsAjustes) {
 	if ops == nil {
 		c.branco()
 		c.vazioIcone("◆", T.Espera, "configurações indisponíveis nesta execução")
