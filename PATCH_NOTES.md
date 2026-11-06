@@ -5,6 +5,9 @@ Cada entrada diz o que muda para quem usa; os detalhes técnicos ficam no histó
 
 ## 2026-11-06 · Visual
 
+**Corrigido**
+- A gaveta de missões (e qualquer outra) não fica mais em branco quando o que um fantasminha está fazendo traz quebra de linha (ex.: texto de IA de várias linhas no comentário do Jira).
+
 **Muda**
 - **Abas no rodapé, atalhos só no `?`:** a barra "1 Agora · 2 Missões · 3 PRs · 4 Máquina · 5 Config" volta para a última linha da tela, centralizada (com "? ajuda" em cinza à direita quando cabe); somem a linha de atalhos do topo e o rodapé de atalhos. `?` lista tudo, inclusive `ctrl+p`/`b`.
 - **O topo voltou a respirar:** o gengar aparece em tamanho cheio à esquerda e, ao lado, "fantasmas ↻ atualizado HH:MM", o resumo ("1 precisa de você · 2 trabalhando", só o que é maior que zero) e o alerta da máquina quando há. Em janela com menos de 30 linhas o gengar some e o topo fica numa linha.

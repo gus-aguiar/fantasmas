@@ -70,7 +70,7 @@ func avisoDe(linha []byte, agora time.Time) (Aviso, bool) {
 	if err != nil || agora.Sub(at) > janelaMural {
 		return Aviso{}, false
 	}
-	a := Aviso{At: at, Autor: raw.Autor, Texto: raw.Texto, Missao: raw.Missao}
+	a := Aviso{At: at, Autor: raw.Autor, Texto: UmaLinha(raw.Texto), Missao: raw.Missao}
 	if raw.Ate != "" {
 		ate, err := time.Parse(time.RFC3339, raw.Ate)
 		if err != nil {

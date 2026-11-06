@@ -73,7 +73,7 @@ func AtividadeDe(cauda []byte) Atividade {
 		}
 		for _, b := range blocos {
 			if b.Type == "tool_use" {
-				a.Acao = descreverFerramenta(b)
+				a.Acao = UmaLinha(descreverFerramenta(b))
 				a.Quando = quando
 			}
 		}
