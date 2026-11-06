@@ -125,9 +125,6 @@ func resumoTopo(e dados.Estado) (string, string) {
 	return strings.Join(ps, " · "), alerta
 }
 
-// DicaTopo é a linha discreta de atalhos do topo.
-const DicaTopo = DicaPaleta + " · r atualiza · ? ajuda · q sai"
-
 // linhaTopo é o topo de uma linha só (janela baixa): resumo e alerta à esquerda, ↻ hora à direita.
 func linhaTopo(e dados.Estado, w, quadro int, coletando bool, status string) string {
 	stl := func(c lipgloss.Color) lipgloss.Style { return fundo(T.Mantle).Foreground(c) }
@@ -187,21 +184,21 @@ func topoArea(e dados.Estado, largura, altura, quadro int, coletando bool, statu
 
 	l1 := stl(T.Acento()).Bold(true).Render("fantasmas") + stl(T.Dim).Render("  "+glifo+" "+quando)
 	l2 := stl(T.Texto).Render(resumo)
-	dica := stl(T.Dim).Render(DicaTopo)
-	if status != "" {
-		dica = stl(T.Texto).Render(status)
-	}
 	bruto := []string{l1, "", l2}
 	if alerta != "" {
 		bruto = append(bruto, stl(T.EstadoAviso()).Render(alerta))
 	}
-	bruto = append(bruto, "", dica)
+	if status != "" {
+		bruto = append(bruto, "", stl(T.Texto).Render(status))
+	}
 	if artLin < len(bruto) {
 		bruto = []string{l1, l2}
 		if alerta != "" {
 			bruto = append(bruto, stl(T.EstadoAviso()).Render(alerta))
 		}
-		bruto = append(bruto, dica)
+		if status != "" {
+			bruto = append(bruto, stl(T.Texto).Render(status))
+		}
 	}
 	cardW := 0
 	for i, l := range bruto {
@@ -273,17 +270,18 @@ func Rodape(ativa string, largura int) string {
 	return s
 }
 
-// rodapeAbas é a linha de abas como texto: "1 Agora · 2 Missões · …", a ativa em acento e negrito,
-// o dígito sempre no acento. Devolve também o intervalo [x0, x1) de cada aba, para o clique.
+// rodapeAbas é a linha de abas, centralizada: "1 Agora · 2 Missões · …", a ativa em acento e negrito,
+// o dígito sempre no acento. Se couber, "? ajuda" em cinza no canto direito. Devolve também o
+// intervalo [x0, x1) de cada aba, para o clique.
 func rodapeAbas(ativa string, largura int) (string, [][2]int) {
 	if largura <= 0 {
 		return "", nil
 	}
+	const dica = "? ajuda"
 	for _, curto := range []bool{false, true} {
-		var b strings.Builder
-		var abas [][2]int
-		x := 2
-		b.WriteString(espacos(2, T.Base))
+		var partes []string
+		var rel [][2]int
+		x := 0
 		for i, g := range Gavetas {
 			on := g.ID == ativa
 			if i > 0 {
@@ -291,7 +289,7 @@ func rodapeAbas(ativa string, largura int) (string, [][2]int) {
 				if curto {
 					sep = "  "
 				}
-				b.WriteString(st(T.Base, T.Dim).Render(sep))
+				partes = append(partes, st(T.Base, T.Dim).Render(sep))
 				x += lipgloss.Width(sep)
 			}
 			nome := NomeAba[g.ID]
@@ -307,13 +305,23 @@ func rodapeAbas(ativa string, largura int) (string, [][2]int) {
 				r += cor.Render(" " + nome)
 			}
 			w := lipgloss.Width(r)
-			abas = append(abas, [2]int{x, x + w})
+			rel = append(rel, [2]int{x, x + w})
 			x += w
-			b.WriteString(r)
+			partes = append(partes, r)
 		}
-		if x <= largura || curto {
-			return encaixa(b.String(), largura, T.Base), abas
+		if x > largura && !curto {
+			continue
 		}
+		esq := max(0, (largura-x)/2)
+		abas := make([][2]int, len(rel))
+		for i, r := range rel {
+			abas[i] = [2]int{r[0] + esq, r[1] + esq}
+		}
+		linha := espacos(esq, T.Base) + strings.Join(partes, "")
+		if falta := largura - esq - x; falta >= len(dica)+2 {
+			linha += espacos(falta-len(dica)-1, T.Base) + st(T.Base, T.Dim).Render(dica)
+		}
+		return encaixa(linha, largura, T.Base), abas
 	}
 	return "", nil
 }

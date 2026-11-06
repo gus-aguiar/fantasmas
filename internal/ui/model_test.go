@@ -85,7 +85,7 @@ func TestTodasAsGavetasCabem(t *testing.T) {
 						t.Fatalf("%s %dx%d linha %d larga: %d", g.ID, w, h, i, lipgloss.Width(l))
 					}
 				}
-				if ls[h-1] != m.rodapeAtalhos(w) {
+				if p, _ := rodapeAbas(Gavetas[m.gaveta].ID, w); ls[h-1] != p {
 					t.Fatalf("%s %dx%d: última linha não é o rodapé", g.ID, w, h)
 				}
 			}

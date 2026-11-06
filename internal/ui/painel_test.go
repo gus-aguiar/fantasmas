@@ -156,8 +156,8 @@ func TestConfiguracoesSoAjustes(t *testing.T) {
 			t.Fatalf("configurações com o comando %q:\n%s", s, p)
 		}
 	}
-	if !strings.Contains(p, "FANTASMAS_TEMA") || !strings.Contains(p, "ctrl+p comandos") {
-		t.Fatalf("configurações sem ajustes ou sem a dica:\n%s", p)
+	if !strings.Contains(p, "FANTASMAS_TEMA") {
+		t.Fatalf("configurações sem ajustes:\n%s", p)
 	}
 }
 
@@ -232,7 +232,7 @@ func TestTopoGengarCheio(t *testing.T) {
 		t.Fatalf("gengar devia vir em tamanho cheio: sprite %d linhas, topo %d", sp.Linhas, len(ls))
 	}
 	p := render(m, 140, 42)
-	for _, s := range []string{"fantasmas  ↻ atualizado", "precisa de você", DicaTopo, "1 Agora · 2 Missões"} {
+	for _, s := range []string{"fantasmas  ↻ atualizado", "precisa de você", "1 Agora · 2 Missões"} {
 		if !strings.Contains(p, s) {
 			t.Fatalf("topo sem %q:\n%s", s, p)
 		}

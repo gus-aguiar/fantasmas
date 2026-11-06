@@ -6,6 +6,7 @@ Cada entrada diz o que muda para quem usa; os detalhes técnicos ficam no histó
 ## 2026-11-06 · Visual
 
 **Muda**
+- **Abas no rodapé, atalhos só no `?`:** a barra "1 Agora · 2 Missões · 3 PRs · 4 Máquina · 5 Config" volta para a última linha da tela, centralizada (com "? ajuda" em cinza à direita quando cabe); somem a linha de atalhos do topo e o rodapé de atalhos. `?` lista tudo, inclusive `ctrl+p`/`b`.
 - **O topo voltou a respirar:** o gengar aparece em tamanho cheio à esquerda e, ao lado, "fantasmas ↻ atualizado HH:MM", o resumo ("1 precisa de você · 2 trabalhando", só o que é maior que zero), o alerta da máquina quando há e uma linha discreta de atalhos. Em janela com menos de 30 linhas o gengar some e o topo fica numa linha.
 - **O gengar só se mexe quando algum fantasminha está trabalhando;** com tudo parado, ele fica quieto.
 - **Paleta de comandos no lugar do painel lateral:** `ctrl+p` (ou `b`, como antes) abre uma caixa no centro da tela, com o resto esmaecido atrás. Digite para buscar; os comandos vêm agrupados (DIA: Abrir o dia, Fechar o dia · MULTAS: Saúde de multas · SISTEMA: DayDreaming, Reconectar MCPs, Atualizar app), com o estado à direita ("rodando há 4 min"). `enter 2×` executa, `g` vai à aba do disparo e `esc` fecha. Com a busca vazia, `b` também fecha.

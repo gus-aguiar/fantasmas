@@ -47,7 +47,7 @@ As teclas que mais importam estão abaixo. A lista completa abre com `?`.
 
 | Tecla | Faz |
 |---|---|
-| `1`–`5` ou `← →` | troca de gaveta: `1` agora (abre aqui), `2` missões, `3` PRs, `4` máquina, `5` configurações |
+| `1`–`5` ou `← →` | troca de aba (barra no rodapé): `1` agora (abre aqui), `2` missões, `3` PRs, `4` máquina, `5` configurações |
 | `↑ ↓` e `enter` | escolhe e abre/responde; numa missão, abre as sidequests e as decisões |
 | `ctrl+p` ou `b` | abre a paleta de comandos no centro da tela: digite para buscar, `↑ ↓` escolhe, `esc` fecha (com a busca vazia, `b` também fecha) |
 | `enter 2×` | na paleta, dispara Abrir o dia, Fechar o dia, Saúde de multas, DayDreaming, Reconectar MCPs ou Atualizar app |

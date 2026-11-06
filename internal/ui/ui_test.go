@@ -122,7 +122,7 @@ func TestTopoLinhas(t *testing.T) {
 
 func TestTopoConteudo(t *testing.T) {
 	s := ansi.Strip(Topo(estadoEx(), 96, 0, false, ""))
-	for _, esperado := range []string{"atualizado 09:05", DicaTopo, "pesados: mvn", "1 precisa de você"} {
+	for _, esperado := range []string{"atualizado 09:05", "pesados: mvn", "1 precisa de você"} {
 		if !strings.Contains(s, esperado) {
 			t.Fatalf("falta %q em %q", esperado, s)
 		}

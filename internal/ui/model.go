@@ -984,7 +984,7 @@ func (m Model) ajudaLinhas(largura int) []string {
 	k := func(t, d string) string { return Col("  "+t, 16) + d }
 	ls := []string{
 		"teclado",
-		k("1-5  ← →", "gavetas: 1 agora · 2 missões · 3 PRs · 4 máquina · 5 configurações"),
+		k("1-5  ← →", "abas (rodapé): 1 agora · 2 missões · 3 PRs · 4 máquina · 5 configurações"),
 		k("ctrl+p  b", "paleta de comandos (abrir/fechar o dia, saúde de multas, DayDreaming, MCPs, atualizar); digite para buscar, esc fecha"),
 		k("↑ ↓  j k", "escolhe item ou opção"),
 		k("enter", "abre · responde · abre a missão (de novo recolhe)"),
@@ -1093,11 +1093,8 @@ func (m Model) montar(largura, altura int) tela {
 	if len(topo) > altura-1 {
 		topo = topo[:max(0, altura-1)]
 	}
-	if altura-1-len(topo) >= 4 {
-		ab, xs := rodapeAbas(Gavetas[m.gaveta].ID, largura)
-		q.abas, q.abasY = xs, len(topo)
-		topo = append(topo, ab, espacos(largura, T.Base))
-	}
+	rodape, xs := rodapeAbas(Gavetas[m.gaveta].ID, largura)
+	q.abas, q.abasY = xs, altura-1
 	q.topo = len(topo)
 	if area.ok && area.y+area.r <= q.topo {
 		q.img = area
@@ -1152,7 +1149,7 @@ func (m Model) montar(largura, altura int) tela {
 		}
 		linhas = append(linhas, corpo...)
 	}
-	linhas = append(linhas, m.rodapeAtalhos(largura))
+	linhas = append(linhas, rodape)
 	for i, l := range linhas {
 		if lipgloss.Width(l) > largura {
 			linhas[i] = encaixa(l, largura, T.Base)
