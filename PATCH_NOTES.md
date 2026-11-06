@@ -7,11 +7,9 @@ Cada entrada diz o que muda para quem usa; os detalhes técnicos ficam no histó
 
 **Muda**
 - **Abas no rodapé, atalhos só no `?`:** a barra "1 Agora · 2 Missões · 3 PRs · 4 Máquina · 5 Config" volta para a última linha da tela, centralizada (com "? ajuda" em cinza à direita quando cabe); somem a linha de atalhos do topo e o rodapé de atalhos. `?` lista tudo, inclusive `ctrl+p`/`b`.
-- **O topo voltou a respirar:** o gengar aparece em tamanho cheio à esquerda e, ao lado, "fantasmas ↻ atualizado HH:MM", o resumo ("1 precisa de você · 2 trabalhando", só o que é maior que zero), o alerta da máquina quando há e uma linha discreta de atalhos. Em janela com menos de 30 linhas o gengar some e o topo fica numa linha.
+- **O topo voltou a respirar:** o gengar aparece em tamanho cheio à esquerda e, ao lado, "fantasmas ↻ atualizado HH:MM", o resumo ("1 precisa de você · 2 trabalhando", só o que é maior que zero) e o alerta da máquina quando há. Em janela com menos de 30 linhas o gengar some e o topo fica numa linha.
 - **O gengar só se mexe quando algum fantasminha está trabalhando;** com tudo parado, ele fica quieto.
 - **Paleta de comandos no lugar do painel lateral:** `ctrl+p` (ou `b`, como antes) abre uma caixa no centro da tela, com o resto esmaecido atrás. Digite para buscar; os comandos vêm agrupados (DIA: Abrir o dia, Fechar o dia · MULTAS: Saúde de multas · SISTEMA: DayDreaming, Reconectar MCPs, Atualizar app), com o estado à direita ("rodando há 4 min"). `enter 2×` executa, `g` vai à aba do disparo e `esc` fecha. Com a busca vazia, `b` também fecha.
-- **Abas em texto logo abaixo do topo:** "1 Agora · 2 Missões · 3 PRs · 4 Máquina · 5 Config", a ativa em destaque. Continuam clicáveis e com `1-5`/`← →`.
-- **Rodapé curto:** só os atalhos do lugar onde você está (até 5, ex.: "ctrl+p comandos · enter abrir · g ir à aba · a antigos · ? ajuda"). `?` mostra a lista completa.
 - **Menos enfeite, mais leitura:** seções com cabeçalho cinza em caixa alta e contador ("ESPERANDO VOCÊ 1", "TRAVADOS 1", "TRABALHANDO 2", "PARADOS 1"); a cor aparece só para estado e foco.
 - **Listas em colunas:** glifo de estado colorido (▲ pede você, ● trabalhando, ◌ parado, ✗ travado ou caído), o título na cor normal e os detalhes em cinza à direita, cortados com "…".
 - **Acompanhando e antigos recolhidos numa linha só** ("▸ Acompanhando 3   ▸ Antigos 8"); `enter` (ou `a`) abre os dois.
