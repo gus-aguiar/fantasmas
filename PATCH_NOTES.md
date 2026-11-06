@@ -3,6 +3,12 @@
 O que mudou no `gengar` (TUI fantasmas) e no fluxo de missões e sidequests do Spark. A versão mais nova fica no topo.
 Cada entrada diz o que muda para quem usa; os detalhes técnicos ficam no histórico do git.
 
+## 2026-11-06 · Painel de botões
+
+**Muda**
+- **Os comandos saem da gaveta `5` para o painel lateral de botões**, que abre e fecha com `b` em qualquer gaveta (`esc` também fecha). Ele aparece à direita, por cima da lista, sem trocar de gaveta; em janela estreita ocupa a tela toda. Dentro: `/dia abrir`, `/dia fechar`, `/saude-multas`, DayDreaming, reconectar MCPs e atualizar app, com `↑ ↓`, `enter 2×` para disparar, "rodando há N min" e `g` para ir à aba. O rodapé mostra a dica `b botões`.
+- **A gaveta `5` volta a ser configurações**, só com os ajustes (tema, figura e variáveis). `--gaveta configuracoes` abre nela, e `--gaveta comandos` segue valendo como apelido.
+
 ## 2026-11-06 · Cinco gavetas e comandos
 
 **Muda**

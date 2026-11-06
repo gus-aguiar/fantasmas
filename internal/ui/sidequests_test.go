@@ -111,7 +111,7 @@ func telaSQ(m Model, w int) string { return ansi.Strip(m.Render(w, 60)) }
 
 func TestSemGavetaPipes(t *testing.T) {
 	ids := strings.Join(IDsGavetas(), ",")
-	if ids != "agora,missoes,prs,maquina,comandos" {
+	if ids != "agora,missoes,prs,maquina,configuracoes" {
 		t.Fatalf("ordem=%s", ids)
 	}
 	if GavetaValida("pipes") {

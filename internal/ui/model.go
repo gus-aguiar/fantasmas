@@ -132,6 +132,10 @@ type Model struct {
 	armadoCmd  string
 	disparando string
 	relogio    func() time.Time
+
+	// botoes é o painel lateral de botões (tecla b); selGaveta guarda a seleção da gaveta enquanto ele está aberto.
+	botoes    bool
+	selGaveta int
 }
 
 // Novo já nasce coletando: o Init dispara a primeira coleta.
@@ -267,6 +271,9 @@ func (m Model) alturaLista() int {
 }
 
 func (m Model) alvos() []alvo {
+	if m.botoes {
+		return m.corpoBotoes().alvos
+	}
 	return m.montarCorpo(m.larguraEfetiva(), m.alturaLista()).alvos
 }
 
@@ -650,6 +657,9 @@ func (m Model) atualizar(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.ajuda = false
 			return m, nil
 		}
+		if m.botoes {
+			return m.teclaBotoes(msg.String())
+		}
 		if m.aberto != nil {
 			return m.teclaDetalhe(msg)
 		}
@@ -715,7 +725,7 @@ func (m Model) mouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 		m.ajuda = false
 		return m, nil
 	}
-	if m.ajuste != nil {
+	if m.ajuste != nil || m.botoes {
 		return m, nil
 	}
 	q := m.montar(m.larguraEfetiva(), m.alturaEfetiva())
@@ -858,6 +868,8 @@ func (m Model) tecla(k string) (tea.Model, tea.Cmd) {
 		return m.irAba(), nil
 	case "p":
 		return m.abrirURL(PainelURL), nil
+	case "b":
+		return m.abrirBotoes(), nil
 	}
 	if len(k) == 1 && k[0] >= '1' && k[0] <= '9' && int(k[0]-'1') < len(Gavetas) {
 		return m.irGaveta(int(k[0] - '1')), nil
@@ -878,9 +890,8 @@ func (m Model) montarCorpo(largura, altura int) *corpo {
 		gavetaPRs(c, e)
 	case "maquina":
 		gavetaMaquinaToda(c, e, m.maqAberta)
-	case "comandos":
-		gavetaComandos(c, e, m.acoes.Ajustes, estadoComandos{disparos: m.disparos, armado: m.armadoCmd, disparando: m.disparando,
-			agora: m.agora(), pedindoDD: m.pedindoDD, atualizando: m.atualizando, armadoAtu: m.armadoAtu})
+	case "configuracoes":
+		gavetaAjustes(c, m.acoes.Ajustes)
 	}
 	if c.desc != "" {
 		// gaveta sem seção (ex.: missões desligada): a descrição vira o título do topo
@@ -917,8 +928,8 @@ func esqueleto(largura, altura int) []string {
 
 // corpoLinhas devolve as linhas visíveis da gaveta e, para cada uma, o item dono (ou -1).
 func (m Model) corpoLinhas(largura, altura int) ([]string, []int) {
-	// a gaveta comandos não depende da coleta: aparece já na abertura.
-	if m.estado.At.IsZero() && Gavetas[m.gaveta].ID != "comandos" {
+	// a gaveta configurações não depende da coleta: aparece já na abertura.
+	if m.estado.At.IsZero() && Gavetas[m.gaveta].ID != "configuracoes" {
 		ls := esqueleto(largura, altura)
 		dono := make([]int, len(ls))
 		for i := range dono {
@@ -969,15 +980,16 @@ func (m Model) ajudaLinhas(largura int) []string {
 	k := func(t, d string) string { return Col("  "+t, 16) + d }
 	ls := []string{
 		"teclado",
-		k("1-5  ← →", "gavetas: 1 agora · 2 missões · 3 PRs · 4 máquina · 5 comandos"),
+		k("1-5  ← →", "gavetas: 1 agora · 2 missões · 3 PRs · 4 máquina · 5 configurações"),
+		k("b", "abre · fecha o painel de botões (/dia, /saude-multas, DayDreaming, MCPs, atualizar); esc fecha"),
 		k("↑ ↓  j k", "escolhe item ou opção"),
 		k("enter", "abre · responde · abre a missão (de novo recolhe)"),
-		k("enter 2×", "confirma Liberar merge e os comandos da gaveta 5"),
+		k("enter 2×", "confirma Liberar merge e os botões do painel b"),
 		k("", "e Não vou fazer"),
 		k("/", "filtra a lista"),
 		k("esc", "volta · limpa o filtro (ou a missão)"),
 		k("o", "abre o link (abrir ↗)"),
-		k("g", "vai à aba (ir à aba →) · na gaveta 5, à aba do comando"),
+		k("g", "vai à aba (ir à aba →) · no painel b, à aba do disparo"),
 		k("p", "abre o painel do delegate"),
 		k("a", "agora: abre · recolhe os antigos"),
 		k("x 2×", "arquiva a pergunta antiga"),
@@ -1106,6 +1118,9 @@ func (m Model) montar(largura, altura int) tela {
 			for len(corpo) < hl {
 				corpo = append(corpo, espacos(largura, T.Base))
 			}
+			if m.botoes {
+				corpo = m.sobreporBotoes(corpo, largura)
+			}
 		}
 		if len(corpo) > h {
 			corpo = corpo[:h]
@@ -1131,6 +1146,9 @@ func (m Model) montar(largura, altura int) tela {
 		linhas = append(linhas, corpo...)
 	}
 	rod, abas := rodapeAbas(Gavetas[m.gaveta].ID, largura)
+	if m.botoes {
+		q.dono = nil
+	}
 	q.abas = abas
 	linhas = append(linhas, rod)
 	for i, l := range linhas {

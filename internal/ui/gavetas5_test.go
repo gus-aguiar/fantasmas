@@ -9,7 +9,7 @@ import (
 )
 
 func TestCincoGavetasETeclas(t *testing.T) {
-	quer := []string{"agora", "missoes", "prs", "maquina", "comandos"}
+	quer := []string{"agora", "missoes", "prs", "maquina", "configuracoes"}
 	if len(Gavetas) != 5 {
 		t.Fatalf("gavetas: %d", len(Gavetas))
 	}
@@ -23,7 +23,7 @@ func TestCincoGavetasETeclas(t *testing.T) {
 			t.Fatalf("tecla %d: %s", i+1, Gavetas[m.gaveta].ID)
 		}
 	}
-	if m = tecla(m, "6"); Gavetas[m.gaveta].ID != "comandos" {
+	if m = tecla(m, "6"); Gavetas[m.gaveta].ID != "configuracoes" {
 		t.Fatal("6 não é gaveta")
 	}
 	if m = tecla(m, "right"); Gavetas[m.gaveta].ID != "agora" {
@@ -32,7 +32,7 @@ func TestCincoGavetasETeclas(t *testing.T) {
 }
 
 func TestApelidosDeGaveta(t *testing.T) {
-	for velho, novo := range map[string]string{"crew": "agora", "ambiente": "maquina", "worktrees": "maquina", "configuracoes": "comandos"} {
+	for velho, novo := range map[string]string{"crew": "agora", "ambiente": "maquina", "worktrees": "maquina", "comandos": "configuracoes"} {
 		if !GavetaValida(velho) || Gavetas[indiceGaveta(velho)].ID != novo {
 			t.Fatalf("%s não leva a %s", velho, novo)
 		}
@@ -102,7 +102,7 @@ func TestComandoPedeEnterDuasVezes(t *testing.T) {
 		pedidos = append(pedidos, id)
 		return dados.Disparo{ID: id, Aba: "w2:t9", Nome: "dia-1106-0900", Inicio: time.Now()}, nil
 	}
-	m = tecla(m, "5")
+	m = tecla(m, "b")
 	if a, _ := m.selecionado(); a.comando != "dia-abrir" {
 		t.Fatalf("primeiro item: %+v", a)
 	}
@@ -127,7 +127,7 @@ func TestComandoPedeEnterDuasVezes(t *testing.T) {
 		t.Fatalf("pedidos %v", pedidos)
 	}
 	m.relogio = func() time.Time { return m.disparos["dia-abrir"].Inicio.Add(7 * time.Minute) }
-	if p := render(m, 140, 40); !strings.Contains(p, "rodando há 7 min") {
+	if p := render(m, 70, 40); !strings.Contains(p, "rodando há 7 min") {
 		t.Fatalf("sem tempo do disparo:\n%s", p)
 	}
 	if a, _ := m.selecionado(); a.aba != "w2:t9" {
@@ -138,7 +138,7 @@ func TestComandoPedeEnterDuasVezes(t *testing.T) {
 func TestMCPSemSublista(t *testing.T) {
 	e := fixture()
 	e.MCP = dados.ProgressoMCP{Inicio: e.At, Sessoes: []dados.SessaoMCP{{Nome: "sessao-a", Tom: "ok"}, {Nome: "sessao-b", Tom: "ok"}}}
-	p := render(modelo(e, &registro{}).irGaveta(indiceGaveta("comandos")), 140, 40)
+	p := render(modelo(e, &registro{}).ComBotoes(), 70, 40)
 	if strings.Contains(p, "sessao-a") || !strings.Contains(p, "2 ok") {
 		t.Fatalf("reconectar MCPs devia ser uma linha só:\n%s", p)
 	}

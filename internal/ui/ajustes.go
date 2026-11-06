@@ -43,7 +43,7 @@ func mostravel(o config.Opcao, valor string) string {
 	return valor
 }
 
-// gavetaAjustes é o fim da gaveta comandos: tema, figura e variáveis.
+// gavetaAjustes é a gaveta configurações: tema, figura e variáveis.
 func gavetaAjustes(c *corpo, ops OpsAjustes) {
 	if ops == nil {
 		c.branco()

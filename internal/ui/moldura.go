@@ -30,12 +30,12 @@ var Gavetas = []Gaveta{
 	{"missoes", "2", "missões", "Frentes abertas, sidequests e decisões"},
 	{"prs", "3", "PRs", "Seus PRs e o CI"},
 	{"maquina", "4", "máquina", "Computador, serviços e worktrees"},
-	{"comandos", "5", "comandos", "Disparos e ajustes"},
+	{"configuracoes", "5", "configurações", "Tema, figura e variáveis"},
 }
 
 // apelidosGaveta mantém os nomes antigos do --gaveta valendo.
 var apelidosGaveta = map[string]string{
-	"crew": "agora", "ambiente": "maquina", "worktrees": "maquina", "configuracoes": "comandos",
+	"crew": "agora", "ambiente": "maquina", "worktrees": "maquina", "comandos": "configuracoes",
 }
 
 func fundo(c lipgloss.Color) lipgloss.Style { return lipgloss.NewStyle().Background(c) }
@@ -257,6 +257,9 @@ func rodapeAbas(ativa string, largura int) (string, [][2]int) {
 		if lipgloss.Width(s) <= largura {
 			break
 		}
+	}
+	if dica := fundo(T.Mantle).Foreground(T.Dim).Render("  " + DicaBotoes); lipgloss.Width(s)+lipgloss.Width(dica) <= largura {
+		s += dica
 	}
 	esq := max(0, (largura-lipgloss.Width(s))/2)
 	for i := range abas {

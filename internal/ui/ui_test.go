@@ -89,7 +89,7 @@ func TestRodape110TeclaENome(t *testing.T) {
 
 func TestRodape96SoNomes(t *testing.T) {
 	r := ansi.Strip(Rodape("agora", 96))
-	if !strings.Contains(r, "missões") || !strings.Contains(r, "comandos") {
+	if !strings.Contains(r, "missões") || !strings.Contains(r, "configurações") {
 		t.Fatalf("%q", r)
 	}
 }

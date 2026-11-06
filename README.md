@@ -47,14 +47,15 @@ As teclas que mais importam estão abaixo. A lista completa abre com `?`.
 
 | Tecla | Faz |
 |---|---|
-| `1`–`5` ou `← →` | troca de gaveta: `1` agora (abre aqui), `2` missões, `3` PRs, `4` máquina, `5` comandos |
+| `1`–`5` ou `← →` | troca de gaveta: `1` agora (abre aqui), `2` missões, `3` PRs, `4` máquina, `5` configurações |
 | `↑ ↓` e `enter` | escolhe e abre/responde; numa missão, abre as sidequests e as decisões |
-| `enter 2×` | na gaveta `5`, dispara `/dia abrir`, `/dia fechar`, `/saude-multas`, DayDreaming, MCPs ou atualizar |
+| `b` | abre e fecha o painel de botões à direita (`esc` também fecha) |
+| `enter 2×` | no painel `b`, dispara `/dia abrir`, `/dia fechar`, `/saude-multas`, DayDreaming, MCPs ou atualizar |
 | `?` | ajuda com todas as teclas |
 | `m` | abre uma missão nova (enter 2× confirma) |
 | `n` / `N` | lança uma sidequest (`N` abre também um gengar dedicado) |
 | `v` | veta uma decisão que o sistema tomou sozinho (enter 2× confirma) |
-| `g` | vai para a aba do agente no Herdr (na gaveta `5`, para a aba do comando disparado) |
+| `g` | vai para a aba do agente no Herdr (no painel `b`, para a aba do comando disparado) |
 | `r` / `q` | atualiza agora / sai |
 
 ## Comandos (gaveta 5)

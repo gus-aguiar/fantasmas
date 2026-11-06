@@ -57,8 +57,8 @@ bin/fantasmas --uma-vez --demo --gaveta missoes --pipe 13
 
 - `--demo` e `--demo-verde` usam um estado fixo (`ui.EstadoDemo`) e não precisam de workspace.
 - Sem `--demo`, o comando faz uma coleta real.
-- Gavetas válidas: `agora missoes prs maquina comandos`; os nomes antigos seguem como apelido (`crew` → agora, `ambiente` e `worktrees` → maquina, `configuracoes` → comandos, em `apelidosGaveta`). Um nome inválido sai com código 2.
-- Para ver um tema sem mexer no arquivo do usuário: `FANTASMAS_AJUSTES=/tmp/a.json FANTASMAS_TEMA=orca bin/fantasmas --uma-vez --cor --demo --gaveta comandos`.
+- Gavetas válidas: `agora missoes prs maquina configuracoes`; os nomes antigos seguem como apelido (`crew` → agora, `ambiente` e `worktrees` → maquina, `comandos` → configuracoes, em `apelidosGaveta`). `--botoes` abre o painel de botões no quadro. Um nome inválido sai com código 2.
+- Para ver um tema sem mexer no arquivo do usuário: `FANTASMAS_AJUSTES=/tmp/a.json FANTASMAS_TEMA=orca bin/fantasmas --uma-vez --cor --demo --gaveta configuracoes`.
 
 ### Teclas principais
 
@@ -69,7 +69,8 @@ A lista completa fica no `?` dentro do app, e a fonte é `ajudaLinhas` em `inter
   - `2` **missões**: cartas enxutas (nome, ▲ suas, o que o gengar faz agora, PR vermelho); `enter` abre a missão (foco) com cards, contagens, sidequests e decisões, e de novo recolhe;
   - `3` **PRs**: não-rascunho com o CI; os rascunhos ficam numa linha que abre com `enter` ou `d`;
   - `4` **máquina**: máquina, ambiente e worktrees; uma linha quando tudo está verde (enter abre), aberta quando há alerta;
-  - `5` **comandos**: `/dia abrir`, `/dia fechar`, `/saude-multas`, DayDreaming, reconectar MCPs (só o resumo da última rodada) e atualizar app, todos com `enter 2×`; os ajustes vêm no fim.
+  - `5` **configurações**: só os ajustes (tema, figura e variáveis `FANTASMAS_*`).
+- `b`: abre e fecha o **painel de botões** (`internal/ui/painel.go`), à direita e por cima da gaveta, sem trocá-la; `esc` também fecha. Largura fixa `LarguraBotoes` (34); abaixo de 80 colunas ocupa a tela. Dentro: `/dia abrir`, `/dia fechar`, `/saude-multas`, DayDreaming, reconectar MCPs (só o resumo da última rodada) e atualizar app, todos com `enter 2×` (`armadoCmd`). Aberto, as teclas vão para ele (`teclaBotoes`) e a seleção da gaveta é guardada em `selGaveta`. O estado não persiste; o rodapé mostra `b botões`.
 - `↑ ↓`/`j k`: escolhe um item. `enter`: abre ou responde. `esc`: volta e tira o foco da missão.
 - **Topo:** uma linha, `▲ N suas · ● N trabalhando` mais o alerta da máquina só quando existe (`resumoTopo`). O mascote tem no máximo 4 linhas e some abaixo de `AlturaSemMascote` (30) linhas. Contador zerado não aparece (`secaoN`).
 - `/`: filtra. `r`: coleta agora. `q`: sai.
@@ -77,11 +78,11 @@ A lista completa fica no `?` dentro do app, e a fonte é `ajudaLinhas` em `inter
 - Ações destrutivas exigem a tecla duas vezes (estado "armado"):
   - `x 2×`: arquiva a pergunta;
   - `R 2×`: retoma um fantasminha caído;
-  - `U 2×`: atualiza o app (também na gaveta comandos);
-  - `enter 2×`: qualquer item da gaveta comandos (`armadoCmd`);
+  - `U 2×`: atualiza o app (também no painel de botões);
+  - `enter 2×`: qualquer botão do painel `b` (`armadoCmd`);
   - `A`/`S`/`T 2×`: avança, pula ou faz retry de uma etapa da sidequest (no detalhe dela).
 - Gaveta missões: a carta aberta (`enter`) mostra as sidequests da missão (um bloco por etapa) e as decisões; as sem missão saem em "SIDEQUESTS SOLTAS". `n` lança uma sidequest (na missão em foco, senão solta; com uma missão em foco vale em qualquer gaveta), `N` faz o mesmo e abre o gengar dedicado, `e` edita o YAML, `m` abre uma missão (`missao-abrir.sh`, enter 2× confirma), `v` veta uma decisão tomada pela regra (enter 2× confirma) e `enter` numa sidequest abre o detalhe. Merge (`juntar`) é sempre humano: a TUI não aprova.
-- Outras: `D` pede uma rodada do DayDreaming e `M` reconecta os MCPs, de qualquer gaveta e sem confirmação; na gaveta comandos os mesmos botões pedem `enter 2×`.
+- Outras: `D` pede uma rodada do DayDreaming e `M` reconecta os MCPs, de qualquer gaveta e sem confirmação; no painel `b` os mesmos botões pedem `enter 2×`.
 - **Comandos do Herdr** (`dados.ComandosHerdr`, `dados.Disparar`): acham o workspace pelo rótulo em `herdr workspace list` (GENGAR ou "saúde multas", sem caixa nem acento), criam a aba com `herdr tab create --workspace <id> --cwd <raiz> --label dia-MMDD-HHMM --no-focus` e rodam `herdr pane run <pane> claude "/dia abrir"`. Tudo pelo `dados.Runner`. O disparo fica na linha com "rodando há N min" e `g` foca a aba (`herdr tab focus`).
 
 ## De onde vêm os dados
@@ -101,9 +102,9 @@ A coleta é `dados.Coletor.Coletar` (`internal/dados/coleta.go`), e tudo nela ro
 
 As saídas em TSV passam por `dados.TSV`, e a do ddb passa por `dados.DeDdb`. As duas viram o mesmo `[]Linha`.
 
-### Ajustes (fim da gaveta comandos) e variáveis de ambiente
+### Ajustes (gaveta configurações) e variáveis de ambiente
 
-O fim da gaveta **comandos** (`5`) lista as variáveis `FANTASMAS_*` do catálogo `config.Opcoes` (`internal/config/config.go`) pelo nome real, cada uma com o valor que vale agora (o padrão, quando nada foi definido), e as salva em `~/.config/fantasmas/ajustes.json`. `FANTASMAS_IMAGEM`, `FANTASMAS_IMAGEM_MODO` e `FANTASMAS_SPRITE` ficam fora da aba, só pelo shell.
+A gaveta **configurações** (`5`) lista as variáveis `FANTASMAS_*` do catálogo `config.Opcoes` (`internal/config/config.go`) pelo nome real, cada uma com o valor que vale agora (o padrão, quando nada foi definido), e as salva em `~/.config/fantasmas/ajustes.json`. `FANTASMAS_IMAGEM`, `FANTASMAS_IMAGEM_MODO` e `FANTASMAS_SPRITE` ficam fora da aba, só pelo shell.
 - o arquivo tem permissão 0600, numa pasta 0700, e fica fora do repo; `FANTASMAS_AJUSTES` muda o caminho;
 - `main` aplica o arquivo ao ambiente **antes de qualquer `os.Getenv`**, então o resto do código continua só lendo variáveis;
 - **o shell manda:** uma variável já definida no shell não é sobrescrita nem editável pela aba.
@@ -157,8 +158,9 @@ internal/dados/         coleta e ações sobre o mundo externo (sem UI)
 internal/ui/            Model do Bubble Tea, gavetas, detalhe, tema, sprite
   model.go              Model, Update, teclas, ajuda, Render
   moldura.go            lista de Gavetas, topo e rodapé
-  ajustes.go            ajustes (fim da gaveta comandos)
-  comandos.go           gavetas máquina (com ambiente e worktrees) e comandos
+  ajustes.go            ajustes (gaveta configurações)
+  comandos.go           gaveta máquina (com ambiente e worktrees) e botões do painel
+  painel.go             painel lateral de botões (tecla b)
   tema.go               temas (roxo, orca, terminal) e UsarTema
   figuras.go            catálogo de figuras, UsarFigura, PNG → GIF
   gavetas.go missoes.go sidequests.go detalhe.go ...   uma tela por arquivo

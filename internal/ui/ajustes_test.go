@@ -49,7 +49,7 @@ func selAjuste(t *testing.T, m Model, chave string) int {
 
 func TestOitoAbreSettings(t *testing.T) {
 	m, _, _ := modeloAjustes(t, nil)
-	if Gavetas[m.gaveta].ID != "comandos" {
+	if Gavetas[m.gaveta].ID != "configuracoes" {
 		t.Fatalf("gaveta %s", Gavetas[m.gaveta].ID)
 	}
 	out := render(m, 110, 50)

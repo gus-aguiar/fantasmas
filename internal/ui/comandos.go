@@ -54,7 +54,7 @@ func gavetaMaquinaToda(c *corpo, e dados.Estado, aberta bool) {
 	gavetaWorktrees(c, e)
 }
 
-// estadoComandos é o que a gaveta comandos precisa do Model.
+// estadoComandos é o que o painel de botões precisa do Model.
 type estadoComandos struct {
 	disparos                          map[string]dados.Disparo
 	armado                            string
@@ -78,12 +78,24 @@ func rodandoHa(d dados.Disparo, agora time.Time) string {
 	return fmt.Sprintf("rodando há %d min", m)
 }
 
-// gavetaComandos lista os comandos (enter 2× dispara) e, no fim, os ajustes.
-func gavetaComandos(c *corpo, e dados.Estado, ops OpsAjustes, ec estadoComandos) {
-	c.secao("comandos", "enter 2× dispara · g vai à aba")
+// itemPainel desenha um botão em duas linhas: nome e estado; embaixo, o detalhe dim.
+func itemPainel(c *corpo, a alvo, glifo string, cor lipgloss.Color, nome, estado, detalhe string) {
+	w := max(1, c.largura-4)
+	c.item(a, func(bg lipgloss.Color) string {
+		s := st(bg, cor).Render(glifo+" ") + st(bg, T.Texto).Render(nome)
+		if estado != "" {
+			s += st(bg, cor).Render("  " + estado)
+		}
+		return s
+	}, func(bg lipgloss.Color) string {
+		return st(bg, T.Dim).Render("  " + Corte(detalhe, w))
+	})
+}
+
+// painelBotoes lista os botões de utilidade (enter 2× dispara).
+func painelBotoes(c *corpo, e dados.Estado, ec estadoComandos) {
 	confirma := func(id string) bool { return ec.armado == id }
 	for _, k := range dados.ComandosHerdr {
-		k := k
 		g, cor, est, det := "›", T.Texto, "", k.Descricao+" · aba em "+k.Workspace
 		a := alvo{comando: k.ID}
 		if d, ok := ec.disparos[k.ID]; ok {
@@ -96,18 +108,18 @@ func gavetaComandos(c *corpo, e dados.Estado, ops OpsAjustes, ec estadoComandos)
 		case confirma(k.ID):
 			cor, est = T.Espera, "de novo confirma"
 		}
-		c.linhaLista(a, g, cor, k.Rotulo, est, cor, det)
+		itemPainel(c, a, g, cor, k.Rotulo, est, det)
 	}
 	g, cor, est, det := botaoDaydreaming(e.Daydreamer, ec.pedindoDD)
 	if confirma(cmdDaydreaming) {
 		cor, est = T.Espera, "de novo confirma"
 	}
-	c.linhaLista(alvo{comando: cmdDaydreaming}, g, cor, "DayDreaming", est, cor, det)
+	itemPainel(c, alvo{comando: cmdDaydreaming}, g, cor, "DayDreaming", est, det)
 	g, cor, est, det = botaoMCP(e.MCP)
 	if confirma(cmdMCP) {
 		cor, est = T.Espera, "de novo confirma"
 	}
-	c.linhaLista(alvo{comando: cmdMCP}, g, cor, "reconectar MCPs", est, cor, det)
+	itemPainel(c, alvo{comando: cmdMCP}, g, cor, "reconectar MCPs", est, det)
 	g0, cor0, est0 := "⟳", T.Texto, ""
 	switch {
 	case ec.atualizando:
@@ -115,7 +127,5 @@ func gavetaComandos(c *corpo, e dados.Estado, ops OpsAjustes, ec estadoComandos)
 	case ec.armadoAtu || confirma(cmdAtualizar):
 		cor0, est0 = T.Espera, "de novo confirma"
 	}
-	c.linhaLista(alvo{comando: cmdAtualizar}, g0, cor0, "atualizar app", est0, cor0, "git pull, build e reabre · U 2×")
-	c.branco()
-	gavetaAjustes(c, ops)
+	itemPainel(c, alvo{comando: cmdAtualizar}, g0, cor0, "atualizar app", est0, "git pull, build e reabre · U 2×")
 }
