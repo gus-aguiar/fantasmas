@@ -52,11 +52,11 @@ func TestFaxinaAgoraRodaCom2xEMostraResumo(t *testing.T) {
 		vezes++
 		return &dados.Faxina{Acoes: []string{"a", "b", "c"}, MB: 1200}, nil
 	}
-	m, cmd := aperta(m, '4')
+	m, cmd := aperta(m, '5')
 	if cmd != nil || m.armadoCmd != dados.CmdFaxina || vezes != 0 {
-		t.Fatalf("primeiro 4 só arma: %q", m.armadoCmd)
+		t.Fatalf("primeiro 5 só arma: %q", m.armadoCmd)
 	}
-	m, cmd = aperta(m, '4')
+	m, cmd = aperta(m, '5')
 	if cmd == nil || !m.faxinando || !strings.Contains(render(m, 140, 40), "rodando…") {
 		t.Fatal("segundo 4 roda e mostra rodando…")
 	}
@@ -77,7 +77,7 @@ func TestSwapRecusaComPoucaRAM(t *testing.T) {
 	meminfo(t, 3000, 2000) // 3000 não supera 2000 + 2048
 	m, pedidos := paletaSistema(t)
 	for range 2 {
-		m, _ = aperta(m, '5')
+		m, _ = aperta(m, '6')
 	}
 	if len(*pedidos) != 0 || m.armadoCmd != "" {
 		t.Fatalf("com pouca RAM não dispara: %v %q", *pedidos, m.armadoCmd)
@@ -90,13 +90,13 @@ func TestSwapRecusaComPoucaRAM(t *testing.T) {
 func TestSwapDisparaCom2x(t *testing.T) {
 	meminfo(t, 9000, 2000)
 	m, pedidos := paletaSistema(t)
-	m, cmd := aperta(m, '5')
+	m, cmd := aperta(m, '6')
 	if cmd != nil || m.armadoCmd != dados.CmdSwap {
-		t.Fatalf("primeiro 5 só arma: %q", m.armadoCmd)
+		t.Fatalf("primeiro 6 só arma: %q", m.armadoCmd)
 	}
-	_, cmd = aperta(m, '5')
+	_, cmd = aperta(m, '6')
 	if cmd == nil {
-		t.Fatal("segundo 5 devia disparar")
+		t.Fatal("segundo 6 devia disparar")
 	}
 	cmd()
 	if len(*pedidos) != 1 || (*pedidos)[0] != dados.CmdSwap {
@@ -114,7 +114,7 @@ func TestSwapVazioNaoDispara(t *testing.T) {
 		t.Fatal("item devia dizer swap já vazio")
 	}
 	for range 2 {
-		m, _ = aperta(m, '5')
+		m, _ = aperta(m, '6')
 	}
 	if len(*pedidos) != 0 {
 		t.Fatalf("swap vazio não dispara: %v", *pedidos)

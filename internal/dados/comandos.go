@@ -26,6 +26,7 @@ const (
 // ComandosHerdr é o catálogo, na ordem da gaveta.
 var ComandosHerdr = []Comando{
 	{ID: "dia-abrir", Rotulo: "/dia abrir", Workspace: "GENGAR", Prompt: "/dia abrir", Prefixo: "dia", Descricao: "começa o dia: Jira, Intralog, PRs e DayDreaming"},
+	{ID: "plano-dia", Rotulo: "/plano-dia", Workspace: "GENGAR", Prompt: "/plano-dia", Prefixo: "plano", Descricao: "monta o plano do dia em blocos, no Notion e no painel"},
 	{ID: "dia-fechar", Rotulo: "/dia fechar", Workspace: "GENGAR", Prompt: "/dia fechar", Prefixo: "dia", Descricao: "fecha o dia e faz a passagem"},
 	{ID: "saude-multas", Rotulo: "/saude-multas", Workspace: "saúde multas", Prompt: "/saude-multas", Prefixo: "saude", Descricao: "saúde do módulo de multas (só leitura)"},
 	{ID: CmdFaxina, Rotulo: "Faxina agora", Descricao: "fecha fantasminhas encerrados, serviços e daemons ociosos"},

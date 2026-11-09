@@ -45,6 +45,7 @@ func TestDispararMontaHerdr(t *testing.T) {
 		id, ws, nome, cmd string
 	}{
 		{"dia-abrir", "w2", "dia-1106-1430", `claude "/dia abrir"`},
+		{"plano-dia", "w2", "plano-1106-1430", `claude "/plano-dia"`},
 		{"dia-fechar", "w2", "dia-1106-1430", `claude "/dia fechar"`},
 		{"saude-multas", "w9", "saude-1106-1430", `claude "/saude-multas"`},
 	}
@@ -71,6 +72,18 @@ func TestDispararMontaHerdr(t *testing.T) {
 		}
 		if d.Aba != "w9:t3" || d.Nome != c.nome || !d.Inicio.Equal(agora) || d.ID != c.id {
 			t.Fatalf("%s: disparo %+v", c.id, d)
+		}
+	}
+}
+
+func TestCatalogoNaOrdemDaPaleta(t *testing.T) {
+	quer := []string{"dia-abrir", "plano-dia", "dia-fechar", "saude-multas", CmdFaxina, CmdSwap}
+	if len(ComandosHerdr) != len(quer) {
+		t.Fatalf("catálogo com %d comandos, queria %d", len(ComandosHerdr), len(quer))
+	}
+	for i, id := range quer {
+		if ComandosHerdr[i].ID != id {
+			t.Fatalf("posição %d: %s, queria %s", i, ComandosHerdr[i].ID, id)
 		}
 	}
 }

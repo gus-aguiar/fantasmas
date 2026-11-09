@@ -31,7 +31,7 @@ func TestPaletaAbreComCtrlPEB(t *testing.T) {
 		t.Fatalf("ctrl+p devia abrir a paleta sem trocar de gaveta (aberta=%v, %s)", m.botoes, Gavetas[m.gaveta].ID)
 	}
 	p := render(m, 140, 40)
-	for _, s := range []string{"Comandos", "Abrir o dia", "Fechar o dia", "Saúde de multas", "esc fecha"} {
+	for _, s := range []string{"Comandos", "Abrir o dia", "Planejar o dia", "Fechar o dia", "Saúde de multas", "esc fecha"} {
 		if !strings.Contains(p, s) {
 			t.Fatalf("paleta sem %q:\n%s", s, p)
 		}
@@ -41,8 +41,8 @@ func TestPaletaAbreComCtrlPEB(t *testing.T) {
 			t.Fatalf("paleta ainda com %q:\n%s", s, p)
 		}
 	}
-	if n := len(m.alvos()); n != 5 {
-		t.Fatalf("paleta devia ter 5 comandos: %d", n)
+	if n := len(m.alvos()); n != 6 {
+		t.Fatalf("paleta devia ter 6 comandos: %d", n)
 	}
 	if m = manda(m, tea.KeyMsg{Type: tea.KeyCtrlP}); m.botoes {
 		t.Fatal("ctrl+p de novo devia fechar")
@@ -87,31 +87,60 @@ func TestPaletaSemBuscaENumeros(t *testing.T) {
 		return dados.Disparo{ID: id, Aba: "w2:t9", Inicio: time.Now()}, nil
 	}
 	if m.buscaCmd != nil {
-		t.Fatal("com até 5 comandos a paleta não tem busca")
+		t.Fatal("com até 6 comandos a paleta não tem busca")
 	}
 	m = digitaPaleta(m, "multas")
-	if len(m.alvos()) != 5 || m.textoBusca() != "" {
+	if len(m.alvos()) != 6 || m.textoBusca() != "" {
 		t.Fatal("letras não deviam filtrar")
 	}
-	n, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'3'}})
+	n, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'4'}})
 	m = n.(Model)
 	if cmd != nil || m.armadoCmd != "saude-multas" || len(pedidos) != 0 {
-		t.Fatalf("primeiro 3 devia só armar: %q", m.armadoCmd)
+		t.Fatalf("primeiro 4 devia só armar: %q", m.armadoCmd)
 	}
 	if !strings.Contains(render(m, 140, 40), "enter de novo confirma") {
 		t.Fatal("item armado sem aviso")
 	}
-	n, cmd = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'3'}})
+	n, cmd = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'4'}})
 	if cmd == nil {
-		t.Fatal("segundo 3 devia disparar")
+		t.Fatal("segundo 4 devia disparar")
 	}
 	n.(Model).Update(cmd())
 	if len(pedidos) != 1 || pedidos[0] != "saude-multas" {
 		t.Fatalf("pedidos %v", pedidos)
 	}
 	m = tecla(tecla(m, "1"), "2")
-	if m.armadoCmd != "dia-fechar" {
-		t.Fatalf("2 depois de 1 devia armar o 2, não disparar o 1: %q", m.armadoCmd)
+	if m.armadoCmd != "plano-dia" {
+		t.Fatalf("2 depois de 1 devia armar o 2 (Planejar o dia), não disparar o 1: %q", m.armadoCmd)
+	}
+	if m = tecla(m, "3"); m.armadoCmd != "dia-fechar" {
+		t.Fatalf("3 devia armar Fechar o dia: %q", m.armadoCmd)
+	}
+}
+
+func TestPaletaPlanejarODiaDispara2x(t *testing.T) {
+	var pedidos []string
+	m := modelo(fixture(), &registro{})
+	m.acoes.Disparar = func(id string) (dados.Disparo, error) {
+		pedidos = append(pedidos, id)
+		return dados.Disparo{ID: id, Aba: "w2:t9", Nome: "plano-1109-0900", Inicio: time.Now()}, nil
+	}
+	m = manda(m, tea.KeyMsg{Type: tea.KeyCtrlP})
+	if !strings.Contains(render(m, 140, 40), "monta o plano do dia em blocos") {
+		t.Fatal("Planejar o dia sem a descrição")
+	}
+	n, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'2'}})
+	m = n.(Model)
+	if cmd != nil || m.armadoCmd != "plano-dia" || len(pedidos) != 0 {
+		t.Fatalf("primeiro 2 devia só armar: %q", m.armadoCmd)
+	}
+	_, cmd = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'2'}})
+	if cmd == nil {
+		t.Fatal("segundo 2 devia disparar")
+	}
+	cmd()
+	if len(pedidos) != 1 || pedidos[0] != "plano-dia" {
+		t.Fatalf("pedidos %v", pedidos)
 	}
 }
 

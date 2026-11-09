@@ -17,7 +17,7 @@ const (
 	LarguraPaleta = 58
 	DicaPaleta    = "ctrl+p comandos"
 	// MaxSemBusca: até tantos comandos a paleta não mostra o campo de busca.
-	MaxSemBusca = 5
+	MaxSemBusca = 6
 )
 
 // cores da estética dos fantasminhas do painel do delegate
@@ -133,6 +133,7 @@ type itemPaleta struct {
 
 var nomeComando = map[string]string{
 	"dia-abrir":    "Abrir o dia",
+	"plano-dia":    "Planejar o dia",
 	"dia-fechar":   "Fechar o dia",
 	"saude-multas": "Saúde de multas",
 }

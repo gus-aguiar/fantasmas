@@ -3,6 +3,14 @@
 O que mudou no `gengar` (TUI fantasmas) e no fluxo de missões e sidequests do Spark. A versão mais nova fica no topo.
 Cada entrada diz o que muda para quem usa; os detalhes técnicos ficam no histórico do git.
 
+## 2026-11-09 · Planejar o dia na paleta
+
+**Novo**
+- **Planejar o dia (`2` na paleta):** abre uma aba nova no workspace GENGAR rodando `/plano-dia`, que monta o plano do dia em blocos, no Notion e no painel. Funciona como Abrir o dia: `enter` 2× confirma, mostra "rodando há N min" e `g` leva até a aba.
+
+**Muda**
+- Os atalhos da paleta seguem a nova ordem: Abrir o dia `1`, Planejar o dia `2`, Fechar o dia `3`, Saúde de multas `4`, Faxina agora `5`, Esvaziar swap `6`.
+
 ## 2026-11-06 · Faxina e swap na paleta
 
 **Novo**
