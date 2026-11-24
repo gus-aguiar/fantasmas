@@ -43,13 +43,23 @@ Toda vez que abre pelo `scripts/fantasmas.sh` do Spark, o `gengar` se atualiza a
 
 Terminal sem suporte a imagem (ex.: Windows Terminal): o gengar aparece desenhado com caracteres; para forçar, `FANTASMAS_IMAGEM=celulas`.
 
+### Variáveis de organização
+
+Todas opcionais; podem ir no shell ou em `~/.config/fantasmas/ajustes.json` (`{"env": {...}}`).
+
+| Variável | Padrão | O que faz |
+|---|---|---|
+| `FANTASMAS_GH_ORG` | vazio (qualquer repo) | limita a gaveta PRs aos PRs seus nessa organização do GitHub (`org:<valor>`) |
+| `FANTASMAS_REPO_PREFIXO` | vazio (nome inteiro) | prefixo tirado do nome do repo na gaveta PRs (ex.: `Acme` mostra `AcmeWebApp` como `WebApp`) |
+| `FANTASMAS_CMD_EXTRA` | vazio (sem comando) | comando extra da paleta, entre Fechar o dia e Faxina: `Rótulo\|workspace do Herdr\|/prompt\|prefixo da aba\|descrição` (rótulo e prompt obrigatórios) |
+
 As teclas que mais importam estão abaixo. A lista completa abre com `?`.
 
 | Tecla | Faz |
 |---|---|
 | `1`–`5` ou `← →` | troca de aba (barra no rodapé): `1` agora (abre aqui), `2` missões, `3` PRs, `4` máquina, `5` configurações |
 | `↑ ↓` e `enter` | escolhe e abre/responde; numa missão, abre as sidequests e as decisões |
-| `ctrl+p` ou `b` | abre a paleta de comandos (Abrir o dia, Planejar o dia, Fechar o dia, Saúde de multas, Faxina agora, Esvaziar swap): `1`–`6` ou `enter`, duas vezes, dispara; `esc` fecha |
+| `ctrl+p` ou `b` | abre a paleta de comandos (Abrir o dia, Planejar o dia, Fechar o dia, o comando extra se configurado, Faxina agora, Esvaziar swap): `1`–`6` ou `enter`, duas vezes, dispara; `esc` fecha |
 | `?` | ajuda curta com a navegação; os atalhos de cada item aparecem à direita da linha selecionada |
 | `m` | abre uma missão nova (enter 2× confirma) |
 | `n` / `N` | lança uma sidequest (`N` abre também um gengar dedicado) |
@@ -59,7 +69,7 @@ As teclas que mais importam estão abaixo. A lista completa abre com `?`.
 
 ## Comandos (gaveta 5)
 
-`/dia abrir`, `/plano-dia` e `/dia fechar` abrem uma aba nova no workspace do Herdr chamado **GENGAR**; `/saude-multas`, no workspace **saúde multas**. A aba nasce na raiz do Spark com o `claude` já rodando o comando e se chama `dia-MMDD-HHMM`, `plano-MMDD-HHMM` ou `saude-MMDD-HHMM`. Cada disparo mostra há quanto tempo roda, e `g` leva até a aba. **Faxina agora** roda `scripts/delegate/faxina.py rodar --uma-vez` em segundo plano, sem aba, e mostra "N ações · ~X MB" por 2 min. **Esvaziar swap** abre uma aba no workspace onde a TUI está (`HERDR_WORKSPACE_ID`, senão GENGAR) com `sudo swapoff -a && sudo swapon -a && free -h`, onde você digita a senha; só dispara se a RAM disponível passar do swap usado + 2 GB (senão pede a Faxina antes) e fica cinza com o swap vazio (< 100 MB). Os ajustes (tema, figura e variáveis) e as ações Reconectar MCPs e Atualizar app (`enter 2×`) ficam na gaveta `5`.
+`/dia abrir`, `/plano-dia` e `/dia fechar` abrem uma aba nova no workspace do Herdr chamado **GENGAR**; o comando extra (`FANTASMAS_CMD_EXTRA`, abaixo), no workspace que ele indicar. A aba nasce na raiz do Spark com o `claude` já rodando o comando e se chama `dia-MMDD-HHMM`, `plano-MMDD-HHMM` ou `<prefixo>-MMDD-HHMM`. Cada disparo mostra há quanto tempo roda, e `g` leva até a aba. **Faxina agora** roda `scripts/delegate/faxina.py rodar --uma-vez` em segundo plano, sem aba, e mostra "N ações · ~X MB" por 2 min. **Esvaziar swap** abre uma aba no workspace onde a TUI está (`HERDR_WORKSPACE_ID`, senão GENGAR) com `sudo swapoff -a && sudo swapon -a && free -h`, onde você digita a senha; só dispara se a RAM disponível passar do swap usado + 2 GB (senão pede a Faxina antes) e fica cinza com o swap vazio (< 100 MB). Os ajustes (tema, figura e variáveis) e as ações Reconectar MCPs e Atualizar app (`enter 2×`) ficam na gaveta `5`.
 
 ## Missões e sidequests
 
