@@ -71,7 +71,12 @@ func TestMergeDe(t *testing.T) {
 }
 
 func TestQueryDe(t *testing.T) {
-	if q := QueryDe("fulano"); !strings.Contains(q, "author:fulano org:prologapp") {
+	t.Setenv(ChaveGHOrg, "")
+	if q := QueryDe("fulano"); !strings.Contains(q, `"is:pr is:open author:fulano"`) {
+		t.Error(q)
+	}
+	t.Setenv(ChaveGHOrg, "acme-org")
+	if q := QueryDe("fulano"); !strings.Contains(q, "author:fulano org:acme-org") {
 		t.Error(q)
 	}
 }

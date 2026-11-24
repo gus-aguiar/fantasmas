@@ -34,7 +34,7 @@ func (m Model) ComBotoes() Model { return m.abrirBotoes() }
 
 func (m Model) abrirBotoes() Model {
 	m.selGaveta, m.sel, m.botoes, m.armadoCmd, m.buscaCmd = m.sel, 0, true, "", nil
-	if len(dados.ComandosHerdr) > MaxSemBusca {
+	if len(dados.ComandosHerdr()) > MaxSemBusca {
 		ti := textinput.New()
 		ti.Prompt = ""
 		ti.Placeholder = "buscar comando"
@@ -132,16 +132,15 @@ type itemPaleta struct {
 }
 
 var nomeComando = map[string]string{
-	"dia-abrir":    "Abrir o dia",
-	"plano-dia":    "Planejar o dia",
-	"dia-fechar":   "Fechar o dia",
-	"saude-multas": "Saúde de multas",
+	"dia-abrir":  "Abrir o dia",
+	"plano-dia":  "Planejar o dia",
+	"dia-fechar": "Fechar o dia",
 }
 
 // itensPaleta monta os comandos do Herdr com o estado de agora; a lógica de disparo é a de sempre.
 func itensPaleta(_ dados.Estado, ec estadoComandos) []itemPaleta {
 	var out []itemPaleta
-	for _, k := range dados.ComandosHerdr {
+	for _, k := range dados.ComandosHerdr() {
 		nome, ok := nomeComando[k.ID]
 		if !ok {
 			nome = k.Rotulo

@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -15,6 +16,7 @@ import (
 
 func TestMain(m *testing.M) {
 	lipgloss.SetColorProfile(termenv.TrueColor)
+	os.Setenv(dados.ChaveCmdExtra, "Relatório de saúde|relatório saúde|/relatorio|saude|saúde do módulo (só leitura)")
 	m.Run()
 }
 

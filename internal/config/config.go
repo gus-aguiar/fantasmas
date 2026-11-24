@@ -50,6 +50,9 @@ var Opcoes = []Opcao{
 	{"FANTASMAS_CACHE_DIR", "variáveis de ambiente", "pasta de cache do fantasmas", nil, false, padraoCache()},
 	{"FANTASMAS_EDITOR", "variáveis de ambiente", "editor de arquivos e pastas", nil, false, padraoEditor()},
 	{"FANTASMAS_CTX_JANELA", "variáveis de ambiente", "janela de contexto usada no %", nil, false, "1000000"},
+	{"FANTASMAS_GH_ORG", "variáveis de ambiente", "organização do GitHub da busca de PRs", nil, false, "qualquer repo"},
+	{"FANTASMAS_REPO_PREFIXO", "variáveis de ambiente", "prefixo tirado do nome do repo nos PRs", nil, false, "nenhum"},
+	{"FANTASMAS_CMD_EXTRA", "variáveis de ambiente", "comando extra da paleta: rótulo|workspace|/prompt|prefixo|descrição", nil, false, "nenhum"},
 	{"FANTASMAS_DEBUG", "variáveis de ambiente", "arquivo de log do terminal e da imagem", nil, true, "desligado"},
 }
 
