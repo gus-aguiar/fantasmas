@@ -14,21 +14,21 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-const mergeJSON = `{"repo":"PrologWebReact","pr":77,"url":"https://github.com/o/PrologWebReact/pull/77","base":"dev","spark":"ok","checks":"ok"}`
+const mergeJSON = `{"repo":"AcmeWebReact","pr":77,"url":"https://github.com/o/AcmeWebReact/pull/77","base":"dev","spark":"ok","checks":"ok"}`
 
 func fixture() dados.Estado {
 	return dados.Estado{
 		At: time.Date(2026, 10, 16, 9, 5, 0, 0, time.UTC),
 		Esperando: []dados.Linha{
-			{Chave: "c-pl-1/questions.json#plano", Rotulo: "c-pl-1 · plano", Detalhe: "aprovar o plano?"},
-			{Chave: "c-pl-2/questions.json#gate", Rotulo: "c-pl-2 · gate", Detalhe: "mergear?", Merge: mergeJSON},
+			{Chave: "c-vt-1/questions.json#plano", Rotulo: "c-vt-1 · plano", Detalhe: "aprovar o plano?"},
+			{Chave: "c-vt-2/questions.json#gate", Rotulo: "c-vt-2 · gate", Detalhe: "mergear?", Merge: mergeJSON},
 		},
 		Travados: []dados.Travado{
-			{Repo: "PrologWebService", Number: 1, Motivo: "conflito", Title: "[PL-1] conserta", URL: "https://github.com/o/PrologWebService/pull/1"},
-			{Repo: "PrologWebService", Number: 2, Motivo: "aguardando revisão", Title: "a", URL: "https://github.com/o/PrologWebService/pull/2"},
-			{Repo: "PrologWebService", Number: 3, Motivo: "aguardando revisão", Title: "b", URL: "https://github.com/o/PrologWebService/pull/3"},
-			{Repo: "PrologWebService", Number: 4, Motivo: "aguardando revisão", Title: "c", URL: "https://github.com/o/PrologWebService/pull/4"},
-			{Repo: "PrologWebService", Number: 5, Motivo: "aguardando revisão", Title: "d", URL: "https://github.com/o/PrologWebService/pull/5"},
+			{Repo: "AcmeWebService", Number: 1, Motivo: "conflito", Title: "[VT-1] conserta", URL: "https://github.com/o/AcmeWebService/pull/1"},
+			{Repo: "AcmeWebService", Number: 2, Motivo: "aguardando revisão", Title: "a", URL: "https://github.com/o/AcmeWebService/pull/2"},
+			{Repo: "AcmeWebService", Number: 3, Motivo: "aguardando revisão", Title: "b", URL: "https://github.com/o/AcmeWebService/pull/3"},
+			{Repo: "AcmeWebService", Number: 4, Motivo: "aguardando revisão", Title: "c", URL: "https://github.com/o/AcmeWebService/pull/4"},
+			{Repo: "AcmeWebService", Number: 5, Motivo: "aguardando revisão", Title: "d", URL: "https://github.com/o/AcmeWebService/pull/5"},
 		},
 		Tasks: []dados.Linha{
 			{Chave: "t-a", Rotulo: "c-pl-a", Detalhe: "working", Extra: "aba-a"},
@@ -39,7 +39,7 @@ func fixture() dados.Estado {
 		},
 		Maquina:   []dados.Linha{{Chave: "trava", Rotulo: "pesados", Detalhe: "livre", Extra: "ok"}, {Chave: "ram", Rotulo: "RAM", Detalhe: "3 GB livres", Extra: "aviso"}},
 		Servicos:  []dados.Linha{{Chave: "React", Rotulo: "no ar", Detalhe: "http://localhost:3000"}, {Chave: "WS", Rotulo: "parado", Detalhe: ":8081"}},
-		Worktrees: []dados.Linha{{Chave: "/tmp/wt", Rotulo: "PrologWebReact · feature/x-PL-1", Detalhe: "/tmp/wt"}},
+		Worktrees: []dados.Linha{{Chave: "/tmp/wt", Rotulo: "AcmeWebReact · feature/x-VT-1", Detalhe: "/tmp/wt"}},
 		Recursos:  dados.Recursos{GH: true, Herdr: true, Delegate: true, Painel: "/p.py", Autor: "eu"},
 	}
 }
@@ -145,7 +145,7 @@ func TestEnterEmPRAbreURL(t *testing.T) {
 	m := modelo(fixture(), r)
 	m = tecla(m, "3")
 	m = tecla(m, "enter")
-	if len(r.urls) != 1 || r.urls[0] != "https://github.com/o/PrologWebService/pull/1" {
+	if len(r.urls) != 1 || r.urls[0] != "https://github.com/o/AcmeWebService/pull/1" {
 		t.Fatalf("urls = %v", r.urls)
 	}
 }
@@ -163,12 +163,12 @@ func TestFeedMostraMaisNaFila(t *testing.T) {
 
 func TestStatusDaResposta(t *testing.T) {
 	m := modelo(fixture(), &registro{})
-	n, _ := m.Update(respondeuMsg{Entrega: dados.Entrega{Crew: "c-pl-1", Resposta: "Aprovar", Entregue: true}})
-	if s := n.(Model).status; s != "entregue a c-pl-1: Aprovar" {
+	n, _ := m.Update(respondeuMsg{Entrega: dados.Entrega{Crew: "c-vt-1", Resposta: "Aprovar", Entregue: true}})
+	if s := n.(Model).status; s != "entregue a c-vt-1: Aprovar" {
 		t.Fatalf("status = %q", s)
 	}
-	n, _ = m.Update(respondeuMsg{Entrega: dados.Entrega{Crew: "c-pl-1", Motivo: "herdr falhou"}})
-	if s := n.(Model).status; s != "gravado; não entregue a c-pl-1: herdr falhou" {
+	n, _ = m.Update(respondeuMsg{Entrega: dados.Entrega{Crew: "c-vt-1", Motivo: "herdr falhou"}})
+	if s := n.(Model).status; s != "gravado; não entregue a c-vt-1: herdr falhou" {
 		t.Fatalf("status = %q", s)
 	}
 }

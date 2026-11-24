@@ -17,7 +17,7 @@ func L(chave, rotulo, detalhe string, extra ...string) Linha {
 }
 
 func PR(n int, motivo string) Travado {
-	return Travado{Repo: "PrologWebService", Number: n, Motivo: motivo, Title: "x", URL: "https://gh/" + string(rune('0'+n))}
+	return Travado{Repo: "AcmeWebService", Number: n, Motivo: motivo, Title: "x", URL: "https://gh/" + string(rune('0'+n))}
 }
 
 func tipos(f []ItemFeed) []TipoFeed {
@@ -41,10 +41,10 @@ func count(f []ItemFeed, t TipoFeed) int {
 func TestFeedOrdemUrgencia(t *testing.T) {
 	e := Estado{
 		Tasks: []Linha{
-			L("/d/a", "c-pl-1", "done · 0/2 perguntas · 3h · done"),
-			L("/d/b", "c-pl-2", "sem report · 1/1 perguntas · 5min · blocked", "w1:t9"),
+			L("/d/a", "c-vt-1", "done · 0/2 perguntas · 3h · done"),
+			L("/d/b", "c-vt-2", "sem report · 1/1 perguntas · 5min · blocked", "w1:t9"),
 		},
-		Esperando: []Linha{L("/d/c/questions.json#plano", "c-pl-3 · alto", "Aprova o plano?", "coord: B")},
+		Esperando: []Linha{L("/d/c/questions.json#plano", "c-vt-3 · alto", "Aprova o plano?", "coord: B")},
 		Travados:  []Travado{PR(1, "aguardando revisão"), PR(2, "aprovado · mergear"), PR(3, "CI vermelho")},
 	}
 	want := []TipoFeed{TipoDecidir, TipoTravado, TipoLer}
@@ -54,8 +54,8 @@ func TestFeedOrdemUrgencia(t *testing.T) {
 }
 
 func TestGateJuntarNaoDuplica(t *testing.T) {
-	m := `{"repo":"PrologWebService","pr":2,"url":"https://gh/2"}`
-	e := Estado{Esperando: []Linha{L("/d/c/questions.json#juntar", "c-pl-3 · alto", "Libera?", "", m)}, Travados: []Travado{PR(2, "aprovado · mergear")}}
+	m := `{"repo":"AcmeWebService","pr":2,"url":"https://gh/2"}`
+	e := Estado{Esperando: []Linha{L("/d/c/questions.json#juntar", "c-vt-3 · alto", "Libera?", "", m)}, Travados: []Travado{PR(2, "aprovado · mergear")}}
 	f := MontarFeed(e)
 	if count(f, TipoJuntar) != 1 || f[0].Pergunta == nil || f[0].Pergunta.Chave != "/d/c/questions.json#juntar" || f[0].Merge == nil {
 		t.Errorf("%+v", f)
@@ -80,13 +80,13 @@ func TestFeedVazio(t *testing.T) {
 
 func TestTaskTravadaComPerguntaSoDecidir(t *testing.T) {
 	e := Estado{
-		Tasks:     []Linha{L("/d/b", "c-pl-2", "sem report · 1/1 perguntas · 5min · blocked", "w1:t9")},
-		Esperando: []Linha{L("/d/b/questions.json#plano", "c-pl-2 · alto", "Aprova?")},
+		Tasks:     []Linha{L("/d/b", "c-vt-2", "sem report · 1/1 perguntas · 5min · blocked", "w1:t9")},
+		Esperando: []Linha{L("/d/b/questions.json#plano", "c-vt-2 · alto", "Aprova?")},
 	}
 	if g := tipos(MontarFeed(e)); !reflect.DeepEqual(g, []TipoFeed{TipoDecidir}) {
 		t.Error(g)
 	}
-	e.Esperando = []Linha{L("/d/b2/questions.json#x", "c-pl-9 · alto", "Aprova?")}
+	e.Esperando = []Linha{L("/d/b2/questions.json#x", "c-vt-9 · alto", "Aprova?")}
 	if g := tipos(MontarFeed(e)); !reflect.DeepEqual(g, []TipoFeed{TipoDecidir, TipoTravado}) {
 		t.Error(g)
 	}
@@ -103,7 +103,7 @@ func TestResumo(t *testing.T) {
 		t.Error(g)
 	}
 	e := Estado{
-		Esperando: []Linha{L("/d/c/questions.json#p", "c-pl-3 · alto", "Aprova?")},
+		Esperando: []Linha{L("/d/c/questions.json#p", "c-vt-3 · alto", "Aprova?")},
 		Travados:  []Travado{PR(1, "conflito"), PR(2, "CI vermelho")},
 		Tasks:     []Linha{L("/d/w", "c", "sem report · 0/0 · 1min · working")},
 	}

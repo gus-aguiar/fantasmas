@@ -182,7 +182,7 @@ func TestCliqueComFiltroAbertoNaoDeixaDigitando(t *testing.T) {
 	c := novaCena(t)
 	m := c.modelo(c.estado("plano"))
 	m = aperta(t, m, "/")
-	x, y := onde(t, m, "decidir c-pl-17724", 0)
+	x, y := onde(t, m, "decidir c-vt-17724", 0)
 	m, _ = clique(t, m, x, y)
 	if m.aberto == nil {
 		t.Fatal("clique não abriu o detalhe")

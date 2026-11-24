@@ -16,6 +16,7 @@ import (
 
 func TestMain(m *testing.M) {
 	lipgloss.SetColorProfile(termenv.TrueColor)
+	os.Setenv("FANTASMAS_REPO_PREFIXO", "Acme")
 	os.Setenv(dados.ChaveCmdExtra, "Relatório de saúde|relatório saúde|/relatorio|saude|saúde do módulo (só leitura)")
 	m.Run()
 }
@@ -25,7 +26,7 @@ var larguras = []int{20, 30, 46, 56, 70, 96, 140}
 func estadoEx() dados.Estado {
 	return dados.Estado{
 		At:        time.Date(2026, 10, 16, 9, 5, 0, 0, time.UTC),
-		Esperando: []dados.Linha{{Chave: "c-pl-1/q1", Rotulo: "c-pl-1 · plano", Detalhe: "ação — válida…"}},
+		Esperando: []dados.Linha{{Chave: "c-vt-1/q1", Rotulo: "c-vt-1 · plano", Detalhe: "ação — válida…"}},
 		Tasks:     []dados.Linha{{Chave: "t1", Rotulo: "ação", Detalhe: "working"}},
 		Maquina:   []dados.Linha{{Chave: "trava", Detalhe: "mvn há 3 min · ação—válida", Extra: "aviso"}},
 	}
@@ -99,7 +100,7 @@ func TestRodape96SoNomes(t *testing.T) {
 func TestTopoCabe(t *testing.T) {
 	for _, w := range larguras {
 		for _, col := range []bool{false, true} {
-			for _, st := range []string{"", "entregue a c-pl-1: ação — válida com texto bem longo para estourar"} {
+			for _, st := range []string{"", "entregue a c-vt-1: ação — válida com texto bem longo para estourar"} {
 				for _, l := range strings.Split(Topo(estadoEx(), w, 3, col, st), "\n") {
 					if lipgloss.Width(l) > w {
 						t.Fatalf("w=%d linha %d: %q", w, lipgloss.Width(l), ansi.Strip(l))

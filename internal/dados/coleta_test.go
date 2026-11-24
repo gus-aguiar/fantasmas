@@ -55,7 +55,7 @@ func (f *fakeRunner) vezes(prefixo string) int {
 	return n
 }
 
-const graphql = `{"data":{"search":{"nodes":[{"number":7,"title":"[PL-1] x","url":"u","repository":{"name":"PrologWebReact"},"isDraft":true}]}}}`
+const graphql = `{"data":{"search":{"nodes":[{"number":7,"title":"[VT-1] x","url":"u","repository":{"name":"AcmeWebReact"},"isDraft":true}]}}}`
 
 func raizFake(t *testing.T) string {
 	raiz := t.TempDir()

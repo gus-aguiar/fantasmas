@@ -23,7 +23,7 @@ func corpoPRs(e dados.Estado, w int) (*corpo, []string) {
 }
 
 func TestPRsComCITudoVerde(t *testing.T) {
-	e := dados.Estado{Travados: []dados.Travado{{Repo: "PrologWebReact", Number: 1, CI: "SUCCESS", Motivo: "aprovado · mergear"}, {Repo: "PrologFlutter", Number: 2, CI: "SUCCESS", Motivo: "aprovado · mergear"}}}
+	e := dados.Estado{Travados: []dados.Travado{{Repo: "AcmeWebReact", Number: 1, CI: "SUCCESS", Motivo: "aprovado · mergear"}, {Repo: "AcmeFlutter", Number: 2, CI: "SUCCESS", Motivo: "aprovado · mergear"}}}
 	_, ls := corpoPRs(e, 120)
 	if !strings.HasPrefix(ls[0], "PRs 2  CI: ✓ 2") {
 		t.Errorf("título: %q", ls[0])
@@ -45,10 +45,10 @@ func TestPRsSemPR(t *testing.T) {
 
 func TestPRsComCIVermelhoRodandoEVerdes(t *testing.T) {
 	e := dados.Estado{Travados: []dados.Travado{
-		{Repo: "PrologWebReact", Number: 3650, URL: "u/3650", CI: "FAILURE", Falhos: []string{"lint", "vitest"}, Motivo: "CI vermelho"},
-		{Repo: "PrologWebService", Number: 812, URL: "u/812", CI: "PENDING", Motivo: "aguardando revisão"},
-		{Repo: "PrologFlutter", Number: 3, CI: "SUCCESS", Motivo: "aprovado · mergear"},
-		{Repo: "PrologE2E", Number: 4, Motivo: "aguardando revisão"},
+		{Repo: "AcmeWebReact", Number: 3650, URL: "u/3650", CI: "FAILURE", Falhos: []string{"lint", "vitest"}, Motivo: "CI vermelho"},
+		{Repo: "AcmeWebService", Number: 812, URL: "u/812", CI: "PENDING", Motivo: "aguardando revisão"},
+		{Repo: "AcmeFlutter", Number: 3, CI: "SUCCESS", Motivo: "aprovado · mergear"},
+		{Repo: "AcmeE2E", Number: 4, Motivo: "aguardando revisão"},
 	}}
 	c, ls := corpoPRs(e, 120)
 	if !strings.HasPrefix(ls[0], "PRs 4  CI: ✗ 1 · ◐ 1 · ✓ 1 · – 1") {
@@ -73,10 +73,10 @@ func TestPRsComCIVermelhoRodandoEVerdes(t *testing.T) {
 
 func TestPRsComCICabe(t *testing.T) {
 	e := dados.Estado{Travados: []dados.Travado{
-		{Repo: "PrologWebReact", Number: 3650, CI: "FAILURE", Falhos: []string{"lint-com-nome-muito-comprido", "vitest-e-os-testes-de-integracao-do-modulo"}, Motivo: "CI vermelho", Title: "um título bem comprido para estourar a largura da gaveta em telas estreitas"},
-		{Repo: "PrologWebService", Number: 812, CI: "PENDING", Motivo: "aguardando revisão"},
-		{Repo: "PrologFlutter", Number: 3, CI: "SUCCESS"},
-		{Repo: "PrologE2E", Number: 4},
+		{Repo: "AcmeWebReact", Number: 3650, CI: "FAILURE", Falhos: []string{"lint-com-nome-muito-comprido", "vitest-e-os-testes-de-integracao-do-modulo"}, Motivo: "CI vermelho", Title: "um título bem comprido para estourar a largura da gaveta em telas estreitas"},
+		{Repo: "AcmeWebService", Number: 812, CI: "PENDING", Motivo: "aguardando revisão"},
+		{Repo: "AcmeFlutter", Number: 3, CI: "SUCCESS"},
+		{Repo: "AcmeE2E", Number: 4},
 	}}
 	for _, w := range larguras {
 		_, ls := corpoPRs(e, w)
@@ -100,8 +100,8 @@ func TestDemoVerdeSoTemVerdes(t *testing.T) {
 
 func TestPRsColunasNuncaEncostam(t *testing.T) {
 	e := dados.Estado{Travados: []dados.Travado{
-		{Repo: "GlorpDesignSystem", Number: 605, CI: "SUCCESS", Motivo: "aprovado · mergear", Title: "Token de borda"},
-		{Repo: "PrologWebService", Number: 4202, CI: "PENDING", Motivo: "aguardando revisão", Title: "Endpoint"},
+		{Repo: "AcmeDesignSystem", Number: 605, CI: "SUCCESS", Motivo: "aprovado · mergear", Title: "Token de borda"},
+		{Repo: "AcmeWebService", Number: 4202, CI: "PENDING", Motivo: "aguardando revisão", Title: "Endpoint"},
 	}}
 	for _, w := range []int{90, 120} {
 		_, ls := corpoPRs(e, w)

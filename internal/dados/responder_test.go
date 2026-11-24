@@ -58,24 +58,24 @@ func nenhumPromptLocal(t *testing.T, f *respRunner, destino string) {
 }
 
 func TestRespondePeloPainel(t *testing.T) {
-	f := &respRunner{resp: []respResp{{"python3 /p/painel.py", "pl-1\tc-pl-1\tPlano\tAprovar\tsim: c-pl-1\n", nil}}}
+	f := &respRunner{resp: []respResp{{"python3 /p/painel.py", "vt-1\tc-vt-1\tPlano\tAprovar\tsim: c-vt-1\n", nil}}}
 	rec := Recursos{Painel: "/p/painel.py", Herdr: true}
-	e, err := Responder(context.Background(), f, "/raiz", rec, "pl-1:7", "Aprovar")
+	e, err := Responder(context.Background(), f, "/raiz", rec, "vt-1:7", "Aprovar")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got := f.juntas(); len(got) != 1 || got[0] != "python3 /p/painel.py responder /raiz pl-1:7 Aprovar" {
+	if got := f.juntas(); len(got) != 1 || got[0] != "python3 /p/painel.py responder /raiz vt-1:7 Aprovar" {
 		t.Fatalf("argv: %v", got)
 	}
-	want := Entrega{Slug: "pl-1", Crew: "c-pl-1", Titulo: "Plano", Resposta: "Aprovar", Entregue: true}
+	want := Entrega{Slug: "vt-1", Crew: "c-vt-1", Titulo: "Plano", Resposta: "Aprovar", Entregue: true}
 	if e != want {
 		t.Fatalf("entrega: %+v", e)
 	}
-	nenhumPromptLocal(t, f, "c-pl-1")
+	nenhumPromptLocal(t, f, "c-vt-1")
 }
 
 func TestPainelNaoEntregou(t *testing.T) {
-	f := &respRunner{resp: []respResp{{"python3", "pl-1\tc-pl-1\tPlano\tAprovar\tnão: herdr falhou (x)\n", nil}}}
+	f := &respRunner{resp: []respResp{{"python3", "vt-1\tc-vt-1\tPlano\tAprovar\tnão: herdr falhou (x)\n", nil}}}
 	e, err := Responder(context.Background(), f, "/raiz", Recursos{Painel: "/p/painel.py", Herdr: true}, "k", "Aprovar")
 	if err != nil {
 		t.Fatal(err)
@@ -86,7 +86,7 @@ func TestPainelNaoEntregou(t *testing.T) {
 	if len(f.calls) != 1 {
 		t.Fatalf("esperava 1 chamada, vieram %v", f.juntas())
 	}
-	nenhumPromptLocal(t, f, "c-pl-1")
+	nenhumPromptLocal(t, f, "c-vt-1")
 }
 
 func TestPainelJaRespondido(t *testing.T) {
@@ -98,7 +98,7 @@ func TestPainelJaRespondido(t *testing.T) {
 	if len(f.calls) != 1 {
 		t.Fatalf("esperava 1 chamada, vieram %v", f.juntas())
 	}
-	nenhumPromptLocal(t, f, "c-pl-1")
+	nenhumPromptLocal(t, f, "c-vt-1")
 }
 
 func pastaPerguntas(t *testing.T, crew, kind, meta string) string {
@@ -122,51 +122,51 @@ func pastaPerguntas(t *testing.T, crew, kind, meta string) string {
 const scriptDelegate = "python3 /raiz/shared/mods/control-panel/scripts/delegate.py responder "
 
 func TestSemPainelGravaEEntregaAoCrew(t *testing.T) {
-	arq := pastaPerguntas(t, "c-pl-1", "question", "")
-	f := &respRunner{resp: []respResp{{"python3", "slug-x\tc-pl-1\tPlano\tAprovar\n", nil}}}
+	arq := pastaPerguntas(t, "c-vt-1", "question", "")
+	f := &respRunner{resp: []respResp{{"python3", "slug-x\tc-vt-1\tPlano\tAprovar\n", nil}}}
 	e, err := Responder(context.Background(), f, "/raiz", Recursos{Herdr: true}, arq+"#plano", "Aprovar")
 	if err != nil {
 		t.Fatal(err)
 	}
 	got := f.juntas()
-	if len(got) != 2 || got[0] != scriptDelegate+arq+" plano Aprovar" || got[1] != "herdr agent prompt c-pl-1 decision: plano: Aprovar" {
+	if len(got) != 2 || got[0] != scriptDelegate+arq+" plano Aprovar" || got[1] != "herdr agent prompt c-vt-1 decision: plano: Aprovar" {
 		t.Fatalf("argv: %v", got)
 	}
-	if !e.Entregue || e.Crew != "c-pl-1" || e.Slug != "slug-x" || e.Titulo != "Plano" {
+	if !e.Entregue || e.Crew != "c-vt-1" || e.Slug != "slug-x" || e.Titulo != "Plano" {
 		t.Fatalf("entrega: %+v", e)
 	}
-	nenhumPromptLocal(t, f, "c-pl-1")
+	nenhumPromptLocal(t, f, "c-vt-1")
 }
 
 func TestSemPainelAcaoFeitoVaiComoInfo(t *testing.T) {
-	arq := pastaPerguntas(t, "c-pl-1", "action", "")
-	f := &respRunner{resp: []respResp{{"python3", "slug-x\tc-pl-1\tPlano\tFeito\n", nil}}}
+	arq := pastaPerguntas(t, "c-vt-1", "action", "")
+	f := &respRunner{resp: []respResp{{"python3", "slug-x\tc-vt-1\tPlano\tFeito\n", nil}}}
 	if _, err := Responder(context.Background(), f, "/raiz", Recursos{Herdr: true}, arq+"#plano", "Feito"); err != nil {
 		t.Fatal(err)
 	}
 	got := f.juntas()
-	if len(got) != 2 || got[1] != "herdr agent prompt c-pl-1 info: plano: Feito" {
+	if len(got) != 2 || got[1] != "herdr agent prompt c-vt-1 info: plano: Feito" {
 		t.Fatalf("argv: %v", got)
 	}
 }
 
 func TestSemPainelCoordenadorVaiParaMeta(t *testing.T) {
-	arq := pastaPerguntas(t, "coordenador", "question", "coordinator=prolog-claude-bd\n")
+	arq := pastaPerguntas(t, "coordenador", "question", "coordinator=spark-bd\n")
 	f := &respRunner{resp: []respResp{{"python3", "slug-x\tcoordenador\tPlano\tAprovar\n", nil}}}
 	e, err := Responder(context.Background(), f, "/raiz", Recursos{Herdr: true}, arq+"#plano", "Aprovar")
 	if err != nil {
 		t.Fatal(err)
 	}
 	got := f.juntas()
-	if len(got) != 2 || got[1] != "herdr agent prompt prolog-claude-bd decision: plano: Aprovar" || !e.Entregue {
+	if len(got) != 2 || got[1] != "herdr agent prompt spark-bd decision: plano: Aprovar" || !e.Entregue {
 		t.Fatalf("argv: %v entrega: %+v", got, e)
 	}
-	nenhumPromptLocal(t, f, "prolog-claude-bd")
+	nenhumPromptLocal(t, f, "spark-bd")
 }
 
 func TestSemPainelSemHerdrOuSemDestino(t *testing.T) {
-	arq := pastaPerguntas(t, "c-pl-1", "question", "")
-	f := &respRunner{resp: []respResp{{"python3", "slug-x\tc-pl-1\tPlano\tAprovar\n", nil}}}
+	arq := pastaPerguntas(t, "c-vt-1", "question", "")
+	f := &respRunner{resp: []respResp{{"python3", "slug-x\tc-vt-1\tPlano\tAprovar\n", nil}}}
 	e, err := Responder(context.Background(), f, "/raiz", Recursos{Herdr: false}, arq+"#plano", "Aprovar")
 	if err != nil || e.Entregue || e.Motivo == "" || len(f.calls) != 1 {
 		t.Fatalf("sem herdr: %+v err=%v calls=%v", e, err, f.juntas())
@@ -181,23 +181,23 @@ func TestSemPainelSemHerdrOuSemDestino(t *testing.T) {
 }
 
 func TestRelatorioPeloPainelUsaUid(t *testing.T) {
-	f := &respRunner{resp: []respResp{{"python3 /p/painel.py", "pl-5\tc-pl-5\tRelatório\tLido\tnão: relatório só lido, nada a entregar\n", nil}}}
-	e, err := Responder(context.Background(), f, "/raiz", Recursos{Painel: "/p/painel.py"}, "c-pl-5#report", "Lido")
-	if err != nil || e.Crew != "c-pl-5" || e.Entregue {
+	f := &respRunner{resp: []respResp{{"python3 /p/painel.py", "vt-5\tc-vt-5\tRelatório\tLido\tnão: relatório só lido, nada a entregar\n", nil}}}
+	e, err := Responder(context.Background(), f, "/raiz", Recursos{Painel: "/p/painel.py"}, "c-vt-5#report", "Lido")
+	if err != nil || e.Crew != "c-vt-5" || e.Entregue {
 		t.Fatalf("e=%+v err=%v", e, err)
 	}
-	if got := f.juntas(); len(got) != 1 || got[0] != "python3 /p/painel.py responder /raiz c-pl-5#report Lido" {
+	if got := f.juntas(); len(got) != 1 || got[0] != "python3 /p/painel.py responder /raiz c-vt-5#report Lido" {
 		t.Errorf("calls=%v", got)
 	}
 }
 
 func TestRelatorioSemPainel(t *testing.T) {
 	f := &respRunner{}
-	e, err := Responder(context.Background(), f, "/raiz", Recursos{Herdr: true}, "c-pl-5#report", "Lido")
-	if err != nil || e.Entregue || e.Crew != "c-pl-5" || e.Resposta != "Lido" || len(f.calls) != 0 {
+	e, err := Responder(context.Background(), f, "/raiz", Recursos{Herdr: true}, "c-vt-5#report", "Lido")
+	if err != nil || e.Entregue || e.Crew != "c-vt-5" || e.Resposta != "Lido" || len(f.calls) != 0 {
 		t.Errorf("lido: e=%+v err=%v calls=%v", e, err, f.calls)
 	}
-	if _, err := Responder(context.Background(), f, "/raiz", Recursos{Herdr: true}, "c-pl-5#report", "Lido, e tenho pedido: x"); err == nil || len(f.calls) != 0 {
+	if _, err := Responder(context.Background(), f, "/raiz", Recursos{Herdr: true}, "c-vt-5#report", "Lido, e tenho pedido: x"); err == nil || len(f.calls) != 0 {
 		t.Errorf("pedido sem painel deveria falhar sem rodar nada: err=%v calls=%v", err, f.calls)
 	}
 }

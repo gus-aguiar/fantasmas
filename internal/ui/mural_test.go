@@ -15,7 +15,7 @@ func avisosEx() []dados.Aviso {
 	h := time.Date(2026, 10, 30, 10, 12, 0, 0, time.Local)
 	return []dados.Aviso{
 		{At: h, Autor: "gengar-1030-0900", Texto: "vou mexer no delegate-spawn até 12h"},
-		{At: h.Add(20 * time.Minute), Autor: "humano-com-nome-bem-comprido", Texto: "HML fora até 15h — não rodem homologação 🚀 nem suíte E2E contra o ambiente até eu avisar de novo aqui"},
+		{At: h.Add(20 * time.Minute), Autor: "humano-com-nome-bem-comprido", Texto: "VPS fora até 15h — não rodem homologação 🚀 nem suíte E2E contra o ambiente até eu avisar de novo aqui"},
 	}
 }
 

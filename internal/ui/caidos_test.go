@@ -10,7 +10,7 @@ import (
 
 func comCaido(sid string) (Model, *[]dados.Caido) {
 	e := fixture()
-	e.Caidos = []dados.Caido{{Nome: "c-pl-9", Pane: "w1:p9", SessionID: sid, Pasta: "/x/.delegate/s9"}}
+	e.Caidos = []dados.Caido{{Nome: "c-vt-9", Pane: "w1:p9", SessionID: sid, Pasta: "/x/.delegate/s9"}}
 	var chamadas []dados.Caido
 	m := modelo(e, &registro{})
 	m.acoes.Retomar = func(c dados.Caido) error { chamadas = append(chamadas, c); return nil }
@@ -27,7 +27,7 @@ func comCaido(sid string) (Model, *[]dados.Caido) {
 func TestGavetaCrewMostraCaidos(t *testing.T) {
 	m, _ := comCaido("sid-1")
 	out := render(m, 96, 40)
-	if !strings.Contains(out, "caído") || !strings.Contains(out, "R 2× retoma") || !strings.Contains(out, "c-pl-9") {
+	if !strings.Contains(out, "caído") || !strings.Contains(out, "R 2× retoma") || !strings.Contains(out, "c-vt-9") {
 		t.Fatalf("raia dos caídos ausente:\n%s", out)
 	}
 }

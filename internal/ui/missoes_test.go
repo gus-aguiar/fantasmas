@@ -36,11 +36,11 @@ func TestCartaEmTodasAsLarguras(t *testing.T) {
 			}
 		}
 		p := ansi.Strip(out)
-		if !strings.Contains(p, "multas-custos") || !strings.Contains(p, "Genguinha") {
+		if !strings.Contains(p, "d21-placar") || !strings.Contains(p, "Genguinha") {
 			t.Fatalf("w=%d sem missão ou principal:\n%s", w, p)
 		}
 		if w >= 96 {
-			for _, s := range []string{"multas-custos", "g-multas-custos", "▲ 1 sua", "PR vermelho", "gengar-1030-0900"} {
+			for _, s := range []string{"d21-placar", "g-d21-placar", "▲ 1 sua", "PR vermelho", "gengar-1030-0900"} {
 				if !strings.Contains(p, s) {
 					t.Errorf("w=%d sem %q:\n%s", w, s, p)
 				}
@@ -60,7 +60,7 @@ func TestEnterFocaMissaoEFiltraGavetas(t *testing.T) {
 		t.Fatalf("enter deveria abrir a missão ali mesmo, veio %s", Gavetas[m.gaveta].ID)
 	}
 	p := ansi.Strip(m.Render(140, 42))
-	if !strings.Contains(p, "◆ "+nome) || !strings.Contains(p, "PL-19597") || !strings.Contains(p, "▾ aberta") {
+	if !strings.Contains(p, "◆ "+nome) || !strings.Contains(p, "VT-19597") || !strings.Contains(p, "▾ aberta") {
 		t.Fatalf("sem selo ou sem a missão aberta:\n%s", p)
 	}
 	m = m.irGaveta(indiceGaveta("agora"))
@@ -96,7 +96,7 @@ func TestEscEZeroLimpamMissao(t *testing.T) {
 		if m.missao != "" {
 			t.Fatalf("%s não limpou", k)
 		}
-		if strings.Contains(ansi.Strip(m.Render(140, 42)), "◆ multas-custos") {
+		if strings.Contains(ansi.Strip(m.Render(140, 42)), "◆ d21-placar") {
 			t.Fatalf("%s: selo ficou", k)
 		}
 	}
@@ -113,11 +113,11 @@ func TestGVaiAAbaDoGengarDaMissao(t *testing.T) {
 }
 
 func TestCorEstavelPorSlug(t *testing.T) {
-	if corMissao("frota-por-unidade") != corMissao("frota-por-unidade") {
+	if corMissao("placar-por-unidade") != corMissao("placar-por-unidade") {
 		t.Fatal("instável")
 	}
 	vistas := map[lipgloss.Color]bool{}
-	for _, s := range []string{"a", "b", "c", "d", "e", "f", "g", "h", "frota", "multas"} {
+	for _, s := range []string{"a", "b", "c", "d", "e", "f", "g", "h", "placar", "listas"} {
 		vistas[corMissao(s)] = true
 	}
 	if len(vistas) < 4 {
@@ -154,9 +154,9 @@ func TestFiltroPorWorkspaceSemDdb(t *testing.T) {
 // Valores calculados em Python com o fnv1a32 do painel (painel.py: utf-8, 32 bits, ACENTOS[h % 6]).
 func TestCorMissaoIdenticaAoPainel(t *testing.T) {
 	casos := map[string]string{
-		"multas":             "#6ee7b7", // fnv1a32 = 2612968891, índice 1
-		"economia-de-multas": "#f59ad8", // fnv1a32 = 743490299, índice 5
-		"frota-por-unidade":  "#67d4f0", // fnv1a32 = 2777837278, índice 4
+		"listas":             "#f59ad8", // fnv1a32 = 1077052457, índice 5
+		"precos-de-listas":   "#fbbf5a", // fnv1a32 = 2873827574, índice 2
+		"placar-por-unidade": "#ff8f80", // fnv1a32 = 1773205677, índice 3
 	}
 	for slug, esperada := range casos {
 		if got := string(corMissao(slug)); got != esperada {

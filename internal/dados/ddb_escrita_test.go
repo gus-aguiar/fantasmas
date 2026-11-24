@@ -42,7 +42,7 @@ func TestResponderPeloDdbNaoEntregue(t *testing.T) {
 
 func TestSemChaveSegueOCaminhoAntigo(t *testing.T) {
 	t.Setenv("FANTASMAS_FONTE", "")
-	f := &respRunner{resp: []respResp{{"python3 /p/painel.py", "pl-1\tc-pl-1\tP\tA\tsim: c-pl-1\n", nil}}}
+	f := &respRunner{resp: []respResp{{"python3 /p/painel.py", "vt-1\tc-vt-1\tP\tA\tsim: c-vt-1\n", nil}}}
 	if _, err := Responder(context.Background(), f, "/raiz", Recursos{Painel: "/p/painel.py"}, "k", "A"); err != nil {
 		t.Fatal(err)
 	}
@@ -83,19 +83,19 @@ func TestArquivarSemChaveEscreveArquivo(t *testing.T) {
 
 func TestRetomarMontaComandos(t *testing.T) {
 	f := &respRunner{}
-	c := Caido{Nome: "c-pl-9", Pane: "w1:p9", SessionID: "abc-123"}
+	c := Caido{Nome: "c-vt-9", Pane: "w1:p9", SessionID: "abc-123"}
 	if err := Retomar(context.Background(), f, c); err != nil {
 		t.Fatal(err)
 	}
 	want := []string{
-		"herdr pane run w1:p9 claude --dangerously-skip-permissions --name c-pl-9 --resume abc-123",
-		"herdr agent rename w1:p9 c-pl-9",
+		"herdr pane run w1:p9 claude --dangerously-skip-permissions --name c-vt-9 --resume abc-123",
+		"herdr agent rename w1:p9 c-vt-9",
 	}
 	got := f.juntas()
 	if len(got) != 2 || got[0] != want[0] || got[1] != want[1] {
 		t.Fatalf("argv: %v", got)
 	}
-	if len(f.calls[0]) != 5 || f.calls[0][4] != "claude --dangerously-skip-permissions --name c-pl-9 --resume abc-123" {
+	if len(f.calls[0]) != 5 || f.calls[0][4] != "claude --dangerously-skip-permissions --name c-vt-9 --resume abc-123" {
 		t.Fatalf("o comando deve ir como um argumento só: %q", f.calls[0])
 	}
 }

@@ -260,7 +260,7 @@ func TestCabecalhosDeSecao(t *testing.T) {
 }
 
 func TestColunasMetaADireitaETruncada(t *testing.T) {
-	s := ansi.Strip(colunas(T.Base, 40, "●", T.Ok, "um título bem comprido que não cabe na linha", "c-pl-1 · 55% · há 2h"))
+	s := ansi.Strip(colunas(T.Base, 40, "●", T.Ok, "um título bem comprido que não cabe na linha", "c-vt-1 · 55% · há 2h"))
 	if lipgloss.Width(s) != 40 || !strings.HasPrefix(s, "● um título") || !strings.Contains(s, "…") {
 		t.Fatalf("%q", s)
 	}

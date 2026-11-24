@@ -30,14 +30,14 @@ func (r *runnerPipes) Run(_ context.Context, argv ...string) (string, error) {
 		return `[{"name":"implementar","arquivo":"/s/implementar.yaml","version":1,"inputs":["card","repos"],"stages":["implementar"],"erros":[]},
 {"name":"bugfix","arquivo":"/s/bugfix.yaml","version":1,"inputs":["card"],"stages":["debug","corrigir"],"erros":[]}]`, nil
 	case strings.Contains(k, " sidequest new "):
-		return "7 2026-10-30-PL-9\n", nil
+		return "7 2026-10-30-VT-9\n", nil
 	}
 	return "", nil
 }
 
 func estadoPipes() dados.Estado {
 	e := EstadoDemo(time.Date(2026, 10, 30, 10, 0, 0, 0, time.UTC))
-	e.Proximo = map[string]string{"2026-10-30-PL-19597-homolog": "lançaria (homolog, skill homolog)"}
+	e.Proximo = map[string]string{"2026-10-30-VT-19597-homolog": "lançaria (homolog, skill homolog)"}
 	return e
 }
 
@@ -85,24 +85,24 @@ func estadoSQ() dados.Estado {
 	return dados.Estado{
 		At: t0SQ, MissoesLigado: true, PipesLigado: true,
 		Missoes: []dados.Missao{
-			{Slug: "multas-custos", Nome: "multas-custos", Workspace: "w20", Origem: "PDY", Gengar: "g-multas-custos",
-				Cards: []string{"PL-19597", "PL-19598"}, Sidequests: []int{1}, Contagem: dados.Contagem{Pendentes: 1}},
-			{Slug: "economia-multas", Nome: "economia-multas", Workspace: "w21", Origem: "produto", Gengar: "g-economia",
-				Cards: []string{"PL-19826"}, Sidequests: []int{2, 3}, Contagem: dados.Contagem{Trabalhando: 2},
+			{Slug: "d21-placar", Nome: "d21-placar", Workspace: "w20", Origem: "issue", Gengar: "g-d21-placar",
+				Cards: []string{"VT-19597", "VT-19598"}, Sidequests: []int{1}, Contagem: dados.Contagem{Pendentes: 1}},
+			{Slug: "mtg-preco-deck", Nome: "mtg-preco-deck", Workspace: "w21", Origem: "produto", Gengar: "g-economia",
+				Cards: []string{"VT-19826"}, Sidequests: []int{2, 3}, Contagem: dados.Contagem{Trabalhando: 2},
 				Decisoes: []dados.Decisao{
 					{Via: "regra", Slug: "s-3-impl", Item: "plano", Motivo: "plano curto"},
 					{Via: "humano", Slug: "s-2-corrigir", Item: "plano"},
 				}},
 		},
 		Sidequests: []dados.Sidequest{
-			{ID: 1, Pipeline: "implementar-homologar", Status: "running", EsperaVoce: 1, Missao: "multas-custos",
+			{ID: 1, Pipeline: "implementar-homologar", Status: "running", EsperaVoce: 1, Missao: "d21-placar",
 				Etapas: []dados.Etapa{et("implementar", "done", "", "s-1-impl", ""), et("homologar", "needs_input", "gate:login", "s-1-hom", ""), et("juntar", "pending", "", "s-1-j", "")}},
-			{ID: 2, Pipeline: "bugfix", Status: "done", Missao: "economia-multas",
+			{ID: 2, Pipeline: "bugfix", Status: "done", Missao: "mtg-preco-deck",
 				Etapas: []dados.Etapa{et("debug", "done", "", "s-2-debug", ""), et("corrigir", "done", "", "s-2-corrigir", ""), et("pr", "done", "", "s-2-pr", "")}},
-			{ID: 3, Pipeline: "implementar-homologar", Status: "failed", Missao: "economia-multas",
+			{ID: 3, Pipeline: "implementar-homologar", Status: "failed", Missao: "mtg-preco-deck",
 				Etapas: []dados.Etapa{et("implementar", "done", "", "s-3-impl", ""), et("PR", "failed", "falhou", "s-3-pr", ""), et("homologar", "pending", "", "s-3-hom", "")}},
-			{ID: 4, Pipeline: "bugfix", SlugBase: "PL-19848", Status: "running", Solta: true,
-				Etapas: []dados.Etapa{et("debug", "done", "", "s-4-debug", ""), et("corrigir", "running", "", "s-4-corrigir", "c-pl-19848"), et("pr", "pending", "", "s-4-pr", "")}},
+			{ID: 4, Pipeline: "bugfix", SlugBase: "VT-19848", Status: "running", Solta: true,
+				Etapas: []dados.Etapa{et("debug", "done", "", "s-4-debug", ""), et("corrigir", "running", "", "s-4-corrigir", "c-vt-19848"), et("pr", "pending", "", "s-4-pr", "")}},
 		},
 	}
 }
@@ -147,10 +147,10 @@ func TestSoltasNoFimDaGaveta(t *testing.T) {
 	e := estadoSQ()
 	p := telaSQ(comPipes(e, &runnerPipes{}), 140)
 	i := strings.Index(p, "SIDEQUESTS SOLTAS")
-	if i < 0 || !strings.Contains(p[i:], "bugfix · PL-19848 ■■□ corrigir · c-pl-19848") {
+	if i < 0 || !strings.Contains(p[i:], "bugfix · VT-19848 ■■□ corrigir · c-vt-19848") {
 		t.Fatalf("soltas fora do fim:\n%s", p)
 	}
-	if strings.Index(p, "economia-multas") > i {
+	if strings.Index(p, "mtg-preco-deck") > i {
 		t.Fatal("soltas antes das missões")
 	}
 	e.Sidequests = e.Sidequests[:3]
@@ -214,7 +214,7 @@ func TestEnterAbreDetalheDaSidequest(t *testing.T) {
 
 func preencheImplementar(m Model) Model {
 	m = tecla(m, "enter")
-	m = digitaPipe(m, "PL-9")
+	m = digitaPipe(m, "VT-9")
 	m = teclaMsg(m, tea.KeyMsg{Type: tea.KeyTab})
 	m = digitaPipe(m, "WS")
 	m = teclaMsg(m, tea.KeyMsg{Type: tea.KeyTab})
@@ -224,9 +224,9 @@ func preencheImplementar(m Model) Model {
 func TestTeclaNLancaNaMissaoEmFoco(t *testing.T) {
 	r := &runnerPipes{}
 	m := comPipes(estadoSQ(), r)
-	m.missao = "economia-multas"
+	m.missao = "mtg-preco-deck"
 	m = preencheImplementar(tecla(m, "n"))
-	quer := "python3 /r/ddb.py --raiz /r sidequest new implementar --input card=PL-9 --input repos=WS --workspace w21"
+	quer := "python3 /r/ddb.py --raiz /r sidequest new implementar --input card=VT-9 --input repos=WS --workspace w21"
 	if r.calls[len(r.calls)-1] != quer {
 		t.Fatalf("com foco: calls=%v", r.calls)
 	}
@@ -240,7 +240,7 @@ func TestTeclaNLancaNaMissaoEmFoco(t *testing.T) {
 func TestTeclaNComFocoEmOutraGaveta(t *testing.T) {
 	r := &runnerPipes{}
 	m := comPipes(estadoSQ(), r)
-	m.missao = "multas-custos"
+	m.missao = "d21-placar"
 	m = m.irGaveta(indiceGaveta("agora"))
 	m = preencheImplementar(tecla(m, "n"))
 	if c := r.calls[len(r.calls)-1]; !strings.HasSuffix(c, "--workspace w20") {
@@ -259,7 +259,7 @@ func TestTeclaMAbreMissao(t *testing.T) {
 	if m.form == nil || m.form.tipo != "missao" {
 		t.Fatal("m não abriu o formulário da missão")
 	}
-	for _, v := range []string{"multas-novas", "Multas novas", "produto", "pedido do CS", "PL-1,PL-2"} {
+	for _, v := range []string{"listas-novas", "Listas novas", "produto", "pedido do CS", "VT-1,VT-2"} {
 		m = digitaPipe(m, v)
 		m = teclaMsg(m, tea.KeyMsg{Type: tea.KeyTab})
 	}
@@ -268,7 +268,7 @@ func TestTeclaMAbreMissao(t *testing.T) {
 		t.Fatalf("1º enter deveria só armar: calls=%v status=%q", r.calls, m.status)
 	}
 	m = tecla(m, "enter")
-	quer := "bash /r/scripts/delegate/missao-abrir.sh multas-novas --nome Multas novas --origem produto --origem-ref pedido do CS --cards PL-1,PL-2"
+	quer := "bash /r/scripts/delegate/missao-abrir.sh listas-novas --nome Listas novas --origem produto --origem-ref pedido do CS --cards VT-1,VT-2"
 	if len(r.calls) == 0 || r.calls[0] != quer {
 		t.Fatalf("calls=%v", r.calls)
 	}
@@ -436,13 +436,13 @@ func TestPipesFormularioMontaComando(t *testing.T) {
 		t.Fatalf("lista de sidequests ausente:\n%s", p)
 	}
 	m = tecla(m, "enter")
-	m = digitaPipe(m, "PL-9")
+	m = digitaPipe(m, "VT-9")
 	m = teclaMsg(m, tea.KeyMsg{Type: tea.KeyTab})
 	m = digitaPipe(m, "WS React")
 	m = teclaMsg(m, tea.KeyMsg{Type: tea.KeyTab})
 	m = digitaPipe(m, "Filtro")
 	m = tecla(m, "enter")
-	quer := "python3 /r/ddb.py --raiz /r sidequest new implementar --input card=PL-9 --input repos=WS React --title Filtro"
+	quer := "python3 /r/ddb.py --raiz /r sidequest new implementar --input card=VT-9 --input repos=WS React --title Filtro"
 	if r.calls[len(r.calls)-1] != quer {
 		t.Fatalf("calls=%v", r.calls)
 	}
@@ -485,7 +485,7 @@ func TestPipesNMaiusculoPedeConfirmacaoEChamaGengar(t *testing.T) {
 	if n < 2 || !strings.Contains(r.calls[n-2], " sidequest new implementar ") {
 		t.Fatalf("sidequest new ausente: %v", r.calls)
 	}
-	if quer := "bash /r/scripts/delegate/gengar-spawn.sh 7 --assunto PL-9"; r.calls[n-1] != quer {
+	if quer := "bash /r/scripts/delegate/gengar-spawn.sh 7 --assunto VT-9"; r.calls[n-1] != quer {
 		t.Fatalf("calls=%v quer %q", r.calls, quer)
 	}
 	if !strings.Contains(m.toast, "gengar") {
@@ -519,7 +519,7 @@ func TestPipesLinhaMostraGengarEProntidao(t *testing.T) {
 		out := m.Render(w, 80)
 		p := ansi.Strip(out)
 		if w >= 46 {
-			for _, s := range []string{"g-economia-multas", "aguardando prontidão", "g-multas-custos", "✓ pronto"} {
+			for _, s := range []string{"g-mtg-preco-deck", "aguardando prontidão", "g-d21-placar", "✓ pronto"} {
 				if !strings.Contains(p, s) {
 					t.Errorf("w=%d: falta %q:\n%s", w, s, p)
 				}

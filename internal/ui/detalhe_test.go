@@ -19,7 +19,7 @@ import (
 )
 
 const qDetalhe = `{
- "crew": "c-pl-17724", "key": "PL-17724", "area": "Edição ampliada",
+ "crew": "c-vt-17724", "key": "VT-17724", "area": "Edição ampliada",
  "items": [
   {"id": "plano", "kind": "gate", "title": "Aprova o plano?", "peso": "alto",
    "context": ["Contexto da decisão, com acento e travessão — para ver a quebra de linha em larguras pequenas sem cortar nada.", "- item da lista"],
@@ -37,21 +37,21 @@ const qDetalhe = `{
    "plan": "docs/x/_plan.md",
    "links": [{"label": "Épico", "url": "https://jira/1"}]},
   {"id": "juntar", "kind": "gate", "title": "Libera juntar o PR #3589 no tronco?", "peso": "alto",
-   "merge": {"repo": "PrologWebReact", "pr": 3589, "url": "https://github.com/o/PrologWebReact/pull/3589",
-     "base": "feat/PL-17174-tronco", "spark": "aprovado · 2 comentários triados, 0 pendentes", "checks": "verdes (lint, test, build)"},
+   "merge": {"repo": "AcmeWebReact", "pr": 3589, "url": "https://github.com/o/AcmeWebReact/pull/3589",
+     "base": "feat/VT-17174-tronco", "spark": "aprovado · 2 comentários triados, 0 pendentes", "checks": "verdes (lint, test, build)"},
    "context": ["Tronco trazido às 14:02, sem conflito."],
    "options": [
      {"id": "liberar", "label": "Liberar merge", "effect": "O fantasminha junta no tronco e manda done.", "default": true},
      {"id": "segurar", "label": "Segurar", "effect": "O fantasminha espera; o motivo vai na próxima mensagem."}],
    "recommendation": "Liberar: Spark aprovado e checks verdes.", "unlocks": "Merge no tronco e fechamento da task."},
   {"id": "env", "kind": "action", "title": "Copia o .env do WS para o worktree?",
-   "commands": ["cp /home/gustavo/Documents/PROLOG/prolog-claude/PrologWebService/.env.local /home/gustavo/Documents/PROLOG/prolog-claude/.worktrees/pl-17724/PrologWebService/"]}
+   "commands": ["cp /home/user/projetos/spark/AcmeWebService/.env.local /home/user/projetos/spark/.worktrees/vt-17724/AcmeWebService/"]}
  ]}`
 
-const rDetalhe = `{"crew": "c-pl-5", "key": "PL-5", "area": "Herança", "status": "done",
+const rDetalhe = `{"crew": "c-vt-5", "key": "VT-5", "area": "Herança", "status": "done",
  "summary": ["PR aberto na dev com os testes do motor verdes.", "Sem pendência de review."],
  "links": [{"label": "PR #12", "url": "https://github.com/o/r/pull/12"}],
- "report_path": ".delegate/pl-5/report.md"}`
+ "report_path": ".delegate/vt-5/report.md"}`
 
 type respondido struct{ chave, resposta string }
 
@@ -78,7 +78,7 @@ func novaCena(t *testing.T) *cena {
 	must(os.WriteFile(filepath.Join(dir, "q", "questions.json"), []byte(qDetalhe), 0o644))
 	must(os.WriteFile(filepath.Join(dir, "r", "report.json"), []byte(rDetalhe), 0o644))
 	must(os.WriteFile(filepath.Join(dir, "docs", "x", "_plan.md"), []byte("# Plano\n\n- passo 1\n- passo 2\n"), 0o644))
-	return &cena{dir: dir, ent: dados.Entrega{Crew: "c-pl-17724", Entregue: true}}
+	return &cena{dir: dir, ent: dados.Entrega{Crew: "c-vt-17724", Entregue: true}}
 }
 
 func (c *cena) chave(id string) string { return filepath.Join(c.dir, "q", "questions.json") + "#" + id }
@@ -87,9 +87,9 @@ func (c *cena) estado(ids ...string) dados.Estado {
 	e := dados.Estado{At: time.Date(2026, 10, 19, 9, 0, 0, 0, time.UTC), Raiz: c.dir,
 		Recursos: dados.Recursos{GH: true, Herdr: true, Delegate: true, Painel: "/p.py", Autor: "eu"}}
 	for _, id := range ids {
-		l := dados.Linha{Chave: c.chave(id), Rotulo: "c-pl-17724 · " + id, Detalhe: id}
+		l := dados.Linha{Chave: c.chave(id), Rotulo: "c-vt-17724 · " + id, Detalhe: id}
 		if id == "juntar" {
-			l.Merge = `{"repo":"PrologWebReact","pr":3589,"url":"https://github.com/o/PrologWebReact/pull/3589"}`
+			l.Merge = `{"repo":"AcmeWebReact","pr":3589,"url":"https://github.com/o/AcmeWebReact/pull/3589"}`
 		}
 		e.Esperando = append(e.Esperando, l)
 	}
@@ -158,7 +158,7 @@ func abrir(t *testing.T, c *cena, id string) Model {
 func abrirRelatorio(t *testing.T, c *cena) Model {
 	t.Helper()
 	e := c.estado()
-	e.Tasks = []dados.Linha{{Chave: filepath.Join(c.dir, "r"), Rotulo: "c-pl-5", Detalhe: "done"}}
+	e.Tasks = []dados.Linha{{Chave: filepath.Join(c.dir, "r"), Rotulo: "c-vt-5", Detalhe: "done"}}
 	m := c.modelo(e)
 	m = passo(t, m, "enter")
 	if m.aberto == nil || m.aberto.Tipo != "relatorio" {
@@ -170,7 +170,7 @@ func abrirRelatorio(t *testing.T, c *cena) Model {
 func TestEnterAbreDetalheComOpcoes(t *testing.T) {
 	m := abrir(t, novaCena(t), "plano")
 	out := render(m, 96, 60)
-	for _, s := range []string{"Aprova o plano?", "Aprovar", "Segue a execução", "padrão", "c-pl-17724", "A, plano cobre os ACs", "Execução"} {
+	for _, s := range []string{"Aprova o plano?", "Aprovar", "Segue a execução", "padrão", "c-vt-17724", "A, plano cobre os ACs", "Execução"} {
 		if !strings.Contains(out, s) {
 			t.Errorf("sem %q:\n%s", s, out)
 		}
@@ -237,7 +237,7 @@ func TestRespostaFechaEStatus(t *testing.T) {
 	if m.aberto != nil {
 		t.Fatal("detalhe deveria fechar")
 	}
-	if m.status != "entregue a c-pl-17724: Aprovar" {
+	if m.status != "entregue a c-vt-17724: Aprovar" {
 		t.Fatalf("status=%q", m.status)
 	}
 	if len(m.estado.Esperando) != 0 {
@@ -247,10 +247,10 @@ func TestRespostaFechaEStatus(t *testing.T) {
 
 func TestNaoEntregueMostraMotivo(t *testing.T) {
 	c := novaCena(t)
-	c.ent = dados.Entrega{Crew: "c-pl-17724", Motivo: "herdr falhou (sem sessão)"}
+	c.ent = dados.Entrega{Crew: "c-vt-17724", Motivo: "herdr falhou (sem sessão)"}
 	m := abrir(t, c, "plano")
 	m = passo(t, m, "enter")
-	if m.status != "gravado; não entregue a c-pl-17724: herdr falhou (sem sessão)" {
+	if m.status != "gravado; não entregue a c-vt-17724: herdr falhou (sem sessão)" {
 		t.Fatalf("status=%q", m.status)
 	}
 }
@@ -268,11 +268,11 @@ func TestErroMantemAberto(t *testing.T) {
 func TestGateJuntarCartao(t *testing.T) {
 	c := novaCena(t)
 	e := c.estado("juntar")
-	e.Travados = []dados.Travado{{Repo: "PrologWebReact", Number: 3589, Motivo: "aprovado · mergear", URL: "https://github.com/o/PrologWebReact/pull/3589"}}
+	e.Travados = []dados.Travado{{Repo: "AcmeWebReact", Number: 3589, Motivo: "aprovado · mergear", URL: "https://github.com/o/AcmeWebReact/pull/3589"}}
 	m := c.modelo(e)
 	m = passo(t, m, "enter")
 	out := render(m, 96, 60)
-	for _, s := range []string{"PrologWebReact#3589", "feat/PL-17174-tronco", "aprovado · 2 comentários", "verdes (lint, test, build)", "aprovado · mergear", "Liberar merge", "╭"} {
+	for _, s := range []string{"AcmeWebReact#3589", "feat/VT-17174-tronco", "aprovado · 2 comentários", "verdes (lint, test, build)", "aprovado · mergear", "Liberar merge", "╭"} {
 		if !strings.Contains(out, s) {
 			t.Errorf("sem %q:\n%s", s, out)
 		}
@@ -306,13 +306,13 @@ func TestRelatorioResponde(t *testing.T) {
 	c := novaCena(t)
 	m := abrirRelatorio(t, c)
 	out := render(m, 96, 60)
-	for _, s := range []string{"PR aberto na dev", "PR #12", ".delegate/pl-5/report.md", "Lido", "Lido, e tenho pedido"} {
+	for _, s := range []string{"PR aberto na dev", "PR #12", ".delegate/vt-5/report.md", "Lido", "Lido, e tenho pedido"} {
 		if !strings.Contains(out, s) {
 			t.Errorf("sem %q:\n%s", s, out)
 		}
 	}
 	passo(t, m, "enter")
-	if len(c.resps) != 1 || c.resps[0] != (respondido{"c-pl-5#report", "Lido"}) {
+	if len(c.resps) != 1 || c.resps[0] != (respondido{"c-vt-5#report", "Lido"}) {
 		t.Fatalf("resps=%v", c.resps)
 	}
 	m = abrirRelatorio(t, c)
@@ -320,7 +320,7 @@ func TestRelatorioResponde(t *testing.T) {
 	m = passo(t, m, "enter")
 	m = passo(t, m, "y")
 	passo(t, m, "enter")
-	if len(c.resps) != 2 || c.resps[1] != (respondido{"c-pl-5#report", "Lido, e tenho pedido: y"}) {
+	if len(c.resps) != 2 || c.resps[1] != (respondido{"c-vt-5#report", "Lido, e tenho pedido: y"}) {
 		t.Fatalf("resps=%v", c.resps)
 	}
 }
@@ -432,7 +432,7 @@ func TestPrints(t *testing.T) {
 	if os.Getenv("FANTASMAS_PRINTS") != "1" {
 		t.Skip("FANTASMAS_PRINTS=1 para gerar os prints")
 	}
-	destino := "/home/gustavo/Documents/PROLOG/prolog-claude/.delegate/2026-10-16-fantasmas-tui"
+	destino := "/home/user/projetos/spark/.delegate/2026-10-16-fantasmas-tui"
 	antes := lipgloss.ColorProfile()
 	lipgloss.SetColorProfile(termenv.TrueColor)
 	defer lipgloss.SetColorProfile(antes)
@@ -443,7 +443,7 @@ func TestPrints(t *testing.T) {
 			t.Fatal(err)
 		}
 		e := c.estado("juntar")
-		e.Travados = []dados.Travado{{Repo: "PrologWebReact", Number: 3589, Motivo: "aprovado · mergear"}}
+		e.Travados = []dados.Travado{{Repo: "AcmeWebReact", Number: 3589, Motivo: "aprovado · mergear"}}
 		mj := c.modelo(e)
 		mj = passo(t, mj, "enter")
 		if err := os.WriteFile(filepath.Join(destino, "t7-juntar-"+strconv.Itoa(w)+".txt"), []byte(mj.Render(w, 44)+"\n"), 0o644); err != nil {

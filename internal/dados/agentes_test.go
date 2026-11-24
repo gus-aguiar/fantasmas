@@ -83,8 +83,8 @@ func TestMetasDeSoOsPedidos(t *testing.T) {
 }
 
 func TestCaminhoTranscript(t *testing.T) {
-	got := CaminhoTranscript("/cl", "/home/gustavo/Documents/PROLOG/prolog-claude", "abc")
-	want := "/cl/projects/-home-gustavo-Documents-PROLOG-prolog-claude/abc.jsonl"
+	got := CaminhoTranscript("/cl", "/home/user/projetos/spark", "abc")
+	want := "/cl/projects/-home-user-projetos-spark/abc.jsonl"
 	if got != want {
 		t.Error(got)
 	}
