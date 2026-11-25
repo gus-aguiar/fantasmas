@@ -62,9 +62,9 @@ func TestFiltroNoFeed(t *testing.T) {
 	if m.filtro == nil {
 		t.Fatal("/ não abriu o filtro")
 	}
-	m = digita(t, m, "PL-2")
+	m = digita(t, m, "VT-2")
 	out := render(m, 96, 40)
-	if !strings.Contains(out, "c-pl-2") || strings.Contains(out, "c-pl-1") {
+	if !strings.Contains(out, "c-vt-2") || strings.Contains(out, "c-vt-1") {
 		t.Fatalf("filtro não filtrou:\n%s", out)
 	}
 	if !strings.Contains(out, "1 de ") {
@@ -75,11 +75,11 @@ func TestFiltroNoFeed(t *testing.T) {
 		t.Fatal("enter deveria fechar o campo e manter o filtro")
 	}
 	m = aperta(t, m, "o")
-	if len(r.urls) != 1 || r.urls[0] != "https://github.com/o/PrologWebReact/pull/77" {
+	if len(r.urls) != 1 || r.urls[0] != "https://github.com/o/AcmeWebReact/pull/77" {
 		t.Fatalf("a seleção não bate com o visível: %v", r.urls)
 	}
 	m = aperta(t, m, "esc")
-	if m.busca != "" || !strings.Contains(render(m, 96, 40), "c-pl-1") {
+	if m.busca != "" || !strings.Contains(render(m, 96, 40), "c-vt-1") {
 		t.Fatal("esc não limpou o filtro")
 	}
 }
@@ -263,7 +263,7 @@ func TestTabAlternaFoco(t *testing.T) {
 // ---- D: ir à aba e abrir ----
 
 func comAba(e dados.Estado) dados.Estado {
-	e.Tasks = append(e.Tasks, dados.Linha{Chave: "c-pl-1", Rotulo: "c-pl-1", Detalhe: "esperando", Extra: "aba-1"})
+	e.Tasks = append(e.Tasks, dados.Linha{Chave: "c-vt-1", Rotulo: "c-vt-1", Detalhe: "esperando", Extra: "aba-1"})
 	return e
 }
 
@@ -304,7 +304,7 @@ func TestSemAbaNemURLSemBotao(t *testing.T) {
 func TestIrAbaEAbrirNoDetalhe(t *testing.T) {
 	c := novaCena(t)
 	e := c.estado("juntar")
-	e.Tasks = []dados.Linha{{Chave: filepath.Join(c.dir, "q"), Rotulo: "c-pl-17724", Detalhe: "esperando", Extra: "aba-j"}}
+	e.Tasks = []dados.Linha{{Chave: filepath.Join(c.dir, "q"), Rotulo: "c-vt-17724", Detalhe: "esperando", Extra: "aba-j"}}
 	m := c.modelo(e)
 	m = passo(t, m, "enter")
 	out := render(m, 96, 60)

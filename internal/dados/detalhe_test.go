@@ -7,7 +7,7 @@ import (
 )
 
 const qJSON = `{
- "crew": "c-pl-17724", "key": "PL-17724", "area": "Edição ampliada",
+ "crew": "c-vt-17724", "key": "VT-17724", "area": "Edição ampliada",
  "items": [
   {"id": "plano", "kind": "gate", "title": "Aprova o plano?", "peso": "alto",
    "context": ["Contexto.", "- item"], "explain": ["Por quê."],
@@ -16,7 +16,7 @@ const qJSON = `{
      {"id": "B", "label": "Segurar", "effect": "Espera"}],
    "recommendation": {"option": "A", "text": "ignorado"},
    "coordinator": "A, plano cobre os ACs", "unlocks": "Execução",
-   "merge": {"repo": "PrologWebReact", "pr": 3901, "url": "https://gh/3901"},
+   "merge": {"repo": "AcmeWebReact", "pr": 3901, "url": "https://gh/3901"},
    "links": [{"label": "Épico", "url": "https://jira/1"}, {"label": "sem url"}]},
   {"id": "env", "kind": "action", "title": "Copia o .env?", "commands": ["cp a b"]}
  ]}`
@@ -26,7 +26,7 @@ func TestPerguntaTrazConteudo(t *testing.T) {
 	if err != nil || d == nil {
 		t.Fatalf("d=%v err=%v", d, err)
 	}
-	if d.Crew != "c-pl-17724" || d.Recomendacao != "A" {
+	if d.Crew != "c-vt-17724" || d.Recomendacao != "A" {
 		t.Errorf("crew=%q rec=%q", d.Crew, d.Recomendacao)
 	}
 	var ops [][2]any
@@ -46,7 +46,7 @@ func TestPerguntaTrazConteudo(t *testing.T) {
 	if !reflect.DeepEqual(urls, []string{"https://jira/1", "https://gh/3901"}) {
 		t.Errorf("links=%v", urls)
 	}
-	if d.Links[1].Label != "PR #3901 PrologWebReact" {
+	if d.Links[1].Label != "PR #3901 AcmeWebReact" {
 		t.Errorf("label=%q", d.Links[1].Label)
 	}
 }
@@ -89,7 +89,7 @@ func TestEhLivre(t *testing.T) {
 			t.Errorf("%q deveria ser livre", l)
 		}
 	}
-	for _, l := range []string{"Aprovar", "Recusar destino inativo", "Mudar o Glorp", "Refazer neste PR", "React · endereço (em revisão)", "Sempre que o código muda"} {
+	for _, l := range []string{"Aprovar", "Recusar destino inativo", "Mudar o DS", "Refazer neste PR", "React · endereço (em revisão)", "Sempre que o código muda"} {
 		if EhLivre(l, false) {
 			t.Errorf("%q não deveria ser livre", l)
 		}
@@ -130,9 +130,9 @@ func TestSeparar(t *testing.T) {
 	}
 }
 
-const qRico = `{"crew": "c-x", "key": "PL-9", "area": "Área",
+const qRico = `{"crew": "c-x", "key": "VT-9", "area": "Área",
  "items": [{"id": "juntar", "kind": "gate", "title": "Junta?",
-   "merge": {"repo": "PrologWebReact", "pr": 3589, "url": "https://gh/3589", "base": "tronco", "spark": "aprovado", "checks": "verdes"},
+   "merge": {"repo": "AcmeWebReact", "pr": 3589, "url": "https://gh/3589", "base": "tronco", "spark": "aprovado", "checks": "verdes"},
    "diagram": "flowchart LR\n  A --> B", "diagram_caption": "o fluxo",
    "compare_title": "Lado a lado", "compare_head": ["Ponto", "Pedido", "Hoje", ""],
    "compare": [{"item": "Título", "a": "x", "b": "y", "status": "diff", "tag": "difere"}]}]}`
@@ -142,7 +142,7 @@ func TestPerguntaRica(t *testing.T) {
 	if err != nil || d == nil {
 		t.Fatalf("d=%v err=%v", d, err)
 	}
-	if d.Key != "PL-9" || d.Area != "Área" || d.Uid != "/d/x/questions.json#juntar" {
+	if d.Key != "VT-9" || d.Area != "Área" || d.Uid != "/d/x/questions.json#juntar" {
 		t.Errorf("key=%q area=%q uid=%q", d.Key, d.Area, d.Uid)
 	}
 	if d.Merge == nil || d.Merge.PR != 3589 || d.Merge.Base != "tronco" || d.Merge.Checks != "verdes" {
@@ -158,8 +158,8 @@ func TestPerguntaRica(t *testing.T) {
 }
 
 func TestRelatorioTemOpcoesEUid(t *testing.T) {
-	d, _ := RelatorioDe("/d/x", []byte(`{"crew":"c-pl-5","status":"done"}`))
-	if d.Uid != "c-pl-5#report" || d.Kind != "report" {
+	d, _ := RelatorioDe("/d/x", []byte(`{"crew":"c-vt-5","status":"done"}`))
+	if d.Uid != "c-vt-5#report" || d.Kind != "report" {
 		t.Errorf("uid=%q kind=%q", d.Uid, d.Kind)
 	}
 	if len(d.Opcoes) != 2 || d.Opcoes[0].Label != "Lido" || d.Opcoes[1].Label != "Lido, e tenho pedido" || !d.Opcoes[1].Livre || d.Opcoes[0].Livre {

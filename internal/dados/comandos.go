@@ -23,19 +23,53 @@ const (
 	LinhaSwap = "sudo swapoff -a && sudo swapon -a && free -h"
 )
 
-// ComandosHerdr é o catálogo, na ordem da gaveta.
-var ComandosHerdr = []Comando{
-	{ID: "dia-abrir", Rotulo: "/dia abrir", Workspace: "GENGAR", Prompt: "/dia abrir", Prefixo: "dia", Descricao: "começa o dia: Jira, Intralog, PRs e DayDreaming"},
+// ChaveCmdExtra é a variável do comando extra da paleta, no formato
+// "Rótulo|workspace do Herdr|/prompt|prefixo da aba|descrição" (só o rótulo e o prompt são obrigatórios).
+// Vazia, a paleta não tem o comando extra.
+const ChaveCmdExtra = "FANTASMAS_CMD_EXTRA"
+
+// CmdExtra é o ID do comando extra.
+const CmdExtra = "extra"
+
+var comandosBase = []Comando{
+	{ID: "dia-abrir", Rotulo: "/dia abrir", Workspace: "GENGAR", Prompt: "/dia abrir", Prefixo: "dia", Descricao: "começa o dia: Jira, tarefas, PRs e DayDreaming"},
 	{ID: "plano-dia", Rotulo: "/plano-dia", Workspace: "GENGAR", Prompt: "/plano-dia", Prefixo: "plano", Descricao: "monta o plano do dia em blocos, no Notion e no painel"},
 	{ID: "dia-fechar", Rotulo: "/dia fechar", Workspace: "GENGAR", Prompt: "/dia fechar", Prefixo: "dia", Descricao: "fecha o dia e faz a passagem"},
-	{ID: "saude-multas", Rotulo: "/saude-multas", Workspace: "saúde multas", Prompt: "/saude-multas", Prefixo: "saude", Descricao: "saúde do módulo de multas (só leitura)"},
 	{ID: CmdFaxina, Rotulo: "Faxina agora", Descricao: "fecha fantasminhas encerrados, serviços e daemons ociosos"},
 	{ID: CmdSwap, Rotulo: "Esvaziar swap", Prefixo: "swap", Linha: LinhaSwap, Descricao: "devolve o swap para a RAM (pede sua senha)"},
 }
 
+// comandoExtra lê FANTASMAS_CMD_EXTRA; ok=false se vazia ou incompleta.
+func comandoExtra() (Comando, bool) {
+	ps := strings.Split(os.Getenv(ChaveCmdExtra), "|")
+	for len(ps) < 5 {
+		ps = append(ps, "")
+	}
+	for i := range ps {
+		ps[i] = strings.TrimSpace(ps[i])
+	}
+	if ps[0] == "" || ps[2] == "" {
+		return Comando{}, false
+	}
+	pre := ps[3]
+	if pre == "" {
+		pre = CmdExtra
+	}
+	return Comando{ID: CmdExtra, Rotulo: ps[0], Workspace: ps[1], Prompt: ps[2], Prefixo: pre, Descricao: ps[4]}, true
+}
+
+// ComandosHerdr é o catálogo, na ordem da gaveta; o comando extra (se configurado) entra antes da faxina.
+func ComandosHerdr() []Comando {
+	out := append([]Comando{}, comandosBase[:3]...)
+	if c, ok := comandoExtra(); ok {
+		out = append(out, c)
+	}
+	return append(out, comandosBase[3:]...)
+}
+
 // ComandoPorID devolve o comando do catálogo.
 func ComandoPorID(id string) (Comando, bool) {
-	for _, c := range ComandosHerdr {
+	for _, c := range ComandosHerdr() {
 		if c.ID == id {
 			return c, true
 		}

@@ -249,12 +249,12 @@ func TestAjudaAbreEFecha(t *testing.T) {
 func TestToastSomeSozinho(t *testing.T) {
 	m := modelo(fixture(), &registro{})
 	m.largura, m.altura = 96, 30
-	m, cmd := atualiza(t, m, respondeuMsg{Entrega: dados.Entrega{Crew: "c-pl-1", Resposta: "Aprovar", Entregue: true}})
-	if cmd == nil || !strings.Contains(render(m, 96, 30), "entregue a c-pl-1") {
+	m, cmd := atualiza(t, m, respondeuMsg{Entrega: dados.Entrega{Crew: "c-vt-1", Resposta: "Aprovar", Entregue: true}})
+	if cmd == nil || !strings.Contains(render(m, 96, 30), "entregue a c-vt-1") {
 		t.Fatal("sem toast")
 	}
 	velho := m.genToast
-	m, _ = atualiza(t, m, respondeuMsg{Entrega: dados.Entrega{Crew: "c-pl-2", Motivo: "x"}})
+	m, _ = atualiza(t, m, respondeuMsg{Entrega: dados.Entrega{Crew: "c-vt-2", Motivo: "x"}})
 	m, _ = atualiza(t, m, toastFimMsg{velho})
 	if m.toast == "" {
 		t.Fatal("toast velho apagou o novo")

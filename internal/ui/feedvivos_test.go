@@ -11,7 +11,7 @@ import (
 
 func comMortos() dados.Estado {
 	e := fixture()
-	e.Vivos = map[string]bool{"c-pl-1": true, "c-pl-2": true, "c-pl-d": true}
+	e.Vivos = map[string]bool{"c-vt-1": true, "c-vt-2": true, "c-pl-d": true}
 	e.Esperando = append(e.Esperando, dados.Linha{Chave: "/x/morto/questions.json#q9", Rotulo: "c-pl-morto · alto", Detalhe: "pergunta velha?"})
 	return e
 }

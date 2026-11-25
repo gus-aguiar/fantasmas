@@ -14,7 +14,7 @@ func (r *runnerHerdr) Run(_ context.Context, argv ...string) (string, error) {
 	r.calls = append(r.calls, argv)
 	switch strings.Join(argv[:min(3, len(argv))], " ") {
 	case "herdr workspace list":
-		return `{"result":{"workspaces":[{"workspace_id":"w2","label":"GENGAR"},{"workspace_id":"w9","label":"saúde multas"}]}}`, nil
+		return `{"result":{"workspaces":[{"workspace_id":"w2","label":"GENGAR"},{"workspace_id":"w9","label":"relatório saúde"}]}}`, nil
 	case "herdr tab create":
 		return `{"result":{"root_pane":{"pane_id":"w9:p4"},"tab":{"tab_id":"w9:t3"}}}`, nil
 	}
@@ -29,7 +29,7 @@ func TestNomeAba(t *testing.T) {
 
 func TestWorkspacePorRotulo(t *testing.T) {
 	r := &runnerHerdr{}
-	for rot, quer := range map[string]string{"GENGAR": "w2", "gengar": "w2", "saude multas": "w9", "saúde multas": "w9"} {
+	for rot, quer := range map[string]string{"GENGAR": "w2", "gengar": "w2", "relatorio saude": "w9", "relatório saúde": "w9"} {
 		if id, err := WorkspacePorRotulo(context.Background(), r, rot); err != nil || id != quer {
 			t.Fatalf("%s: %q %v", rot, id, err)
 		}
@@ -40,6 +40,7 @@ func TestWorkspacePorRotulo(t *testing.T) {
 }
 
 func TestDispararMontaHerdr(t *testing.T) {
+	t.Setenv(ChaveCmdExtra, "Relatório de saúde|relatório saúde|/relatorio|saude|saúde do módulo (só leitura)")
 	agora := time.Date(2026, 11, 6, 14, 30, 0, 0, time.UTC)
 	casos := []struct {
 		id, ws, nome, cmd string
@@ -47,7 +48,7 @@ func TestDispararMontaHerdr(t *testing.T) {
 		{"dia-abrir", "w2", "dia-1106-1430", `claude "/dia abrir"`},
 		{"plano-dia", "w2", "plano-1106-1430", `claude "/plano-dia"`},
 		{"dia-fechar", "w2", "dia-1106-1430", `claude "/dia fechar"`},
-		{"saude-multas", "w9", "saude-1106-1430", `claude "/saude-multas"`},
+		{CmdExtra, "w9", "saude-1106-1430", `claude "/relatorio"`},
 	}
 	for _, c := range casos {
 		r := &runnerHerdr{}
@@ -77,7 +78,16 @@ func TestDispararMontaHerdr(t *testing.T) {
 }
 
 func TestCatalogoNaOrdemDaPaleta(t *testing.T) {
-	quer := []string{"dia-abrir", "plano-dia", "dia-fechar", "saude-multas", CmdFaxina, CmdSwap}
+	t.Setenv(ChaveCmdExtra, "")
+	if n := len(ComandosHerdr()); n != 5 {
+		t.Fatalf("sem extra, catálogo com %d comandos, queria 5", n)
+	}
+	t.Setenv(ChaveCmdExtra, "Relatório|relatório saúde|/relatorio")
+	ComandosHerdr := ComandosHerdr()
+	quer := []string{"dia-abrir", "plano-dia", "dia-fechar", CmdExtra, CmdFaxina, CmdSwap}
+	if ComandosHerdr[3].Prefixo != CmdExtra {
+		t.Fatalf("prefixo padrão do extra: %q", ComandosHerdr[3].Prefixo)
+	}
 	if len(ComandosHerdr) != len(quer) {
 		t.Fatalf("catálogo com %d comandos, queria %d", len(ComandosHerdr), len(quer))
 	}

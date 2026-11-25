@@ -3,6 +3,7 @@ package dados
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"regexp"
 	"sort"
 	"strings"
@@ -47,17 +48,24 @@ type No struct {
 	} `json:"commits"`
 }
 
+// ChaveGHOrg é a variável que limita a busca de PRs a uma organização do GitHub (vazia = qualquer repo).
+const ChaveGHOrg = "FANTASMAS_GH_ORG"
+
 func QueryDe(autor string) string {
+	filtro := "author:" + autor
+	if org := strings.TrimSpace(os.Getenv(ChaveGHOrg)); org != "" {
+		filtro += " org:" + org
+	}
 	return fmt.Sprintf(`
 query {
-  search(query: "is:pr is:open author:%s org:prologapp", type: ISSUE, first: 60) {
+  search(query: "is:pr is:open %s", type: ISSUE, first: 60) {
     nodes { ... on PullRequest {
       number title url isDraft mergeable reviewDecision headRefName
       repository { name }
       commits(last: 1) { nodes { commit { statusCheckRollup { state contexts(first: 30) { nodes { __typename ... on CheckRun { name conclusion } ... on StatusContext { context state } } } } } } }
     } }
   }
-}`, autor)
+}`, filtro)
 }
 
 func rollupDe(n No) *Rollup {

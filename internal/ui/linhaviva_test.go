@@ -22,12 +22,12 @@ func TestBarraCtx(t *testing.T) {
 
 func linhasEx() []dados.LinhaViva {
 	h := time.Date(2026, 10, 30, 10, 12, 0, 0, time.Local)
-	longo := "rodando a suíte de integração do módulo de pneus com Testcontainers 🚀 e conferindo a migração de índices — ação válida até o fim"
+	longo := "rodando a suíte de integração do módulo de listas com Testcontainers 🚀 e conferindo a migração de índices — ação válida até o fim"
 	return []dados.LinhaViva{
-		{Nome: "c-pl-2", Aba: "a2", Etapa: "implementar", Agora: "1 sua(s): plano", Estado: dados.EsperaVoce, CtxPct: 72, Hora: h},
-		{Nome: "c-pl-1-nome-bem-comprido", Aba: "a1", Etapa: "implementar", Agora: longo, Estado: dados.Trabalhando, CtxPct: 55, Hora: h},
-		{Nome: "h-pl-3", Aba: "a3", Etapa: "homologar", Agora: "parado com tarefa há 14 min", Estado: dados.Parado, CtxPct: -1, Hora: h},
-		{Nome: "c-pl-4", Aba: "a4", Etapa: "implementar", Agora: "entregou relatório", Estado: dados.Terminou, CtxPct: 100, Hora: h},
+		{Nome: "c-vt-2", Aba: "a2", Etapa: "implementar", Agora: "1 sua(s): plano", Estado: dados.EsperaVoce, CtxPct: 72, Hora: h},
+		{Nome: "c-vt-1-nome-bem-comprido", Aba: "a1", Etapa: "implementar", Agora: longo, Estado: dados.Trabalhando, CtxPct: 55, Hora: h},
+		{Nome: "h-vt-3", Aba: "a3", Etapa: "homologar", Agora: "parado com tarefa há 14 min", Estado: dados.Parado, CtxPct: -1, Hora: h},
+		{Nome: "c-vt-4", Aba: "a4", Etapa: "implementar", Agora: "entregou relatório", Estado: dados.Terminou, CtxPct: 100, Hora: h},
 	}
 }
 

@@ -9,7 +9,7 @@ Cada entrada diz o que muda para quem usa; os detalhes técnicos ficam no histó
 - **Planejar o dia (`2` na paleta):** abre uma aba nova no workspace GENGAR rodando `/plano-dia`, que monta o plano do dia em blocos, no Notion e no painel. Funciona como Abrir o dia: `enter` 2× confirma, mostra "rodando há N min" e `g` leva até a aba.
 
 **Muda**
-- Os atalhos da paleta seguem a nova ordem: Abrir o dia `1`, Planejar o dia `2`, Fechar o dia `3`, Saúde de multas `4`, Faxina agora `5`, Esvaziar swap `6`.
+- Os atalhos da paleta seguem a nova ordem: Abrir o dia `1`, Planejar o dia `2`, Fechar o dia `3`, comando extra `4`, Faxina agora `5`, Esvaziar swap `6`.
 
 ## 2026-11-06 · Faxina e swap na paleta
 
@@ -25,7 +25,7 @@ Cada entrada diz o que muda para quem usa; os detalhes técnicos ficam no histó
 ## 2026-11-06 · Paleta enxuta
 
 **Muda**
-- **Paleta só com o que você usa:** Abrir o dia, Fechar o dia e Saúde de multas. Sem busca e sem grupos; `1`–`3` disparam (aperte duas vezes, como o `enter`). O DayDreaming saiu (o `/dia` já o atualiza).
+- **Paleta só com o que você usa:** Abrir o dia, Fechar o dia e o relatório de saúde. Sem busca e sem grupos; `1`–`3` disparam (aperte duas vezes, como o `enter`). O DayDreaming saiu (o `/dia` já o atualiza).
 - **Paleta limpa:** borda roxa arredondada, cada comando com o número e, embaixo, o que ele faz; um ponto colorido aparece quando ele está rodando.
 - **Reconectar MCPs e Atualizar app foram para a gaveta 5,** na seção "AÇÕES", com `enter 2×`.
 - **Atalhos onde você usa:** a linha selecionada mostra à direita, em cinza, o que dá para fazer nela ("enter responder · g ir à aba · o abrir", "g ir à aba", "R 2× retoma", "enter detalhes · g aba", "o abrir", "enter expande"). Sai o "R 2× retoma caído" do título de PARADOS e os botões "ir à aba →"/"abrir ↗" das listas (no detalhe continuam).
@@ -40,7 +40,7 @@ Cada entrada diz o que muda para quem usa; os detalhes técnicos ficam no histó
 - **Abas no rodapé, atalhos só no `?`:** a barra "1 Agora · 2 Missões · 3 PRs · 4 Máquina · 5 Config" volta para a última linha da tela, centralizada (com "? ajuda" em cinza à direita quando cabe); somem a linha de atalhos do topo e o rodapé de atalhos. `?` lista tudo, inclusive `ctrl+p`/`b`.
 - **O topo voltou a respirar:** o gengar aparece em tamanho cheio à esquerda e, ao lado, "fantasmas ↻ atualizado HH:MM", o resumo ("1 precisa de você · 2 trabalhando", só o que é maior que zero) e o alerta da máquina quando há. Em janela com menos de 30 linhas o gengar some e o topo fica numa linha.
 - **O gengar só se mexe quando algum fantasminha está trabalhando;** com tudo parado, ele fica quieto.
-- **Paleta de comandos no lugar do painel lateral:** `ctrl+p` (ou `b`, como antes) abre uma caixa no centro da tela, com o resto esmaecido atrás. Digite para buscar; os comandos vêm agrupados (DIA: Abrir o dia, Fechar o dia · MULTAS: Saúde de multas · SISTEMA: DayDreaming, Reconectar MCPs, Atualizar app), com o estado à direita ("rodando há 4 min"). `enter 2×` executa, `g` vai à aba do disparo e `esc` fecha. Com a busca vazia, `b` também fecha.
+- **Paleta de comandos no lugar do painel lateral:** `ctrl+p` (ou `b`, como antes) abre uma caixa no centro da tela, com o resto esmaecido atrás. Digite para buscar; os comandos vêm agrupados (DIA: Abrir o dia, Fechar o dia · SAÚDE: Relatório de saúde · SISTEMA: DayDreaming, Reconectar MCPs, Atualizar app), com o estado à direita ("rodando há 4 min"). `enter 2×` executa, `g` vai à aba do disparo e `esc` fecha. Com a busca vazia, `b` também fecha.
 - **Menos enfeite, mais leitura:** seções com cabeçalho cinza em caixa alta e contador ("ESPERANDO VOCÊ 1", "TRAVADOS 1", "TRABALHANDO 2", "PARADOS 1"); a cor aparece só para estado e foco.
 - **Listas em colunas:** glifo de estado colorido (▲ pede você, ● trabalhando, ◌ parado, ✗ travado ou caído), o título na cor normal e os detalhes em cinza à direita, cortados com "…".
 - **Acompanhando e antigos recolhidos numa linha só** ("▸ Acompanhando 3   ▸ Antigos 8"); `enter` (ou `a`) abre os dois.
@@ -48,7 +48,7 @@ Cada entrada diz o que muda para quem usa; os detalhes técnicos ficam no histó
 ## 2026-11-06 · Painel de botões
 
 **Muda**
-- **Os comandos saem da gaveta `5` para o painel lateral de botões**, que abre e fecha com `b` em qualquer gaveta (`esc` também fecha). Ele aparece à direita, por cima da lista, sem trocar de gaveta; em janela estreita ocupa a tela toda. Dentro: `/dia abrir`, `/dia fechar`, `/saude-multas`, DayDreaming, reconectar MCPs e atualizar app, com `↑ ↓`, `enter 2×` para disparar, "rodando há N min" e `g` para ir à aba. O rodapé mostra a dica `b botões`.
+- **Os comandos saem da gaveta `5` para o painel lateral de botões**, que abre e fecha com `b` em qualquer gaveta (`esc` também fecha). Ele aparece à direita, por cima da lista, sem trocar de gaveta; em janela estreita ocupa a tela toda. Dentro: `/dia abrir`, `/dia fechar`, o relatório de saúde, DayDreaming, reconectar MCPs e atualizar app, com `↑ ↓`, `enter 2×` para disparar, "rodando há N min" e `g` para ir à aba. O rodapé mostra a dica `b botões`.
 - **A gaveta `5` volta a ser configurações**, só com os ajustes (tema, figura e variáveis). `--gaveta configuracoes` abre nela, e `--gaveta comandos` segue valendo como apelido.
 
 ## 2026-11-06 · Cinco gavetas e comandos
@@ -63,7 +63,7 @@ Cada entrada diz o que muda para quem usa; os detalhes técnicos ficam no histó
 - `--gaveta` aceita os nomes novos (`agora missoes prs maquina comandos`); os antigos (`crew`, `ambiente`, `worktrees`, `configuracoes`) continuam valendo.
 
 **Novo**
-- **Gaveta comandos (`5`):** `/dia abrir` e `/dia fechar` abrem uma aba nova no workspace GENGAR do Herdr, e `/saude-multas` no workspace "saúde multas", já rodando o `claude` com o comando, na raiz do Spark. Cada um pede `enter 2×`, mostra "rodando há N min" e `g` vai até a aba. DayDreaming, reconectar MCPs e atualizar app também estão lá, e os ajustes (tema, figura, variáveis) ficam no fim.
+- **Gaveta comandos (`5`):** `/dia abrir` e `/dia fechar` abrem uma aba nova no workspace GENGAR do Herdr, e o relatório de saúde no workspace dele, já rodando o `claude` com o comando, na raiz do Spark. Cada um pede `enter 2×`, mostra "rodando há N min" e `g` vai até a aba. DayDreaming, reconectar MCPs e atualizar app também estão lá, e os ajustes (tema, figura, variáveis) ficam no fim.
 
 **Sai**
 - As dicas do topo e o rodapé de dicas das missões (a ajuda `?` cobre).

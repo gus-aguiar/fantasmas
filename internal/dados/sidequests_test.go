@@ -9,9 +9,9 @@ import (
 )
 
 const estadoRuns = `{"tasks":[],"pendentes":[],"opcoes":{},"mural":[],"runs":[
-{"id":2,"pipeline":"implementar-homologar","title":"Filtro de frota","slug_base":"PL-2","status":"running","coordinator":"g","inputs":{"card":"PL-2"},"created_at":"2026-10-30T10:00:00","idade_min":42,"espera_voce":1,
- "stages":[{"id":"implementar","role":"implementer","skill":"writing-plans","status":"needs_input","reason":"gate:plano","slug":"2026-10-30-PL-2","attempt":0,"after":[],"gates":[{"item":"plano","by":"human"}],"agent":"c-pl-2","tab":"w1:t2","gone":false,"started_at":null,"ended_at":null,"report":null},
-  {"id":"homologar","role":"homolog","skill":"homolog","status":"pending","reason":null,"slug":"2026-10-30-PL-2-homolog","attempt":0,"after":["implementar"],"gates":[],"agent":null,"tab":null,"gone":false,"started_at":null,"ended_at":null,"report":{"status":"done","links":["https://x/pr/1"]}}]}]}`
+{"id":2,"pipeline":"implementar-homologar","title":"Filtro de projetos","slug_base":"VT-2","status":"running","coordinator":"g","inputs":{"card":"VT-2"},"created_at":"2026-10-30T10:00:00","idade_min":42,"espera_voce":1,
+ "stages":[{"id":"implementar","role":"implementer","skill":"writing-plans","status":"needs_input","reason":"gate:plano","slug":"2026-10-30-VT-2","attempt":0,"after":[],"gates":[{"item":"plano","by":"human"}],"agent":"c-vt-2","tab":"w1:t2","gone":false,"started_at":null,"ended_at":null,"report":null},
+  {"id":"homologar","role":"homolog","skill":"homolog","status":"pending","reason":null,"slug":"2026-10-30-VT-2-homolog","attempt":0,"after":["implementar"],"gates":[],"agent":null,"tab":null,"gone":false,"started_at":null,"ended_at":null,"report":{"status":"done","links":["https://x/pr/1"]}}]}]}`
 
 func TestDeDdbLeRuns(t *testing.T) {
 	p, err := DeDdb([]byte(estadoRuns), time.Now())
@@ -26,7 +26,7 @@ func TestDeDdbLeRuns(t *testing.T) {
 		t.Fatalf("run=%+v", r)
 	}
 	e := r.Etapas[0]
-	if e.Status != "needs_input" || e.Reason != "gate:plano" || e.Agent != "c-pl-2" || e.Tab != "w1:t2" || len(e.Gates) != 1 {
+	if e.Status != "needs_input" || e.Reason != "gate:plano" || e.Agent != "c-vt-2" || e.Tab != "w1:t2" || len(e.Gates) != 1 {
 		t.Fatalf("etapa=%+v", e)
 	}
 	if h := r.Etapas[1]; len(h.After) != 1 || h.After[0] != "implementar" {
@@ -39,15 +39,15 @@ func TestDeDdbLeRuns(t *testing.T) {
 
 func TestProximoDoTick(t *testing.T) {
 	saida := "[dry-run] nada é gravado nem lançado; para valer: DDB_TICK=on ddb tick --executar\n" +
-		"2026-10-30-PL-1: ready\n2026-10-30-PL-2: ready\n" +
-		"lançaria 2026-10-30-PL-1 (implementer, skill writing-plans)\n" +
-		"não lança 2026-10-30-PL-2: max_running (1/1)\n"
+		"2026-10-30-VT-1: ready\n2026-10-30-VT-2: ready\n" +
+		"lançaria 2026-10-30-VT-1 (implementer, skill writing-plans)\n" +
+		"não lança 2026-10-30-VT-2: max_running (1/1)\n"
 	p := ProximoDoTick(saida)
-	if p["2026-10-30-PL-1"] != "lançaria (implementer, skill writing-plans)" {
-		t.Errorf("PL-1=%q", p["2026-10-30-PL-1"])
+	if p["2026-10-30-VT-1"] != "lançaria (implementer, skill writing-plans)" {
+		t.Errorf("VT-1=%q", p["2026-10-30-VT-1"])
 	}
-	if p["2026-10-30-PL-2"] != "não lança: max_running (1/1)" {
-		t.Errorf("PL-2=%q", p["2026-10-30-PL-2"])
+	if p["2026-10-30-VT-2"] != "não lança: max_running (1/1)" {
+		t.Errorf("VT-2=%q", p["2026-10-30-VT-2"])
 	}
 	if _, ok := p["[dry-run]"]; ok {
 		t.Error("cabeçalho do dry-run virou etapa")
@@ -58,12 +58,12 @@ func TestColetaComDdbTrazRunsETick(t *testing.T) {
 	t.Setenv("FANTASMAS_FONTE", "ddb")
 	f := novoFake()
 	f.saida[" state --json"] = estadoRuns
-	f.saida[" tick --dry-run"] = "lançaria 2026-10-30-PL-2-homolog (homolog, skill homolog)\n"
+	f.saida[" tick --dry-run"] = "lançaria 2026-10-30-VT-2-homolog (homolog, skill homolog)\n"
 	e := (&Coletor{Raiz: raizDdb(t), R: f}).Coletar(context.Background())
 	if !e.PipesLigado || len(e.Sidequests) != 1 {
 		t.Fatalf("ligado=%v runs=%v", e.PipesLigado, e.Sidequests)
 	}
-	if e.Proximo["2026-10-30-PL-2-homolog"] == "" {
+	if e.Proximo["2026-10-30-VT-2-homolog"] == "" {
 		t.Errorf("proximo=%v", e.Proximo)
 	}
 	for _, c := range f.calls {
@@ -90,10 +90,10 @@ func TestPipesMontaComandos(t *testing.T) {
 	if err != nil || len(ps) != 1 || ps[0].Arquivo != "/s/implementar.yaml" || len(ps[0].Inputs) != 2 {
 		t.Fatalf("ps=%+v err=%v", ps, err)
 	}
-	if _, err := p.Novo("implementar", [][2]string{{"card", "PL-9"}, {"repos", "WS React"}}, "Meu título", "w15"); err != nil {
+	if _, err := p.Novo("implementar", [][2]string{{"card", "VT-9"}, {"repos", "WS React"}}, "Meu título", "w15"); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := p.Novo("implementar", [][2]string{{"card", "PL-9"}}, "", ""); err != nil {
+	if _, err := p.Novo("implementar", [][2]string{{"card", "VT-9"}}, "", ""); err != nil {
 		t.Fatal(err)
 	}
 	if err := p.Etapa(3, "homologar", "retry"); err != nil {
@@ -104,8 +104,8 @@ func TestPipesMontaComandos(t *testing.T) {
 	}
 	quer := []string{
 		"python3 /r/ddb.py --raiz /r sidequest list --json",
-		"python3 /r/ddb.py --raiz /r sidequest new implementar --input card=PL-9 --input repos=WS React --title Meu título --workspace w15",
-		"python3 /r/ddb.py --raiz /r sidequest new implementar --input card=PL-9 --solta",
+		"python3 /r/ddb.py --raiz /r sidequest new implementar --input card=VT-9 --input repos=WS React --title Meu título --workspace w15",
+		"python3 /r/ddb.py --raiz /r sidequest new implementar --input card=VT-9 --solta",
 		"python3 /r/ddb.py --raiz /r stage 3:homologar retry",
 		"python3 /r/ddb.py --raiz /r sidequest validate /s/implementar.yaml",
 	}
@@ -164,12 +164,12 @@ func TestVetarEAbrirMissao(t *testing.T) {
 	if err := p.Vetar(5, "implementar", "refaz o plano"); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := p.AbrirMissao(NovaMissao{Slug: "m1", Nome: "M 1", Origem: "PDY", OrigemRef: "PDY-1", Cards: "PL-1,PL-2", Objetivo: "x"}); err != nil {
+	if _, err := p.AbrirMissao(NovaMissao{Slug: "m1", Nome: "M 1", Origem: "issue", OrigemRef: "GH-1", Cards: "VT-1,VT-2", Objetivo: "x"}); err != nil {
 		t.Fatal(err)
 	}
 	quer := []string{
 		"python3 /r/ddb.py --raiz /r stage 5:implementar veto -- refaz o plano",
-		"bash /r/scripts/delegate/missao-abrir.sh m1 --nome M 1 --origem PDY --origem-ref PDY-1 --cards PL-1,PL-2 --objetivo x",
+		"bash /r/scripts/delegate/missao-abrir.sh m1 --nome M 1 --origem issue --origem-ref GH-1 --cards VT-1,VT-2 --objetivo x",
 	}
 	if strings.Join(f.calls, "|") != strings.Join(quer, "|") {
 		t.Fatalf("calls: %v", f.calls)

@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -363,7 +364,15 @@ func gavetaPRs(c *corpo, e dados.Estado) {
 }
 
 func nomePR(x dados.Travado) string {
-	return fmt.Sprintf("%s #%d", strings.Replace(x.Repo, "Prolog", "", 1), x.Number)
+	return fmt.Sprintf("%s #%d", semPrefixo(x.Repo), x.Number)
+}
+
+// semPrefixo tira do nome do repo o prefixo de FANTASMAS_REPO_PREFIXO (vazio = nome inteiro).
+func semPrefixo(repo string) string {
+	if p := os.Getenv("FANTASMAS_REPO_PREFIXO"); p != "" {
+		return strings.Replace(repo, p, "", 1)
+	}
+	return repo
 }
 
 // resumoCI é o extra do título dos PRs: só os estados que existem, vermelho primeiro.

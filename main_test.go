@@ -25,7 +25,7 @@ func TestUmaVezDemoCor(t *testing.T) {
 	lipgloss.SetColorProfile(termenv.TrueColor)
 	t0 := time.Date(2026, 10, 28, 9, 0, 0, 0, time.UTC)
 	out := ui.Novo(nil, ui.Acoes{}, time.Minute).ComEstado(ui.EstadoDemo(t0)).Render(140, 42)
-	if !strings.Contains(out, "\x1b[38;2;") || !strings.Contains(out, "c-pl-1") {
+	if !strings.Contains(out, "\x1b[38;2;") || !strings.Contains(out, "c-vt-1") {
 		t.Fatalf("quadro sem cor de 24 bits ou sem fantasminha da demo:\n%s", out)
 	}
 }

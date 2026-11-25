@@ -31,7 +31,7 @@ type Acoes struct {
 	ProgressoMCP   func() dados.ProgressoMCP
 	// configurações → atualizar app fantasmas: git pull + build + troca do binário
 	Atualizar func() (dados.Resultado, error)
-	// gaveta comandos: abre a aba do /dia ou do /saude-multas no Herdr
+	// gaveta comandos: abre a aba do /dia ou do comando extra no Herdr
 	Disparar func(id string) (dados.Disparo, error)
 	// paleta: Faxina agora (segundo plano) e a leitura de memória do Esvaziar swap
 	Faxina  func() (*dados.Faxina, error)

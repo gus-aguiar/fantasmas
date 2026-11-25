@@ -829,7 +829,7 @@ func (m Model) abrirFormMissao() (tea.Model, tea.Cmd) {
 	}
 	m.form = abrirFormTexto(&formPipe{tipo: "missao"},
 		[]string{"slug", "nome", "origem", "origem-ref", "cards", "objetivo"},
-		[]string{"multas-custos", "rótulo da missão", "PDY, produto ou designer", "PDY-123 ou pedido do CS", "PL-1,PL-2", "opcional"})
+		[]string{"d21-placar", "rótulo da missão", "PDY, produto ou designer", "GH-123 ou pedido do CS", "VT-1,VT-2", "opcional"})
 	return m, textinput.Blink
 }
 

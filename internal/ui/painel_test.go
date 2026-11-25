@@ -31,7 +31,7 @@ func TestPaletaAbreComCtrlPEB(t *testing.T) {
 		t.Fatalf("ctrl+p devia abrir a paleta sem trocar de gaveta (aberta=%v, %s)", m.botoes, Gavetas[m.gaveta].ID)
 	}
 	p := render(m, 140, 40)
-	for _, s := range []string{"Comandos", "Abrir o dia", "Planejar o dia", "Fechar o dia", "Saúde de multas", "esc fecha"} {
+	for _, s := range []string{"Comandos", "Abrir o dia", "Planejar o dia", "Fechar o dia", "Relatório de saúde", "esc fecha"} {
 		if !strings.Contains(p, s) {
 			t.Fatalf("paleta sem %q:\n%s", s, p)
 		}
@@ -89,13 +89,13 @@ func TestPaletaSemBuscaENumeros(t *testing.T) {
 	if m.buscaCmd != nil {
 		t.Fatal("com até 6 comandos a paleta não tem busca")
 	}
-	m = digitaPaleta(m, "multas")
+	m = digitaPaleta(m, "saúde")
 	if len(m.alvos()) != 6 || m.textoBusca() != "" {
 		t.Fatal("letras não deviam filtrar")
 	}
 	n, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'4'}})
 	m = n.(Model)
-	if cmd != nil || m.armadoCmd != "saude-multas" || len(pedidos) != 0 {
+	if cmd != nil || m.armadoCmd != dados.CmdExtra || len(pedidos) != 0 {
 		t.Fatalf("primeiro 4 devia só armar: %q", m.armadoCmd)
 	}
 	if !strings.Contains(render(m, 140, 40), "enter de novo confirma") {
@@ -106,7 +106,7 @@ func TestPaletaSemBuscaENumeros(t *testing.T) {
 		t.Fatal("segundo 4 devia disparar")
 	}
 	n.(Model).Update(cmd())
-	if len(pedidos) != 1 || pedidos[0] != "saude-multas" {
+	if len(pedidos) != 1 || pedidos[0] != dados.CmdExtra {
 		t.Fatalf("pedidos %v", pedidos)
 	}
 	m = tecla(tecla(m, "1"), "2")
@@ -166,7 +166,7 @@ func TestPaletaEscFecha(t *testing.T) {
 func TestPaletaFicaComAsTeclas(t *testing.T) {
 	m := tecla(modelo(fixture(), &registro{}), "b")
 	m = tecla(m, "j")
-	if a, _ := m.selecionado(); a.comando != dados.ComandosHerdr[1].ID {
+	if a, _ := m.selecionado(); a.comando != dados.ComandosHerdr()[1].ID {
 		t.Fatalf("j com busca vazia devia andar na paleta: %+v", a)
 	}
 	m = tecla(m, "3")
@@ -260,7 +260,7 @@ func TestCabecalhosDeSecao(t *testing.T) {
 }
 
 func TestColunasMetaADireitaETruncada(t *testing.T) {
-	s := ansi.Strip(colunas(T.Base, 40, "●", T.Ok, "um título bem comprido que não cabe na linha", "c-pl-1 · 55% · há 2h"))
+	s := ansi.Strip(colunas(T.Base, 40, "●", T.Ok, "um título bem comprido que não cabe na linha", "c-vt-1 · 55% · há 2h"))
 	if lipgloss.Width(s) != 40 || !strings.HasPrefix(s, "● um título") || !strings.Contains(s, "…") {
 		t.Fatalf("%q", s)
 	}
