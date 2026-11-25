@@ -10,12 +10,12 @@ nome="${4:-$tela}"
 shift $(( $# < 4 ? $# : 4 ))
 
 app="$(cd "$(dirname "$0")/.." && pwd)"
-spark="$(cd "$app/../../.." && pwd)"
+raiz="$(cd "$app/../../.." && pwd)"
 bin="$app/bin/fantasmas-pipes"
 mkdir -p "$app/shots"
 
 if [ ! -x "$bin" ] || [ -n "$(find "$app" -path "$app/bin" -prune -o -path "$app/shots" -prune -o \( -name '*.go' -o -name go.mod -o -name go.sum \) -newer "$bin" -print -quit)" ]; then
-  bash "$spark/scripts/orca-orchestration/heavy-run.sh" -C "$app" "fantasmas build" env GOTOOLCHAIN=local go build -o bin/fantasmas-pipes . >&2
+  bash "$raiz/scripts/orca-orchestration/heavy-run.sh" -C "$app" "fantasmas build" env GOTOOLCHAIN=local go build -o bin/fantasmas-pipes . >&2
 fi
 
 "$bin" --uma-vez --cor --demo --gaveta "$tela" --largura "$largura" --altura "$altura" "$@" > "$app/shots/$nome.ansi"

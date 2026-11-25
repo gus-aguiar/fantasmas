@@ -151,17 +151,17 @@ func TestSemPainelAcaoFeitoVaiComoInfo(t *testing.T) {
 }
 
 func TestSemPainelCoordenadorVaiParaMeta(t *testing.T) {
-	arq := pastaPerguntas(t, "coordenador", "question", "coordinator=spark-bd\n")
+	arq := pastaPerguntas(t, "coordenador", "question", "coordinator=coord-bd\n")
 	f := &respRunner{resp: []respResp{{"python3", "slug-x\tcoordenador\tPlano\tAprovar\n", nil}}}
 	e, err := Responder(context.Background(), f, "/raiz", Recursos{Herdr: true}, arq+"#plano", "Aprovar")
 	if err != nil {
 		t.Fatal(err)
 	}
 	got := f.juntas()
-	if len(got) != 2 || got[1] != "herdr agent prompt spark-bd decision: plano: Aprovar" || !e.Entregue {
+	if len(got) != 2 || got[1] != "herdr agent prompt coord-bd decision: plano: Aprovar" || !e.Entregue {
 		t.Fatalf("argv: %v entrega: %+v", got, e)
 	}
-	nenhumPromptLocal(t, f, "spark-bd")
+	nenhumPromptLocal(t, f, "coord-bd")
 }
 
 func TestSemPainelSemHerdrOuSemDestino(t *testing.T) {

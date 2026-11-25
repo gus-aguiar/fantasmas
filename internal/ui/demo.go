@@ -132,13 +132,13 @@ func runsDemo(agora time.Time) []dados.Sidequest {
 func estadoDemoBase(agora time.Time) dados.Estado {
 	return dados.Estado{
 		At:   agora,
-		Raiz: "/demo/spark",
+		Raiz: "/demo/workspace",
 		Mural: []dados.Aviso{
 			{At: agora.Add(-8 * time.Minute), Autor: "gengar-1030-0900", Texto: "vou mexer no delegate-spawn até 12h"},
 			{At: agora.Add(-95 * time.Minute), Autor: "gustavo", Texto: "VPS fora até 15h, sem homologação por enquanto"},
 		},
 		Vivos:    map[string]bool{"c-vt-1": true, "c-vt-2": true, "c-vt-3": true, "c-vt-4": true},
-		Recursos: dados.Recursos{GH: true, Herdr: true, Delegate: true, Painel: "/demo/spark/scripts/delegate/painel.py", Autor: "demo"},
+		Recursos: dados.Recursos{GH: true, Herdr: true, Delegate: true, Painel: "/demo/workspace/scripts/delegate/painel.py", Autor: "demo"},
 		Tasks: []dados.Linha{
 			{Chave: "t-working", Rotulo: "c-vt-1", Detalhe: "working · VT-1001 · implementando", Extra: "aba-1"},
 			{Chave: "t-espera", Rotulo: "c-vt-2", Detalhe: "esperando você · VT-1002", Extra: "aba-2"},
@@ -146,14 +146,14 @@ func estadoDemoBase(agora time.Time) dados.Estado {
 			{Chave: "t-done", Rotulo: "c-vt-4", Detalhe: "done · VT-1004 · relatório pronto", Extra: "aba-4"},
 		},
 		Linhas: []dados.LinhaViva{
-			{Nome: "c-vt-2", Pasta: "/demo/spark/.delegate/c-vt-2", Aba: "aba-2", Etapa: "implementar", Agora: "1 sua(s): plano", Estado: dados.EsperaVoce, CtxPct: 41, Hora: agora.Add(-3 * time.Minute)},
-			{Nome: "c-vt-1", Pasta: "/demo/spark/.delegate/c-vt-1", Aba: "aba-1", Etapa: "implementar", Agora: "rodando a suíte de integração do módulo de listas com Testcontainers e conferindo a migração de índices — ação válida até o fim da conferência", Estado: dados.Trabalhando, CtxPct: 55, Hora: agora.Add(-1 * time.Minute)},
-			{Nome: "h-vt-5", Pasta: "/demo/spark/.delegate/h-vt-5", Aba: "aba-5", Etapa: "homologar", Agora: "Playwright: navegando em /listas/compartilhar", Estado: dados.Trabalhando, CtxPct: 86, Hora: agora.Add(-2 * time.Minute)},
-			{Nome: "c-vt-3", Pasta: "/demo/spark/.delegate/c-vt-3", Aba: "aba-3", Etapa: "implementar", Agora: "parado com tarefa há 14 min", Estado: dados.Parado, CtxPct: -1, Hora: agora.Add(-14 * time.Minute)},
-			{Nome: "c-vt-4", Pasta: "/demo/spark/.delegate/c-vt-4", Aba: "aba-4", Etapa: "implementar", Agora: "entregou relatório", Estado: dados.Terminou, CtxPct: 100, Hora: agora.Add(-20 * time.Minute)},
+			{Nome: "c-vt-2", Pasta: "/demo/workspace/.delegate/c-vt-2", Aba: "aba-2", Etapa: "implementar", Agora: "1 sua(s): plano", Estado: dados.EsperaVoce, CtxPct: 41, Hora: agora.Add(-3 * time.Minute)},
+			{Nome: "c-vt-1", Pasta: "/demo/workspace/.delegate/c-vt-1", Aba: "aba-1", Etapa: "implementar", Agora: "rodando a suíte de integração do módulo de listas com Testcontainers e conferindo a migração de índices — ação válida até o fim da conferência", Estado: dados.Trabalhando, CtxPct: 55, Hora: agora.Add(-1 * time.Minute)},
+			{Nome: "h-vt-5", Pasta: "/demo/workspace/.delegate/h-vt-5", Aba: "aba-5", Etapa: "homologar", Agora: "Playwright: navegando em /listas/compartilhar", Estado: dados.Trabalhando, CtxPct: 86, Hora: agora.Add(-2 * time.Minute)},
+			{Nome: "c-vt-3", Pasta: "/demo/workspace/.delegate/c-vt-3", Aba: "aba-3", Etapa: "implementar", Agora: "parado com tarefa há 14 min", Estado: dados.Parado, CtxPct: -1, Hora: agora.Add(-14 * time.Minute)},
+			{Nome: "c-vt-4", Pasta: "/demo/workspace/.delegate/c-vt-4", Aba: "aba-4", Etapa: "implementar", Agora: "entregou relatório", Estado: dados.Terminou, CtxPct: 100, Hora: agora.Add(-20 * time.Minute)},
 		},
 		Caidos: []dados.Caido{
-			{Nome: "c-vt-7", Pane: "w1:p7", SessionID: "9f3c2a71-5b0e-4d8a-a1c4-2e7b60d1f5aa", Pasta: "/demo/spark/.delegate/c-vt-7"},
+			{Nome: "c-vt-7", Pane: "w1:p7", SessionID: "9f3c2a71-5b0e-4d8a-a1c4-2e7b60d1f5aa", Pasta: "/demo/workspace/.delegate/c-vt-7"},
 		},
 		Esperando: []dados.Linha{
 			{Chave: "t-espera/q1", Rotulo: "c-vt-2 · plano", Detalhe: "Aprovar o plano de migração da tela de listas?"},

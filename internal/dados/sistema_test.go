@@ -46,10 +46,10 @@ func TestDispararSwapNoWorkspaceDaTUI(t *testing.T) {
 	}
 	t.Setenv("HERDR_WORKSPACE_ID", "w7")
 	r := &runnerHerdr{}
-	if _, err := Disparar(context.Background(), r, "/spark", k, agora); err != nil {
+	if _, err := Disparar(context.Background(), r, "/ws", k, agora); err != nil {
 		t.Fatal(err)
 	}
-	if len(r.calls) != 2 || strings.Join(r.calls[0], " ") != "herdr tab create --workspace w7 --cwd /spark --label swap-1106-1430 --no-focus" {
+	if len(r.calls) != 2 || strings.Join(r.calls[0], " ") != "herdr tab create --workspace w7 --cwd /ws --label swap-1106-1430 --no-focus" {
 		t.Fatalf("chamadas %v", r.calls)
 	}
 	if run := r.calls[1]; run[4] != "sudo swapoff -a && sudo swapon -a && free -h" {
@@ -57,7 +57,7 @@ func TestDispararSwapNoWorkspaceDaTUI(t *testing.T) {
 	}
 	t.Setenv("HERDR_WORKSPACE_ID", "")
 	r = &runnerHerdr{}
-	if _, err := Disparar(context.Background(), r, "/spark", k, agora); err != nil {
+	if _, err := Disparar(context.Background(), r, "/ws", k, agora); err != nil {
 		t.Fatal(err)
 	}
 	if strings.Join(r.calls[1][:5], " ") != "herdr tab create --workspace w2" {

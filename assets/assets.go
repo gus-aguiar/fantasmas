@@ -8,7 +8,7 @@ import "embed"
 //go:embed figuras
 var Figuras embed.FS
 
-// Maquina é a cópia do maquina.sh do Spark, usada quando a raiz não tem o script: memória, carga e
+// Maquina é a cópia do maquina.sh do workspace, usada quando a raiz não tem o script: memória, carga e
 // sessões são do computador, não do workspace. Roda com bash -c; $1 é a trava de testes pesados.
 //
 //go:embed maquina.sh

@@ -56,7 +56,7 @@ func TestDispararMontaHerdr(t *testing.T) {
 		if !ok {
 			t.Fatalf("sem %s", c.id)
 		}
-		d, err := Disparar(context.Background(), r, "/spark", k, agora)
+		d, err := Disparar(context.Background(), r, "/ws", k, agora)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -64,7 +64,7 @@ func TestDispararMontaHerdr(t *testing.T) {
 			t.Fatalf("%s: chamadas %v", c.id, r.calls)
 		}
 		criar := strings.Join(r.calls[1], " ")
-		if criar != "herdr tab create --workspace "+c.ws+" --cwd /spark --label "+c.nome+" --no-focus" {
+		if criar != "herdr tab create --workspace "+c.ws+" --cwd /ws --label "+c.nome+" --no-focus" {
 			t.Fatalf("%s: %s", c.id, criar)
 		}
 		run := r.calls[2]

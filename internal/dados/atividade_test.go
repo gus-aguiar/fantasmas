@@ -19,7 +19,7 @@ func fixture(t *testing.T, nome string) []byte {
 
 func TestAtividadeBash(t *testing.T) {
 	a := AtividadeDe(fixture(t, "transcript-bash.jsonl"))
-	if a.Acao != "Espera o veredito do Spark no PR do React" {
+	if a.Acao != "Espera o veredito da revisão no PR do React" {
 		t.Errorf("Acao = %q", a.Acao)
 	}
 	quando, _ := time.Parse(time.RFC3339Nano, "2026-10-26T19:15:16.768Z")

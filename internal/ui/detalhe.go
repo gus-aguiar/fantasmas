@@ -30,7 +30,7 @@ func (m Model) naRaiz(p string) string {
 	return filepath.Join(m.estado.Raiz, p)
 }
 
-// relativo tira a raiz do Spark do texto do erro para o status mostrar caminho curto.
+// relativo tira a raiz do workspace do texto do erro para o status mostrar caminho curto.
 func (m Model) relativo(err error) error {
 	if err == nil || m.estado.Raiz == "" {
 		return err
@@ -397,8 +397,8 @@ func (m Model) cartaoJuntar(a *dados.Aberto, w int) []string {
 	if mg.Base != "" {
 		ls = append(ls, par("base", mg.Base, kw, inner, T.Texto)...)
 	}
-	if mg.Spark != "" {
-		ls = append(ls, par("Spark", mg.Spark, kw, inner, T.Texto)...)
+	if mg.Revisao != "" {
+		ls = append(ls, par("revisão", mg.Revisao, kw, inner, T.Texto)...)
 	}
 	if mg.Checks != "" {
 		ls = append(ls, par("checks", mg.Checks, kw, inner, T.Texto)...)

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -15,6 +16,7 @@ import (
 	"time"
 
 	"fantasmas/internal/config"
+	"fantasmas/internal/dados"
 	"fantasmas/internal/ui"
 
 	"github.com/charmbracelet/lipgloss"
@@ -311,5 +313,24 @@ func TestConfigurarRaiz(t *testing.T) {
 	l = &lojaFalsa{falhar: true}
 	if n, out := roda(l, uma, "", false); n != 0 || !strings.Contains(out, "não salvei") {
 		t.Fatalf("falha ao salvar não derruba o setup: %d %q", n, out)
+	}
+}
+
+func TestColetaDemo(t *testing.T) {
+	chamou := false
+	real := func(context.Context) dados.Estado { chamou = true; return dados.Estado{} }
+	coletaDemo(false, false, real)(context.Background())
+	if !chamou {
+		t.Fatal("sem --demo deve usar a coleta real")
+	}
+	chamou = false
+	for _, c := range []struct{ demo, verde bool }{{true, false}, {false, true}, {true, true}} {
+		e := coletaDemo(c.demo, c.verde, real)(context.Background())
+		if chamou {
+			t.Fatalf("demo=%v verde=%v chamou a coleta real", c.demo, c.verde)
+		}
+		if reflect.DeepEqual(e, dados.Estado{}) {
+			t.Fatalf("demo=%v verde=%v devolveu estado vazio", c.demo, c.verde)
+		}
 	}
 }

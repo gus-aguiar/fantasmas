@@ -29,21 +29,21 @@ import (
 func main() {
 	// antes de qualquer os.Getenv, inclusive os padrões das flags
 	loja, aviso := abrirAjustes()
-	raiz := flag.String("raiz", "", "raiz do workspace Spark (ou FANTASMAS_RAIZ; sem as duas, a pasta atual)")
+	raiz := flag.String("raiz", "", "raiz do workspace (ou FANTASMAS_RAIZ; sem as duas, a pasta atual)")
 	intervalo := flag.Duration("intervalo", 30*time.Second, "intervalo da coleta automática")
 	largura := flag.Int("largura", 0, "largura do quadro (só com --uma-vez)")
 	altura := flag.Int("altura", 0, "altura do quadro (só com --uma-vez)")
 	umaVez := flag.Bool("uma-vez", false, "coleta, imprime um quadro e sai")
 	sprite := flag.String("sprite", os.Getenv("FANTASMAS_SPRITE"), "GIF do topo no lugar do Gengar embutido (ou FANTASMAS_SPRITE)")
 	cor := flag.Bool("cor", false, "força cor de 24 bits (só com --uma-vez)")
-	demo := flag.Bool("demo", false, "usa o estado de demonstração (só com --uma-vez)")
-	demoVerde := flag.Bool("demo-verde", false, "demonstração com todos os PRs de CI verde (só com --uma-vez)")
+	demo := flag.Bool("demo", false, "usa o estado de demonstração no lugar da coleta real")
+	demoVerde := flag.Bool("demo-verde", false, "demonstração com todos os PRs de CI verde")
 	gaveta := flag.String("gaveta", "", "gaveta inicial: agora|missoes|prs|maquina|configuracoes (aceita os nomes antigos crew, ambiente, worktrees e comandos) (só com --uma-vez)")
 	botoes := flag.Bool("botoes", false, "apelido de --paleta")
 	paleta := flag.Bool("paleta", false, "abre a paleta de comandos (só com --uma-vez)")
 	missao := flag.String("missao", "", "foca a missão pelo slug (só com --uma-vez)")
 	pipe := flag.Int("pipe", 0, "abre o detalhe da sidequest N (só com --uma-vez)")
-	acharRaiz := flag.Bool("achar-raiz", false, "procura a raiz do Spark na home, salva em configurações (FANTASMAS_RAIZ) e sai; o setup.sh usa")
+	acharRaiz := flag.Bool("achar-raiz", false, "procura a raiz do workspace na home, salva em configurações (FANTASMAS_RAIZ) e sai; o setup.sh usa")
 	flag.Parse()
 	if *acharRaiz {
 		var l lojaRaiz
@@ -143,7 +143,7 @@ func main() {
 	if err := ui.UsarTema(os.Getenv(config.ChaveTema)); err != nil {
 		aviso = err.Error()
 	}
-	m := ui.Novo(coleta, acoes, *intervalo)
+	m := ui.Novo(coletaDemo(*demo, *demoVerde, coleta), acoes, *intervalo)
 	if aviso != "" {
 		m = m.ComStatus(aviso)
 	}
@@ -171,14 +171,7 @@ func main() {
 		if g := gavetaInicial(*gaveta, os.Getenv); g != "" {
 			m = m.ComGaveta(g)
 		}
-		est := func() dados.Estado { return coleta(context.Background()) }
-		if *demo {
-			est = func() dados.Estado { return ui.EstadoDemo(time.Now()) }
-		}
-		if *demoVerde {
-			est = func() dados.Estado { return ui.EstadoDemoVerde(time.Now()) }
-		}
-		m = m.ComEstado(est())
+		m = m.ComEstado(coletaDemo(*demo, *demoVerde, coleta)(context.Background()))
 		if *pipe != 0 {
 			m = m.ComPipe(*pipe)
 		}
@@ -264,7 +257,7 @@ func resolverRaiz(flag string, getenv func(string) string, getwd func() (string,
 	return r, ""
 }
 
-// profBuscaRaiz: quantos níveis abaixo da home o --achar-raiz desce (~/orca/workspaces/spark/<ws> é 4).
+// profBuscaRaiz: quantos níveis abaixo da home o --achar-raiz desce (~/a/b/c/<ws> é 4).
 const profBuscaRaiz = 5
 
 // lojaRaiz é o que configurarRaiz usa da config.Loja.
@@ -281,7 +274,7 @@ func configurarRaiz(l lojaRaiz, achar func() []string, home string, entrada io.R
 	const chave = "FANTASMAS_RAIZ"
 	diz := func(f string, a ...any) { fmt.Fprintf(saida, "▸ "+f+"\n", a...) }
 	if l == nil {
-		diz("sem arquivo de configurações; não salvei a raiz do Spark")
+		diz("sem arquivo de configurações; não salvei a raiz do workspace")
 		return 1
 	}
 	switch l.Origem(chave) {
@@ -289,11 +282,11 @@ func configurarRaiz(l lojaRaiz, achar func() []string, home string, entrada io.R
 		diz("%s vem do shell; não mexi", chave)
 		return 0
 	case config.Arquivo:
-		if v := expandirHome(l.Valor(chave), home); dados.EhRaizSpark(v) {
-			diz("%s já está em configurações e tem os scripts do Spark; não mexi", chave)
+		if v := expandirHome(l.Valor(chave), home); dados.EhRaiz(v) {
+			diz("%s já está em configurações e tem os scripts do workspace; não mexi", chave)
 			return 0
 		}
-		diz("a %s salva não tem os scripts do Spark; procurando outra", chave)
+		diz("a %s salva não tem os scripts do workspace; procurando outra", chave)
 	}
 	rs := achar()
 	curto := func(p string) string {
@@ -305,11 +298,11 @@ func configurarRaiz(l lojaRaiz, achar func() []string, home string, entrada io.R
 	escolha := 0
 	switch {
 	case len(rs) == 0:
-		diz("não achei a raiz do Spark na home (até %d níveis)", profBuscaRaiz)
-		diz("defina em configurações (5 → %s) ou rode: gengar --raiz <pasta do Spark>", chave)
+		diz("não achei a raiz do workspace na home (até %d níveis)", profBuscaRaiz)
+		diz("defina em configurações (5 → %s) ou rode: gengar --raiz <pasta do workspace>", chave)
 		return 0
 	case len(rs) > 1 && interativo:
-		diz("achei %d raízes do Spark (da mais ativa para a menos ativa):", len(rs))
+		diz("achei %d raízes de workspace (da mais ativa para a menos ativa):", len(rs))
 		for i, r := range rs {
 			fmt.Fprintf(saida, "    %d) %s\n", i+1, curto(r))
 		}
@@ -320,13 +313,13 @@ func configurarRaiz(l lojaRaiz, achar func() []string, home string, entrada io.R
 			escolha = n - 1
 		}
 	case len(rs) > 1:
-		diz("achei %d raízes do Spark; fiquei com a mais ativa (troque em configurações)", len(rs))
+		diz("achei %d raízes de workspace; fiquei com a mais ativa (troque em configurações)", len(rs))
 	}
 	if err := l.Definir(chave, rs[escolha]); err != nil {
 		diz("não salvei a raiz: %v", err)
 		return 0
 	}
-	diz("raiz do Spark salva em configurações (%s); o gengar abre nela de qualquer pasta", chave)
+	diz("raiz do workspace salva em configurações (%s); o gengar abre nela de qualquer pasta", chave)
 	return 0
 }
 
@@ -446,6 +439,18 @@ func comandoAbrir(goos, editor, alvo string) []string {
 
 // gavetaInicial: a flag --gaveta manda; sem ela, abre na primeira (agora), com ou sem FANTASMAS_FONTE=ddb.
 func gavetaInicial(flag string, _ func(string) string) string { return flag }
+
+// coletaDemo troca a coleta real pelo estado de demonstração (--demo-verde manda sobre --demo),
+// no quadro único e no painel interativo.
+func coletaDemo(demo, verde bool, real ui.Coleta) ui.Coleta {
+	switch {
+	case verde:
+		return func(context.Context) dados.Estado { return ui.EstadoDemoVerde(time.Now()) }
+	case demo:
+		return func(context.Context) dados.Estado { return ui.EstadoDemo(time.Now()) }
+	}
+	return real
+}
 
 // validarGaveta recusa nome desconhecido em vez de cair calado na primeira gaveta.
 func validarGaveta(id string) error {

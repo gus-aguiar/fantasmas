@@ -189,7 +189,7 @@ func TestComandoMaquina(t *testing.T) {
 		t.Fatalf("sem .delegate: %q", argv[:2])
 	}
 	os.MkdirAll(filepath.Join(raiz, ".delegate"), 0o755)
-	// o maquina.sh do Spark na raiz não muda nada: o fantasmas usa sempre o seu
+	// o maquina.sh do workspace na raiz não muda nada: o fantasmas usa sempre o seu
 	scripts := filepath.Join(raiz, "shared", "mods", "control-panel", "scripts")
 	os.MkdirAll(scripts, 0o755)
 	os.WriteFile(filepath.Join(scripts, "maquina.sh"), []byte("#"), 0o644)

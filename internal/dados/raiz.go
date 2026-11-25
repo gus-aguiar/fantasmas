@@ -10,19 +10,19 @@ import (
 	"time"
 )
 
-// marcaRaiz é o script do Spark de que as gavetas mais dependem: com ele, a pasta é uma raiz utilizável.
+// marcaRaiz é o script do workspace de que as gavetas mais dependem: com ele, a pasta é uma raiz utilizável.
 var marcaRaiz = filepath.Join("shared", "mods", "control-panel", "scripts", "delegate.py")
 
-// EhRaizSpark diz se dir tem os scripts do Spark que o fantasmas lê.
-func EhRaizSpark(dir string) bool {
+// EhRaiz diz se dir tem os scripts do workspace que o fantasmas lê.
+func EhRaiz(dir string) bool {
 	st, err := os.Stat(filepath.Join(dir, marcaRaiz))
 	return err == nil && !st.IsDir()
 }
 
-// pulaNaBusca são pastas grandes que nunca são raiz do Spark.
+// pulaNaBusca são pastas grandes que nunca são raiz do workspace.
 var pulaNaBusca = map[string]bool{"node_modules": true, "vendor": true, "snap": true, "go": true, "Library": true, "target": true, "dist": true, "build": true}
 
-// AcharRaizes procura raízes do Spark até prof níveis abaixo de base, sem entrar em pastas ocultas
+// AcharRaizes procura raízes de workspace até prof níveis abaixo de base, sem entrar em pastas ocultas
 // (inclui .worktrees: worktree de task não é a raiz principal) nem nas de pulaNaBusca.
 // Devolve da mais ativa para a menos ativa (mtime do .delegate/, ou da própria pasta).
 func AcharRaizes(ctx context.Context, base string, prof int) []string {
@@ -45,7 +45,7 @@ func AcharRaizes(ctx context.Context, base string, prof int) []string {
 		if p != base && (strings.HasPrefix(d.Name(), ".") || pulaNaBusca[d.Name()]) {
 			return filepath.SkipDir
 		}
-		if EhRaizSpark(p) {
+		if EhRaiz(p) {
 			achadas = append(achadas, p)
 			return filepath.SkipDir
 		}

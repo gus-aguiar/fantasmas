@@ -116,7 +116,7 @@ var tiraAcento = strings.NewReplacer("á", "a", "à", "a", "â", "a", "ã", "a",
 
 func chaveRotulo(s string) string { return tiraAcento.Replace(strings.ToLower(strings.TrimSpace(s))) }
 
-// Disparar abre a aba do comando no workspace dele, com cwd na raiz do Spark, e roda o claude nela.
+// Disparar abre a aba do comando no workspace dele, com cwd na raiz do workspace, e roda o claude nela.
 func Disparar(ctx context.Context, r Runner, raiz string, c Comando, agora time.Time) (Disparo, error) {
 	ws, err := workspaceDo(ctx, r, c)
 	if err != nil {

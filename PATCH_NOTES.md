@@ -1,7 +1,15 @@
 # Patch notes
 
-O que mudou no `gengar` (TUI fantasmas) e no fluxo de missões e sidequests do Spark. A versão mais nova fica no topo.
+O que mudou no `gengar` (TUI fantasmas) e no fluxo de missões e sidequests do workspace. A versão mais nova fica no topo.
 Cada entrada diz o que muda para quem usa; os detalhes técnicos ficam no histórico do git.
+
+## 2026-11-25 · Demonstração no painel interativo
+
+**Corrige**
+- **`gengar --demo` (e `--demo-verde`) agora abre o painel interativo com o estado de demonstração.** Antes, a flag só valia com `--uma-vez`; sem ela o painel fazia a coleta real e aparecia vazio fora de um workspace configurado.
+
+**Muda**
+- **Textos neutros:** o README, a ajuda das flags e as configurações falam em "workspace" (a raiz em `--raiz` / `FANTASMAS_RAIZ`) em vez do nome de um workspace específico. No detalhe do PR, o rótulo da revisão automática passa a ser "revisão". O funcionamento não muda: a raiz continua sendo reconhecida pelos mesmos scripts e o JSON de merge continua com a mesma chave.
 
 ## 2026-11-09 · Planejar o dia na paleta
 
@@ -20,7 +28,7 @@ Cada entrada diz o que muda para quem usa; os detalhes técnicos ficam no histó
 ## 2026-11-06 · Faxina de memória
 
 **Muda**
-- **Faxina na gaveta 4:** a máquina mostra "Faxina: HH:MM · N ações · ~X MB liberados", a última rodada da faxina automática do Spark (serviços esquecidos, daemons Gradle/Kotlin ociosos e fantasminhas done). A lista das ações fica no painel do delegate.
+- **Faxina na gaveta 4:** a máquina mostra "Faxina: HH:MM · N ações · ~X MB liberados", a última rodada da faxina automática do workspace (serviços esquecidos, daemons Gradle/Kotlin ociosos e fantasminhas done). A lista das ações fica no painel do delegate.
 
 ## 2026-11-06 · Paleta enxuta
 
@@ -63,7 +71,7 @@ Cada entrada diz o que muda para quem usa; os detalhes técnicos ficam no histó
 - `--gaveta` aceita os nomes novos (`agora missoes prs maquina comandos`); os antigos (`crew`, `ambiente`, `worktrees`, `configuracoes`) continuam valendo.
 
 **Novo**
-- **Gaveta comandos (`5`):** `/dia abrir` e `/dia fechar` abrem uma aba nova no workspace GENGAR do Herdr, e o relatório de saúde no workspace dele, já rodando o `claude` com o comando, na raiz do Spark. Cada um pede `enter 2×`, mostra "rodando há N min" e `g` vai até a aba. DayDreaming, reconectar MCPs e atualizar app também estão lá, e os ajustes (tema, figura, variáveis) ficam no fim.
+- **Gaveta comandos (`5`):** `/dia abrir` e `/dia fechar` abrem uma aba nova no workspace GENGAR do Herdr, e o relatório de saúde no workspace dele, já rodando o `claude` com o comando, na raiz do workspace. Cada um pede `enter 2×`, mostra "rodando há N min" e `g` vai até a aba. DayDreaming, reconectar MCPs e atualizar app também estão lá, e os ajustes (tema, figura, variáveis) ficam no fim.
 
 **Sai**
 - As dicas do topo e o rodapé de dicas das missões (a ajuda `?` cobre).
@@ -86,7 +94,7 @@ Cada entrada diz o que muda para quem usa; os detalhes técnicos ficam no histó
 - **"Decisões que tomei por você":** cada missão lista o que o sistema decidiu sozinho, com `v` para vetar (enter 2× confirma).
 - **Pista rápida:** tarefa simples aprova o próprio plano sem esperar ninguém. Liberar o merge continua sempre com você.
 - **Etapa `pronto`:** uma sidequest só termina com o PR aprovado pelo bot e a homologação feita no mesmo commit.
-- **Atualização automática:** pelo `scripts/fantasmas.sh`, o `gengar` atualiza o Spark, as skills e este repo antes de abrir. `GENGAR_ATUALIZAR=off` desliga.
+- **Atualização automática:** pelo `scripts/fantasmas.sh`, o `gengar` atualiza o workspace, as skills e este repo antes de abrir. `GENGAR_ATUALIZAR=off` desliga.
 - **README e patch notes** neste repositório.
 
 **Mudou**
@@ -102,7 +110,7 @@ Cada entrada diz o que muda para quem usa; os detalhes técnicos ficam no histó
 - **Figuras do topo:** gengar, lapras e entei. Para usar uma figura sua, ponha o arquivo em `~/.config/fantasmas/figuras/`.
 - **Gaveta máquina:** memória, swap, disco e pressão, lidos de qualquer pasta.
 - **Gaveta worktrees.** PRs e CI ficam numa aba só.
-- **`setup.sh`** instala o Go, compila, cria o comando `gengar` e acha o seu Spark.
+- **`setup.sh`** instala o Go, compila, cria o comando `gengar` e acha o seu workspace.
 - **Botões DayDreaming e "reconectar MCPs"** foram para a aba configurações.
 - **Orca:** o gengar animado agora aparece no terminal do Orca.
 

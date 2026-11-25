@@ -498,7 +498,7 @@ func linhaFaxina(c *corpo, e dados.Estado) {
 	c.linhaLista(alvo{}, "♻", T.Dim, e.Faxina.Linha(), "", T.Dim, "")
 }
 
-// gavetaWorktrees lista onde cada branch está aberto no disco: o Spark e os repos dentro dele
+// gavetaWorktrees lista onde cada branch está aberto no disco: o workspace e os repos dentro dele
 // (coleta.sh worktrees); enter abre a pasta.
 func gavetaWorktrees(c *corpo, e dados.Estado) {
 	c.secao("worktrees", "enter abre a pasta")
