@@ -36,8 +36,8 @@ func main() {
 	umaVez := flag.Bool("uma-vez", false, "coleta, imprime um quadro e sai")
 	sprite := flag.String("sprite", os.Getenv("FANTASMAS_SPRITE"), "GIF do topo no lugar do Gengar embutido (ou FANTASMAS_SPRITE)")
 	cor := flag.Bool("cor", false, "força cor de 24 bits (só com --uma-vez)")
-	demo := flag.Bool("demo", false, "usa o estado de demonstração (só com --uma-vez)")
-	demoVerde := flag.Bool("demo-verde", false, "demonstração com todos os PRs de CI verde (só com --uma-vez)")
+	demo := flag.Bool("demo", false, "usa o estado de demonstração no lugar da coleta real")
+	demoVerde := flag.Bool("demo-verde", false, "demonstração com todos os PRs de CI verde")
 	gaveta := flag.String("gaveta", "", "gaveta inicial: agora|missoes|prs|maquina|configuracoes (aceita os nomes antigos crew, ambiente, worktrees e comandos) (só com --uma-vez)")
 	botoes := flag.Bool("botoes", false, "apelido de --paleta")
 	paleta := flag.Bool("paleta", false, "abre a paleta de comandos (só com --uma-vez)")
@@ -143,7 +143,7 @@ func main() {
 	if err := ui.UsarTema(os.Getenv(config.ChaveTema)); err != nil {
 		aviso = err.Error()
 	}
-	m := ui.Novo(coleta, acoes, *intervalo)
+	m := ui.Novo(coletaDemo(*demo, *demoVerde, coleta), acoes, *intervalo)
 	if aviso != "" {
 		m = m.ComStatus(aviso)
 	}
@@ -171,14 +171,7 @@ func main() {
 		if g := gavetaInicial(*gaveta, os.Getenv); g != "" {
 			m = m.ComGaveta(g)
 		}
-		est := func() dados.Estado { return coleta(context.Background()) }
-		if *demo {
-			est = func() dados.Estado { return ui.EstadoDemo(time.Now()) }
-		}
-		if *demoVerde {
-			est = func() dados.Estado { return ui.EstadoDemoVerde(time.Now()) }
-		}
-		m = m.ComEstado(est())
+		m = m.ComEstado(coletaDemo(*demo, *demoVerde, coleta)(context.Background()))
 		if *pipe != 0 {
 			m = m.ComPipe(*pipe)
 		}
@@ -446,6 +439,18 @@ func comandoAbrir(goos, editor, alvo string) []string {
 
 // gavetaInicial: a flag --gaveta manda; sem ela, abre na primeira (agora), com ou sem FANTASMAS_FONTE=ddb.
 func gavetaInicial(flag string, _ func(string) string) string { return flag }
+
+// coletaDemo troca a coleta real pelo estado de demonstração (--demo-verde manda sobre --demo),
+// no quadro único e no painel interativo.
+func coletaDemo(demo, verde bool, real ui.Coleta) ui.Coleta {
+	switch {
+	case verde:
+		return func(context.Context) dados.Estado { return ui.EstadoDemoVerde(time.Now()) }
+	case demo:
+		return func(context.Context) dados.Estado { return ui.EstadoDemo(time.Now()) }
+	}
+	return real
+}
 
 // validarGaveta recusa nome desconhecido em vez de cair calado na primeira gaveta.
 func validarGaveta(id string) error {

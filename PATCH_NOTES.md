@@ -3,6 +3,11 @@
 O que mudou no `gengar` (TUI fantasmas) e no fluxo de missões e sidequests do Spark. A versão mais nova fica no topo.
 Cada entrada diz o que muda para quem usa; os detalhes técnicos ficam no histórico do git.
 
+## 2026-11-25 · Demonstração no painel interativo
+
+**Corrige**
+- **`gengar --demo` (e `--demo-verde`) agora abre o painel interativo com o estado de demonstração.** Antes, a flag só valia com `--uma-vez`; sem ela o painel fazia a coleta real e aparecia vazio fora de um workspace configurado.
+
 ## 2026-11-09 · Planejar o dia na paleta
 
 **Novo**
