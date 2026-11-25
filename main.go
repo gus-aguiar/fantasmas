@@ -29,7 +29,7 @@ import (
 func main() {
 	// antes de qualquer os.Getenv, inclusive os padrões das flags
 	loja, aviso := abrirAjustes()
-	raiz := flag.String("raiz", "", "raiz do workspace Spark (ou FANTASMAS_RAIZ; sem as duas, a pasta atual)")
+	raiz := flag.String("raiz", "", "raiz do workspace (ou FANTASMAS_RAIZ; sem as duas, a pasta atual)")
 	intervalo := flag.Duration("intervalo", 30*time.Second, "intervalo da coleta automática")
 	largura := flag.Int("largura", 0, "largura do quadro (só com --uma-vez)")
 	altura := flag.Int("altura", 0, "altura do quadro (só com --uma-vez)")
@@ -43,7 +43,7 @@ func main() {
 	paleta := flag.Bool("paleta", false, "abre a paleta de comandos (só com --uma-vez)")
 	missao := flag.String("missao", "", "foca a missão pelo slug (só com --uma-vez)")
 	pipe := flag.Int("pipe", 0, "abre o detalhe da sidequest N (só com --uma-vez)")
-	acharRaiz := flag.Bool("achar-raiz", false, "procura a raiz do Spark na home, salva em configurações (FANTASMAS_RAIZ) e sai; o setup.sh usa")
+	acharRaiz := flag.Bool("achar-raiz", false, "procura a raiz do workspace na home, salva em configurações (FANTASMAS_RAIZ) e sai; o setup.sh usa")
 	flag.Parse()
 	if *acharRaiz {
 		var l lojaRaiz
@@ -257,7 +257,7 @@ func resolverRaiz(flag string, getenv func(string) string, getwd func() (string,
 	return r, ""
 }
 
-// profBuscaRaiz: quantos níveis abaixo da home o --achar-raiz desce (~/orca/workspaces/spark/<ws> é 4).
+// profBuscaRaiz: quantos níveis abaixo da home o --achar-raiz desce (~/a/b/c/<ws> é 4).
 const profBuscaRaiz = 5
 
 // lojaRaiz é o que configurarRaiz usa da config.Loja.
@@ -274,7 +274,7 @@ func configurarRaiz(l lojaRaiz, achar func() []string, home string, entrada io.R
 	const chave = "FANTASMAS_RAIZ"
 	diz := func(f string, a ...any) { fmt.Fprintf(saida, "▸ "+f+"\n", a...) }
 	if l == nil {
-		diz("sem arquivo de configurações; não salvei a raiz do Spark")
+		diz("sem arquivo de configurações; não salvei a raiz do workspace")
 		return 1
 	}
 	switch l.Origem(chave) {
@@ -282,11 +282,11 @@ func configurarRaiz(l lojaRaiz, achar func() []string, home string, entrada io.R
 		diz("%s vem do shell; não mexi", chave)
 		return 0
 	case config.Arquivo:
-		if v := expandirHome(l.Valor(chave), home); dados.EhRaizSpark(v) {
-			diz("%s já está em configurações e tem os scripts do Spark; não mexi", chave)
+		if v := expandirHome(l.Valor(chave), home); dados.EhRaiz(v) {
+			diz("%s já está em configurações e tem os scripts do workspace; não mexi", chave)
 			return 0
 		}
-		diz("a %s salva não tem os scripts do Spark; procurando outra", chave)
+		diz("a %s salva não tem os scripts do workspace; procurando outra", chave)
 	}
 	rs := achar()
 	curto := func(p string) string {
@@ -298,11 +298,11 @@ func configurarRaiz(l lojaRaiz, achar func() []string, home string, entrada io.R
 	escolha := 0
 	switch {
 	case len(rs) == 0:
-		diz("não achei a raiz do Spark na home (até %d níveis)", profBuscaRaiz)
-		diz("defina em configurações (5 → %s) ou rode: gengar --raiz <pasta do Spark>", chave)
+		diz("não achei a raiz do workspace na home (até %d níveis)", profBuscaRaiz)
+		diz("defina em configurações (5 → %s) ou rode: gengar --raiz <pasta do workspace>", chave)
 		return 0
 	case len(rs) > 1 && interativo:
-		diz("achei %d raízes do Spark (da mais ativa para a menos ativa):", len(rs))
+		diz("achei %d raízes de workspace (da mais ativa para a menos ativa):", len(rs))
 		for i, r := range rs {
 			fmt.Fprintf(saida, "    %d) %s\n", i+1, curto(r))
 		}
@@ -313,13 +313,13 @@ func configurarRaiz(l lojaRaiz, achar func() []string, home string, entrada io.R
 			escolha = n - 1
 		}
 	case len(rs) > 1:
-		diz("achei %d raízes do Spark; fiquei com a mais ativa (troque em configurações)", len(rs))
+		diz("achei %d raízes de workspace; fiquei com a mais ativa (troque em configurações)", len(rs))
 	}
 	if err := l.Definir(chave, rs[escolha]); err != nil {
 		diz("não salvei a raiz: %v", err)
 		return 0
 	}
-	diz("raiz do Spark salva em configurações (%s); o gengar abre nela de qualquer pasta", chave)
+	diz("raiz do workspace salva em configurações (%s); o gengar abre nela de qualquer pasta", chave)
 	return 0
 }
 

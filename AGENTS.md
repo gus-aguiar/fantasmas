@@ -4,7 +4,7 @@ Guia para agentes que trabalham neste repositório.
 
 ## O que é
 
-`fantasmas` é uma TUI em Go (Bubble Tea + Lip Gloss) que acompanha os agentes de um **workspace Spark**:
+`fantasmas` é uma TUI em Go (Bubble Tea + Lip Gloss) que acompanha os agentes de um **workspace**:
 - os "gengars" (coordenadores) e os "fantasminhas" (agentes delegados pelo `/delegate`);
 - as perguntas que eles fazem;
 - missões (com as sidequests dentro), PRs, CI, serviços locais e a máquina.
@@ -23,7 +23,7 @@ O script é idempotente. Ele faz cinco coisas:
 1. **Go:** garante Go >= a versão do `go.mod`. Usa o Go do PATH; se não houver, instala pelo `mise`; sem mise, baixa o tarball oficial para `~/.local/share/go`, sem sudo.
 2. **Build:** compila `bin/fantasmas` com `GOTOOLCHAIN=local`.
 3. **Comando:** cria `~/.local/bin/gengar` como **symlink** para `bin/fantasmas`.
-4. **Raiz do Spark:** roda `bin/fantasmas --achar-raiz`, que procura até 5 níveis abaixo da home uma pasta com `shared/mods/control-panel/scripts/delegate.py` (sem entrar em pastas ocultas, `.worktrees` nem `node_modules`) e a salva como `FANTASMAS_RAIZ` em configurações. Não mexe se o shell já define a variável ou se a salva ainda serve; com várias, pergunta no terminal (sem terminal, fica com a de `.delegate/` mais recente).
+4. **Raiz do workspace:** roda `bin/fantasmas --achar-raiz`, que procura até 5 níveis abaixo da home uma pasta com `shared/mods/control-panel/scripts/delegate.py` (sem entrar em pastas ocultas, `.worktrees` nem `node_modules`) e a salva como `FANTASMAS_RAIZ` em configurações. Não mexe se o shell já define a variável ou se a salva ainda serve; com várias, pergunta no terminal (sem terminal, fica com a de `.delegate/` mais recente).
 5. **PATH:** põe `~/.local/bin` no PATH via `~/.zshrc` ou `~/.bashrc`, se faltar.
 
 `GENGAR_BIN_DIR` e `GENGAR_GO_DIR` mudam os diretórios.
@@ -36,13 +36,13 @@ O script é idempotente. Ele faz cinco coisas:
 
 ```bash
 gengar                       # TUI, coleta a cada 30 s, raiz = diretório atual
-gengar --raiz ~/spark        # aponta para o workspace Spark
+gengar --raiz ~/meu-ws       # aponta para o workspace
 gengar --intervalo 1m
 ```
 
-A raiz precisa ser a do workspace Spark, não este repositório. É lá que ficam `.delegate/`, `shared/` e `scripts/`.
+A raiz precisa ser a do workspace, não este repositório. É lá que ficam `.delegate/`, `shared/` e `scripts/`.
 - **Ordem:** `--raiz` manda; sem ela vale `FANTASMAS_RAIZ` (definível na aba configurações, aceita `~/`); sem as duas, a pasta atual (`resolverRaiz` em `main.go`).
-- Com a raiz errada, as gavetas que dependem dos scripts do Spark ficam vazias. A máquina, por exemplo, mostra "sem leitura da máquina".
+- Com a raiz errada, as gavetas que dependem dos scripts do workspace ficam vazias. A máquina, por exemplo, mostra "sem leitura da máquina".
 
 ### Modo quadro único
 
@@ -94,7 +94,7 @@ A coleta é `dados.Coletor.Coletar` (`internal/dados/coleta.go`), e tudo nela ro
 |---|---|
 | `shared/mods/control-panel/scripts/delegate.py` (`tasks`, `esperando`, `opcoes-todas`) | tasks e perguntas do delegate (modo padrão) |
 | `scripts/delegate/ddb.py` (`import`, `state --json`, `tick --dry-run`) | substitui o delegate.py quando `FANTASMAS_FONTE=ddb`; liga as missões e as sidequests |
-| `shared/mods/control-panel/scripts/{local.sh,coleta.sh worktrees,maquina.sh}` | serviços, worktrees e máquina. A máquina vem sempre do `assets/maquina.sh` embutido (memória, swap, pressão, OOM, carga, sessões, disco), não do script do Spark; a trava de pesados só entra com `.delegate/` na raiz. Polling: roda a cada coleta |
+| `shared/mods/control-panel/scripts/{local.sh,coleta.sh worktrees,maquina.sh}` | serviços, worktrees e máquina. A máquina vem sempre do `assets/maquina.sh` embutido (memória, swap, pressão, OOM, carga, sessões, disco), não do script do workspace; a trava de pesados só entra com `.delegate/` na raiz. Polling: roda a cada coleta |
 | `shared/skills/delegate-painel/painel.py` | entrega das respostas (sem ele, a resposta só é gravada) |
 | `.delegate/` (incluindo `_mural.jsonl`) | tasks, mural e daydreamer |
 | `.tmp/faxina-ultima.json` | linha da faxina de memória na gaveta máquina (`dados.FaxinaDe`) |
@@ -119,7 +119,7 @@ Regras para quem mexer:
 |---|---|
 | `FANTASMAS_TEMA=roxo\|orca\|terminal` | cores do app (`ui.UsarTema`); padrão roxo; troca na hora |
 | `FANTASMAS_FIGURA=<nome>` | figura do topo, do catálogo de figuras (ver abaixo); padrão gengar; troca na hora |
-| `FANTASMAS_RAIZ` | raiz do workspace Spark quando não há `--raiz`; aceita `~/`; vale ao reabrir |
+| `FANTASMAS_RAIZ` | raiz do workspace quando não há `--raiz`; aceita `~/`; vale ao reabrir |
 | `FANTASMAS_FONTE=ddb` | usa o `ddb.py` e liga a gaveta missões com as sidequests (o app abre no agora) |
 | `FANTASMAS_DDB_SCRIPT` | caminho alternativo do `ddb.py` |
 | `FANTASMAS_EDITOR` | editor para arquivos e pastas (links continuam no `xdg-open`/`open`) |
@@ -203,8 +203,8 @@ go vet ./...
 - **Windows não compila:**
   - `internal/dados/botoes.go` usa `syscall.SysProcAttr{Setsid}`, que só existe em Unix;
   - `main.go` usa `syscall.Exec` para reabrir após atualizar.
-- **Caminhos que supõem o repo dentro do Spark.** O app costuma viver em `<spark>/shared/tui/fantasmas`, e alguns pontos dependem disso:
+- **Caminhos que supõem o repo dentro do workspace.** O app costuma viver em `<workspace>/shared/tui/fantasmas`, e alguns pontos dependem disso:
   - o brief do daydreamer é lido de `<raiz>/shared/tui/fantasmas/assets/daydreamer-brief.md`;
-  - `ferramentas/quadro.sh` supõe `spark = ../../..` e usa `scripts/orca-orchestration/heavy-run.sh`.
+  - `ferramentas/quadro.sh` supõe `raiz = ../../..` e usa `scripts/orca-orchestration/heavy-run.sh`.
 - `TestPrints` (`internal/ui/detalhe_test.go`) só roda com `FANTASMAS_PRINTS=1` e grava num caminho absoluto de outra máquina.
 - O botão atualizar recusa rodar com mudanças locais no repo e só faz `pull --ff-only`.

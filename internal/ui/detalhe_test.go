@@ -43,9 +43,9 @@ const qDetalhe = `{
    "options": [
      {"id": "liberar", "label": "Liberar merge", "effect": "O fantasminha junta no tronco e manda done.", "default": true},
      {"id": "segurar", "label": "Segurar", "effect": "O fantasminha espera; o motivo vai na próxima mensagem."}],
-   "recommendation": "Liberar: Spark aprovado e checks verdes.", "unlocks": "Merge no tronco e fechamento da task."},
+   "recommendation": "Liberar: revisão aprovada e checks verdes.", "unlocks": "Merge no tronco e fechamento da task."},
   {"id": "env", "kind": "action", "title": "Copia o .env do WS para o worktree?",
-   "commands": ["cp /home/user/projetos/spark/AcmeWebService/.env.local /home/user/projetos/spark/.worktrees/vt-17724/AcmeWebService/"]}
+   "commands": ["cp /home/user/projetos/workspace/AcmeWebService/.env.local /home/user/projetos/workspace/.worktrees/vt-17724/AcmeWebService/"]}
  ]}`
 
 const rDetalhe = `{"crew": "c-vt-5", "key": "VT-5", "area": "Herança", "status": "done",
@@ -432,7 +432,7 @@ func TestPrints(t *testing.T) {
 	if os.Getenv("FANTASMAS_PRINTS") != "1" {
 		t.Skip("FANTASMAS_PRINTS=1 para gerar os prints")
 	}
-	destino := "/home/user/projetos/spark/.delegate/2026-10-16-fantasmas-tui"
+	destino := "/home/user/projetos/workspace/.delegate/2026-10-16-fantasmas-tui"
 	antes := lipgloss.ColorProfile()
 	lipgloss.SetColorProfile(termenv.TrueColor)
 	defer lipgloss.SetColorProfile(antes)

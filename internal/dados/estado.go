@@ -15,12 +15,12 @@ type Travado struct {
 }
 
 type Merge struct {
-	Repo   string `json:"repo"`
-	PR     int    `json:"pr"`
-	URL    string `json:"url"`
-	Base   string `json:"base"`
-	Spark  string `json:"spark"`
-	Checks string `json:"checks"`
+	Repo    string `json:"repo"`
+	PR      int    `json:"pr"`
+	URL     string `json:"url"`
+	Base    string `json:"base"`
+	Revisao string `json:"spark"` // chave do JSON gerado pelos scripts do workspace; não renomear
+	Checks  string `json:"checks"`
 }
 
 type Recursos struct {

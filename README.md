@@ -1,6 +1,6 @@
 # fantasmas
 
-Painel de terminal para acompanhar, numa janela só, o trabalho dos agentes de um workspace **Spark**. Ele mostra:
+Painel de terminal para acompanhar, numa janela só, o trabalho dos agentes de um workspace de orquestração (a pasta com `.delegate/`, `shared/` e `scripts/`, indicada por `--raiz` ou `FANTASMAS_RAIZ`). Ele mostra:
 
 - as **missões**;
 - as **sidequests** de cada missão;
@@ -17,20 +17,20 @@ O que mudou em cada versão está em [PATCH_NOTES.md](PATCH_NOTES.md).
 
 Pré-requisitos:
 - Linux ou macOS (no Windows, use o WSL);
-- o workspace Spark clonado;
+- o workspace clonado;
 - `gh` logado;
 - `herdr` no PATH.
 
 ```bash
-git clone git@github.com:gus-aguiar/fantasmas.git <spark>/shared/tui/fantasmas
-cd <spark>/shared/tui/fantasmas && ./setup.sh
+git clone git@github.com:gus-aguiar/fantasmas.git <workspace>/shared/tui/fantasmas
+cd <workspace>/shared/tui/fantasmas && ./setup.sh
 ```
 
 O `setup.sh` faz quatro coisas, e pode ser rodado de novo sem problema:
 1. instala o Go, se faltar;
 2. compila o binário;
 3. cria o comando `gengar` em `~/.local/bin`;
-4. descobre onde está o seu Spark.
+4. descobre onde está o seu workspace.
 
 ## Usar
 
@@ -39,7 +39,7 @@ gengar                          # abre o painel
 FANTASMAS_FONTE=ddb gengar      # liga missões e sidequests (recomendado)
 ```
 
-Toda vez que abre pelo `scripts/fantasmas.sh` do Spark, o `gengar` se atualiza antes: avança a `main` do Spark, ressincroniza as skills e traz a versão nova deste repo. Ele nunca sobrescreve trabalho local; para desligar, use `GENGAR_ATUALIZAR=off`.
+Toda vez que abre pelo `scripts/fantasmas.sh` do workspace, o `gengar` se atualiza antes: avança a `main` do workspace, ressincroniza as skills e traz a versão nova deste repo. Ele nunca sobrescreve trabalho local; para desligar, use `GENGAR_ATUALIZAR=off`.
 
 Terminal sem suporte a imagem (ex.: Windows Terminal): o gengar aparece desenhado com caracteres; para forçar, `FANTASMAS_IMAGEM=celulas`.
 
@@ -69,7 +69,7 @@ As teclas que mais importam estão abaixo. A lista completa abre com `?`.
 
 ## Comandos (gaveta 5)
 
-`/dia abrir`, `/plano-dia` e `/dia fechar` abrem uma aba nova no workspace do Herdr chamado **GENGAR**; o comando extra (`FANTASMAS_CMD_EXTRA`, abaixo), no workspace que ele indicar. A aba nasce na raiz do Spark com o `claude` já rodando o comando e se chama `dia-MMDD-HHMM`, `plano-MMDD-HHMM` ou `<prefixo>-MMDD-HHMM`. Cada disparo mostra há quanto tempo roda, e `g` leva até a aba. **Faxina agora** roda `scripts/delegate/faxina.py rodar --uma-vez` em segundo plano, sem aba, e mostra "N ações · ~X MB" por 2 min. **Esvaziar swap** abre uma aba no workspace onde a TUI está (`HERDR_WORKSPACE_ID`, senão GENGAR) com `sudo swapoff -a && sudo swapon -a && free -h`, onde você digita a senha; só dispara se a RAM disponível passar do swap usado + 2 GB (senão pede a Faxina antes) e fica cinza com o swap vazio (< 100 MB). Os ajustes (tema, figura e variáveis) e as ações Reconectar MCPs e Atualizar app (`enter 2×`) ficam na gaveta `5`.
+`/dia abrir`, `/plano-dia` e `/dia fechar` abrem uma aba nova no workspace do Herdr chamado **GENGAR**; o comando extra (`FANTASMAS_CMD_EXTRA`, abaixo), no workspace que ele indicar. A aba nasce na raiz do workspace com o `claude` já rodando o comando e se chama `dia-MMDD-HHMM`, `plano-MMDD-HHMM` ou `<prefixo>-MMDD-HHMM`. Cada disparo mostra há quanto tempo roda, e `g` leva até a aba. **Faxina agora** roda `scripts/delegate/faxina.py rodar --uma-vez` em segundo plano, sem aba, e mostra "N ações · ~X MB" por 2 min. **Esvaziar swap** abre uma aba no workspace onde a TUI está (`HERDR_WORKSPACE_ID`, senão GENGAR) com `sudo swapoff -a && sudo swapon -a && free -h`, onde você digita a senha; só dispara se a RAM disponível passar do swap usado + 2 GB (senão pede a Faxina antes) e fica cinza com o swap vazio (< 100 MB). Os ajustes (tema, figura e variáveis) e as ações Reconectar MCPs e Atualizar app (`enter 2×`) ficam na gaveta `5`.
 
 ## Missões e sidequests
 
@@ -89,7 +89,7 @@ As teclas que mais importam estão abaixo. A lista completa abre com `?`.
 1. Abra o `gengar` com `FANTASMAS_FONTE=ddb`.
 2. Escolha onde ela nasce: aperte `enter` numa missão para focar nela, ou não foque nada para ela nascer solta.
 3. Aperte `n`, escolha o fluxo (`implementar`, `implementar-homologar` ou `bugfix`), preencha o card e os repos e confirme.
-4. A TUI só mostra o que *seria* lançado. Para lançar de verdade, rode na raiz do Spark:
+4. A TUI só mostra o que *seria* lançado. Para lançar de verdade, rode na raiz do workspace:
    `DDB_TICK=on python3 scripts/delegate/ddb.py tick --executar`
 
 ## Contribuir

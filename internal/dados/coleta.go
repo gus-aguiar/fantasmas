@@ -168,7 +168,7 @@ func (c *Coletor) Coletar(ctx context.Context) Estado {
 	return e
 }
 
-// comandoMaquina roda o maquina.sh embutido, que lê o computador de qualquer pasta (o do Spark não tem
+// comandoMaquina roda o maquina.sh embutido, que lê o computador de qualquer pasta (o do workspace não tem
 // disco nem swap). A trava de testes pesados só entra com .delegate/ na raiz.
 func comandoMaquina(raiz string) []string {
 	argv := []string{"bash", "-c", assets.Maquina, "maquina.sh"}

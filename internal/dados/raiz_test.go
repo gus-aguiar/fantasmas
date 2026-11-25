@@ -9,8 +9,8 @@ import (
 	"time"
 )
 
-// spark cria uma raiz falsa com o delegate.py, com o .delegate/ de mtime t.
-func spark(t *testing.T, dir string, ativa time.Time) string {
+// raizFalsa cria uma raiz falsa com o delegate.py, com o .delegate/ de mtime t.
+func raizFalsa(t *testing.T, dir string, ativa time.Time) string {
 	t.Helper()
 	s := filepath.Join(dir, "shared", "mods", "control-panel", "scripts")
 	if err := os.MkdirAll(s, 0o755); err != nil {
@@ -25,22 +25,22 @@ func spark(t *testing.T, dir string, ativa time.Time) string {
 func TestAcharRaizes(t *testing.T) {
 	home := t.TempDir()
 	agora := time.Now()
-	velha := spark(t, filepath.Join(home, "orca", "spark"), agora.Add(-48*time.Hour))
-	nova := spark(t, filepath.Join(home, "orca", "workspaces", "spark", "feat-x"), agora)
+	velha := raizFalsa(t, filepath.Join(home, "projetos", "ws"), agora.Add(-48*time.Hour))
+	nova := raizFalsa(t, filepath.Join(home, "projetos", "workspaces", "ws", "feat-x"), agora)
 	// não contam: fundo demais, dentro de pasta oculta, de .worktrees e de node_modules
-	spark(t, filepath.Join(home, "a", "b", "c", "d", "e", "f"), agora)
-	spark(t, filepath.Join(home, ".cache", "spark"), agora)
-	spark(t, filepath.Join(nova, ".worktrees", "task", "spark"), agora)
-	spark(t, filepath.Join(home, "proj", "node_modules", "spark"), agora)
+	raizFalsa(t, filepath.Join(home, "a", "b", "c", "d", "e", "f"), agora)
+	raizFalsa(t, filepath.Join(home, ".cache", "ws"), agora)
+	raizFalsa(t, filepath.Join(nova, ".worktrees", "task", "ws"), agora)
+	raizFalsa(t, filepath.Join(home, "proj", "node_modules", "ws"), agora)
 	// raiz dentro de raiz: só a de fora
-	spark(t, filepath.Join(velha, "sub"), agora)
+	raizFalsa(t, filepath.Join(velha, "sub"), agora)
 
 	got := AcharRaizes(context.Background(), home, 5)
 	if !reflect.DeepEqual(got, []string{nova, velha}) {
 		t.Fatalf("raízes = %v", got)
 	}
-	if !EhRaizSpark(nova) || EhRaizSpark(home) {
-		t.Fatal("EhRaizSpark")
+	if !EhRaiz(nova) || EhRaiz(home) {
+		t.Fatal("EhRaiz")
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()

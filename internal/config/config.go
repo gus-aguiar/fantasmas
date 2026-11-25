@@ -42,9 +42,9 @@ const ChaveFigura = "FANTASMAS_FIGURA"
 var Opcoes = []Opcao{
 	{ChaveTema, "aparência", "cores do app", []string{"roxo", "orca", "terminal"}, false, "roxo"},
 	{ChaveFigura, "aparência", "figura do topo; GIF ou PNG na pasta figuras", []string{"gengar"}, false, "gengar"},
-	{"FANTASMAS_RAIZ", "variáveis de ambiente", "raiz do workspace Spark (aceita ~/); --raiz manda", nil, true, "pasta atual"},
+	{"FANTASMAS_RAIZ", "variáveis de ambiente", "raiz do workspace (aceita ~/); --raiz manda", nil, true, "pasta atual"},
 	{"FANTASMAS_FONTE", "variáveis de ambiente", "ddb liga a gaveta missões e as sidequests", []string{"ddb"}, false, "delegate.py"},
-	{"FANTASMAS_DDB_SCRIPT", "variáveis de ambiente", "caminho do ddb.py, relativo à raiz do Spark", nil, true, "scripts/delegate/ddb.py"},
+	{"FANTASMAS_DDB_SCRIPT", "variáveis de ambiente", "caminho do ddb.py, relativo à raiz do workspace", nil, true, "scripts/delegate/ddb.py"},
 	{"FANTASMAS_MURAL", "variáveis de ambiente", "off esconde o mural", []string{"off"}, false, "ligado"},
 	{"FANTASMAS_CLAUDE_DIR", "variáveis de ambiente", "pasta do Claude (transcripts)", nil, false, "~/.claude"},
 	{"FANTASMAS_CACHE_DIR", "variáveis de ambiente", "pasta de cache do fantasmas", nil, false, padraoCache()},
