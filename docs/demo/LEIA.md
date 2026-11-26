@@ -9,6 +9,8 @@ Gravação de ~26 s do `fantasmas --demo`: abas 1 → 2 → 3 → 4 → 5 → 1 
 | `fantasmas.cast` | asciinema v3, 120×36, para `asciinema-player` |
 | `fantasminha.gif` | figura própria do topo (gerada por `fantasminha.py`), no lugar das figuras de terceiros |
 
+No `--demo` a interface chama o coordenador de "coordenador" e a figura padrão de "fantasma"; fora dele, nada muda.
+
 Regravar, da raiz do repo (precisa de `vhs`, `ttyd`, `ffmpeg` e `asciinema` 3):
 
 ```sh
