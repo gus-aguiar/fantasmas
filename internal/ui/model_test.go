@@ -155,8 +155,11 @@ func TestFeedMostraMaisNaFila(t *testing.T) {
 	for i := 0; i < 12; i++ {
 		e.Esperando = append(e.Esperando, dados.Linha{Chave: fmt.Sprintf("q%d/questions.json#p", i), Rotulo: "c-pl-q · alto", Detalhe: "pergunta?"})
 	}
+	// pergunta de fantasminha sem sessão vai para "antigos"; viva, entra na fila
+	e.Vivos = map[string]bool{"c-pl-q": true}
 	m := modelo(e, &registro{})
-	if out := m.Render(96, 20); !strings.Contains(out, "na fila") {
+	m.largura, m.altura = 96, 16 // a lista mede o espaço pela altura do modelo, como no app
+	if out := m.Render(96, 16); !strings.Contains(out, "na fila") {
 		t.Fatalf("sem 'na fila':\n%s", out)
 	}
 }

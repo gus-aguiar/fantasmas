@@ -102,6 +102,7 @@ func TestLerSomeDepoisDeAberto(t *testing.T) {
 	m := modelo(e, &registro{})
 	m.acoes.MarcarVisto = dados.MarcarVisto
 	m.largura, m.altura = 96, 40
+	m.antigas = true // relatório entregue fica em "Acompanhando", recolhido
 	if !strings.Contains(render(m, 96, 40), "c-pl-rel") {
 		t.Fatal("sem ler")
 	}

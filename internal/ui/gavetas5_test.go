@@ -51,7 +51,7 @@ func TestTopoUmaLinhaEMascoteSome(t *testing.T) {
 		t.Fatalf("abaixo de %d linhas o topo tem %d", AlturaSemMascote, len(ls))
 	}
 	p := render(m, 140, 20)
-	if !strings.Contains(p, "1 precisa de você") || strings.Contains(p, "r atualiza") {
+	if !strings.Contains(p, "2 precisa de você") || strings.Contains(p, "r atualiza") {
 		t.Fatalf("topo:\n%s", p)
 	}
 	if ls, _ = m.linhasTopo(140, 42); spriteFn(140) != nil && len(ls) < spriteFn(140).Linhas {

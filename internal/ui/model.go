@@ -1035,7 +1035,11 @@ func (m Model) corpoLinhas(largura, altura int) ([]string, []int) {
 				b = st(bg, T.Dim).Render(d)
 			}
 			if b != "" && largura-lipgloss.Width(b)-3 >= 16 {
-				s = encaixa(s, largura-lipgloss.Width(b)-3, bg) + espacos(2, bg) + b
+				w := largura - lipgloss.Width(b) - 3
+				if l.estreita != nil {
+					s = espacos(1, bg) + l.estreita(bg, w-1)
+				}
+				s = encaixa(s, w, bg) + espacos(2, bg) + b
 			}
 		}
 		out = append(out, encaixa(s, largura, bg))

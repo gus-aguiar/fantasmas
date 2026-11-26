@@ -64,7 +64,7 @@ func TestPaletaCentralizadaComFundoEsmaecido(t *testing.T) {
 	topo := -1
 	for i, l := range ls {
 		if strings.Contains(ansi.Strip(l), "Comandos") && topo < 0 {
-			topo = i - 3
+			topo = i - 2 // borda, linha de folga, título
 		}
 		if lipgloss.Width(l) > 140 {
 			t.Fatalf("linha %d estoura", i)
@@ -73,7 +73,8 @@ func TestPaletaCentralizadaComFundoEsmaecido(t *testing.T) {
 	if topo < 0 {
 		t.Fatal("sem a borda com o título")
 	}
-	x := strings.Index(ansi.Strip(ls[topo]), "╭")
+	s := ansi.Strip(ls[topo])
+	x := lipgloss.Width(s[:max(0, strings.Index(s, "╭"))]) // em células: o fundo esmaecido tem glifos de vários bytes
 	if esq, dir := x, 140-x-larguraPaleta(140); esq-dir > 1 || dir-esq > 1 {
 		t.Fatalf("caixa fora do centro: %d × %d", esq, dir)
 	}

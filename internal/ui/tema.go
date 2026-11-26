@@ -173,3 +173,10 @@ func (t Tokens) EstadoOk() lipgloss.Color    { return t.Ok }
 func (t Tokens) EstadoAviso() lipgloss.Color { return t.Espera }
 func (t Tokens) EstadoErro() lipgloss.Color  { return t.Erro }
 func (t Tokens) Secundario() lipgloss.Color  { return t.Dim }
+
+// cores da estética dos fantasminhas do painel do delegate (mini fantasminha da paleta); fixas em todos os temas
+var (
+	corFtCorpo   = lipgloss.Color("#a66bff")
+	corFtOlho    = lipgloss.Color("#ff3355")
+	corFtRodando = lipgloss.Color("#67d4f0")
+)

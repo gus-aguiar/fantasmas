@@ -22,7 +22,8 @@ func TestAcoesDeSistemaNaGaveta5(t *testing.T) {
 			t.Errorf("falta %q:\n%s", s, tela)
 		}
 	}
-	if p := ansi.Strip(m.ComBotoes().Render(110, 40)); strings.Contains(p, "Reconectar MCPs") || strings.Contains(p, "DayDreaming") {
+	// a paleta esmaece a gaveta atrás dela; abre na agora para só a caixa contar
+	if p := ansi.Strip(m.irGaveta(indiceGaveta("agora")).ComBotoes().Render(110, 40)); strings.Contains(p, "Reconectar MCPs") || strings.Contains(p, "DayDreaming") {
 		t.Errorf("paleta não devia ter ações de sistema:\n%s", p)
 	}
 	for m.sel = 0; m.sel < len(m.alvos()) && m.alvos()[m.sel].comando != cmdMCP; m.sel++ {
