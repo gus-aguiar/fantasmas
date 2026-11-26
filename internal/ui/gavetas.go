@@ -149,7 +149,7 @@ func gavetaAgora(c *corpo, e dados.Estado, altura int) {
 		if len(praVoce) == 0 {
 			c.vazioIcone("✓", T.Ok, "nada pedindo você agora")
 		} else {
-			usados += lista(praVoce, cabem)
+			usados += filaDecisoes(c, e, praVoce)
 		}
 	}
 	if len(travados) > 0 {
@@ -244,6 +244,81 @@ func gavetaAgora(c *corpo, e dados.Estado, altura int) {
 			c.texto(func(bg lipgloss.Color) string { return st(bg, T.Dim).Render("○ " + f) })
 		}
 	}
+}
+
+// ordemFila põe as decisões puladas (s) no fim, sem mudar a ordem entre elas.
+func ordemFila(itens []dados.ItemFeed, pulados map[string]bool) []dados.ItemFeed {
+	var frente, fim []dados.ItemFeed
+	for _, i := range itens {
+		if i.Pergunta != nil && pulados[i.Pergunta.Chave] {
+			fim = append(fim, i)
+		} else {
+			frente = append(frente, i)
+		}
+	}
+	return append(frente, fim...)
+}
+
+// filaDecisoes mostra uma decisão por vez: a do topo com a recomendação do agente e a regra do vision
+// que motivou a dúvida; as outras ficam numa linha "+N na fila". Devolve as linhas de item usadas.
+func filaDecisoes(c *corpo, e dados.Estado, itens []dados.ItemFeed) int {
+	itens = ordemFila(itens, c.pulados)
+	i := itens[0]
+	a := alvoDoFeed(i)
+	if a.aba == "" && i.Pergunta != nil {
+		a.aba = abaDaChave(e, i.Pergunta.Chave)
+	}
+	rec, temRec := dados.Recomendacao{}, false
+	if i.Pergunta != nil {
+		rec, temRec = e.Recs[i.Pergunta.Chave]
+	}
+	a.topo = true
+	var ps []string
+	if i.Tipo == dados.TipoDecidir && rec.Aprovavel() {
+		a.fila = i.Pergunta.Chave
+		ps = append(ps, "y 2× aprova")
+	}
+	if len(itens) > 1 {
+		ps = append(ps, "s pula")
+	}
+	if d := dicaItem(a); d != "" {
+		ps = append(ps, d)
+	}
+	a.dica = strings.Join(ps, " · ")
+	c.itemFeed(i, a)
+	w := c.largura
+	campo := func(rotulo, texto string, cor lipgloss.Color) {
+		c.texto(func(bg lipgloss.Color) string {
+			cab := espacos(4, bg) + st(bg, T.Dim).Render(fmt.Sprintf("%-10s", rotulo))
+			return cab + st(bg, cor).Render(Corte(texto, max(8, w-lipgloss.Width(cab)-1)))
+		})
+	}
+	switch {
+	case i.Tipo == dados.TipoJuntar:
+		campo("merge", "liberar é com você: enter abre o PR e as opções", T.Sub)
+	case temRec && rec.Texto != "":
+		campo("recomenda", rec.Texto, T.Texto)
+	default:
+		campo("recomenda", "o agente não recomendou; enter abre as opções", T.Dim)
+	}
+	if i.Tipo == dados.TipoDecidir {
+		if rec.Regra != "" {
+			campo("vision", rec.Regra, T.Sub)
+		} else {
+			campo("vision", "fora do vision", T.Espera)
+		}
+	}
+	if n := len(itens) - 1; n > 0 {
+		var quem []string
+		for _, x := range itens[1:] {
+			quem = append(quem, x.Sujeito)
+		}
+		c.texto(func(bg lipgloss.Color) string {
+			cab := fmt.Sprintf("  +%d na fila  ", n)
+			return st(bg, T.Dim).Render(cab + Corte(strings.Join(quem, " · "), max(8, w-lipgloss.Width(cab)-1)))
+		})
+	}
+	return 1
 }
 
 func contagem(n int) string {

@@ -261,7 +261,7 @@ func (m Model) conteudoPipe(w int) []linhaPipe {
 		if r.Prontidao != "" {
 			s += st(bg, T.Dim).Render("  ·  ") + gengarChip(bg, r)
 		} else if r.Coordinator != "" {
-			s += st(bg, T.Dim).Render("  ·  gengar " + r.Coordinator)
+			s += st(bg, T.Dim).Render("  ·  " + nomeCoordenador + " " + r.Coordinator)
 		}
 		return s
 	})

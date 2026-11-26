@@ -36,11 +36,11 @@ func TestCartaEmTodasAsLarguras(t *testing.T) {
 			}
 		}
 		p := ansi.Strip(out)
-		if !strings.Contains(p, "d21-placar") || !strings.Contains(p, "Genguinha") {
+		if !strings.Contains(p, "d21-placar") || !strings.Contains(p, "Central") {
 			t.Fatalf("w=%d sem missão ou principal:\n%s", w, p)
 		}
 		if w >= 96 {
-			for _, s := range []string{"d21-placar", "g-d21-placar", "▲ 1 sua", "PR vermelho", "gengar-1030-0900"} {
+			for _, s := range []string{"d21-placar", "g-d21-placar", "▲ 1 sua", "PR vermelho", "coord-1030-0900"} {
 				if !strings.Contains(p, s) {
 					t.Errorf("w=%d sem %q:\n%s", w, s, p)
 				}

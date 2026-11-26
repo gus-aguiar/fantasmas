@@ -56,4 +56,10 @@ type Estado struct {
 	Coordenadores  map[string]LinhaViva
 	// Faxina é a última rodada da faxina de memória que agiu; nil sem .tmp/faxina-ultima.json.
 	Faxina *Faxina
+	// Recs é a recomendação de cada pergunta pendente, por chave (fila de decisões).
+	Recs map[string]Recomendacao
+	// Mergeados são os PRs seus mergeados hoje (painel "feito hoje").
+	Mergeados []Mergeado
+	// Licoes são os erros corrigidos nos fantasminhas, do mais repetido ao menos.
+	Licoes []Licao
 }

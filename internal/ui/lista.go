@@ -26,6 +26,10 @@ type alvo struct {
 	alterna, comando string
 	// dica troca o atalho padrão mostrado na linha selecionada (ver dicaItem)
 	dica string
+	// fila é a chave da decisão no topo da fila de esperando você (y 2× aprova, s pula)
+	fila string
+	// topo marca a decisão no topo da fila (mesmo sem recomendação aprovável)
+	topo bool
 }
 
 // linha do corpo; item é o índice do alvo dono da linha, ou -1.
@@ -57,6 +61,8 @@ type corpo struct {
 	vis, total int
 
 	antigasAbertas, rascunhos bool
+	// pulados são as decisões que o s mandou para o fim da fila
+	pulados map[string]bool
 
 	// desc é a frase curta da gaveta: vai na primeira seção, depois do título (ver secaoN).
 	desc string

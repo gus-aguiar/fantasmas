@@ -28,7 +28,38 @@ func EstadoDemo(agora time.Time) dados.Estado {
 		dia + "-VT-19848-pr":      "não lança: aguarda corrigir (after)",
 	}
 	missoesDemo(&e, agora)
+	filaDemo(&e)
+	e.Mergeados = mergeadosDemo(agora)
+	e.Licoes = licoesDemo(agora)
 	return e
+}
+
+// filaDemo: duas decisões na fila, uma com regra do vision e outra fora dele, ambas com recomendação.
+func filaDemo(e *dados.Estado) {
+	e.Esperando = append(e.Esperando, dados.Linha{Chave: "t-working/q2", Rotulo: "c-vt-1 · testes", Detalhe: "Trocar o Testcontainers por banco em memória nos testes de listas?"})
+	e.Recs = map[string]dados.Recomendacao{
+		"t-espera/q1":  {Opcao: "aprovar", Texto: "Aprovar o plano", Regra: "migração de dados só roda com plano aprovado"},
+		"t-working/q2": {Opcao: "manter", Texto: "Manter o Testcontainers"},
+	}
+}
+
+// mergeadosDemo: o que foi mergeado hoje nas duas missões e fora delas.
+func mergeadosDemo(agora time.Time) []dados.Mergeado {
+	return []dados.Mergeado{
+		{Repo: "d21", Number: 4198, Title: "[VT-19597] Placar ao vivo", Branch: "feature/placar-VT-19597", Commits: 6, Em: agora.Add(-40 * time.Minute)},
+		{Repo: "d21", Number: 4190, Title: "[VT-19598] Tabela de pontos", Branch: "feature/pontos-VT-19598", Commits: 3, Em: agora.Add(-3 * time.Hour)},
+		{Repo: "mtgNoPapel", Number: 1299, Title: "[VT-19826] Preço por carta", Branch: "feature/preco-VT-19826", Commits: 4, Em: agora.Add(-2 * time.Hour)},
+		{Repo: "vitrine", Number: 3099, Title: "Ficha do fantasmas", Branch: "docs/ficha-fantasmas", Commits: 1, Em: agora.Add(-1 * time.Hour)},
+	}
+}
+
+// licoesDemo: erros que se repetiram nos fantasminhas e o que os corrigiu.
+func licoesDemo(agora time.Time) []dados.Licao {
+	return []dados.Licao{
+		{Erro: "lint: import não usado", Vezes: 4, Correcao: "rodar o lint antes do commit", Ultima: agora.Add(-25 * time.Minute)},
+		{Erro: "teste de integração sem banco", Vezes: 3, Correcao: "subir o Testcontainers antes da suíte", Ultima: agora.Add(-2 * time.Hour)},
+		{Erro: "snapshot de tela desatualizado", Vezes: 1, Correcao: "regravar só com a mudança aprovada", Ultima: agora.Add(-5 * time.Hour)},
+	}
 }
 
 const (
@@ -36,11 +67,11 @@ const (
 	demoEconomia = "mtg-preco-deck"
 )
 
-// missoesDemo: o Genguinha e as duas missões do rascunho (uma espera você, outra trabalhando).
+// missoesDemo: o coordenador principal e as duas missões do rascunho (uma espera você, outra trabalhando).
 func missoesDemo(e *dados.Estado, agora time.Time) {
 	um, zero := 1, 0
 	e.MissoesLigado = true
-	e.Principal = dados.Principal{Nome: "Genguinha", Workspace: "w1", Gengar: "gengar-1030-0900"}
+	e.Principal = dados.Principal{Nome: "Central", Workspace: "w1", Gengar: "coord-1030-0900"}
 	e.Missoes = []dados.Missao{
 		{Slug: demoEconomia, Nome: "mtg-preco-deck", Workspace: "w16", Origem: "produto", OrigemRef: "pedido do CS",
 			Cards: []string{"VT-19826"}, Estado: "aberta", Gengar: "g-mtg-preco-deck", Sidequests: []int{11, 14},
@@ -56,11 +87,11 @@ func missoesDemo(e *dados.Estado, agora time.Time) {
 			UltimaAtividade: agora.Add(-1 * time.Minute)},
 	}
 	e.Coordenadores = map[string]dados.LinhaViva{
-		"gengar-1030-0900": {Nome: "gengar-1030-0900", Aba: "w1:t1", Etapa: "gengar", Estado: dados.Trabalhando, CtxPct: 41,
+		"coord-1030-0900": {Nome: "coord-1030-0900", Aba: "w1:t1", Etapa: "coordenar", Estado: dados.Trabalhando, CtxPct: 41,
 			Agora: "revisando o PR do React", Hora: agora.Add(-1 * time.Minute)},
-		"g-d21-placar": {Nome: "g-d21-placar", Aba: "w15:t1", Etapa: "gengar", Estado: dados.EsperaVoce, CtxPct: 38,
+		"g-d21-placar": {Nome: "g-d21-placar", Aba: "w15:t1", Etapa: "coordenar", Estado: dados.EsperaVoce, CtxPct: 38,
 			Agora: "1 sua: login para homologar (c-vt-2)", Hora: agora.Add(-1 * time.Minute)},
-		"g-mtg-preco-deck": {Nome: "g-mtg-preco-deck", Aba: "w16:t1", Etapa: "gengar", Estado: dados.Trabalhando, CtxPct: 17,
+		"g-mtg-preco-deck": {Nome: "g-mtg-preco-deck", Aba: "w16:t1", Etapa: "coordenar", Estado: dados.Trabalhando, CtxPct: 17,
 			Agora: "Bash: herdr agent wait h-vt-5 --until blocked", Hora: agora.Add(-2 * time.Minute)},
 	}
 	ws := map[string][2]string{
@@ -111,7 +142,7 @@ func runsDemo(agora time.Time) []dados.Sidequest {
 			Coordinator: "g-d21-placar", Inputs: map[string]string{"card": "VT-19597", "repos": "WS React", "homolog_alvo": "vps"},
 			IdadeMin: 42, EsperaVoce: 1, Prontidao: "pronto",
 			Etapas: []dados.Etapa{impl("VT-19597", "done", "c-vt-19597", "w15:t3"), login,
-				{ID: "juntar", Role: "gengar", Status: "pending", Slug: dia + "-VT-19597-juntar", After: []string{"homologar.done"},
+				{ID: "juntar", Role: "coordenador", Status: "pending", Slug: dia + "-VT-19597-juntar", After: []string{"homologar.done"},
 					Gates: []dados.Gate{{Item: "juntar", By: "human"}}}}},
 		{ID: 11, Pipeline: "bugfix", Title: "Valor da carta arredondado", SlugBase: "VT-19830", Status: "done",
 			Coordinator: "g-mtg-preco-deck", Inputs: map[string]string{"card": "VT-19830", "repos": "WS"}, IdadeMin: 26 * 60,
@@ -122,7 +153,7 @@ func runsDemo(agora time.Time) []dados.Sidequest {
 			Inputs: map[string]string{"card": "VT-19826", "repos": "React"}, IdadeMin: 70,
 			Etapas: []dados.Etapa{impl("VT-19826", "done", "c-vt-19826", ""), pr, homol("VT-19826", "pending")}},
 		{ID: 12, Pipeline: "bugfix", Title: "Item duplicado na lista", SlugBase: "VT-19848", Status: "running",
-			Coordinator: "gengar-1030-0900", Inputs: map[string]string{"card": "VT-19848", "repos": "WS"}, IdadeMin: 95,
+			Coordinator: "coord-1030-0900", Inputs: map[string]string{"card": "VT-19848", "repos": "WS"}, IdadeMin: 95,
 			Etapas: []dados.Etapa{etapa("debug", "VT-19848", "done", "c-vt-19848"),
 				etapa("corrigir", "VT-19848-corrigir", "running", "c-vt-19848", "debug.done"),
 				etapa("pr", "VT-19848-pr", "pending", "", "corrigir.done")}},
@@ -134,7 +165,7 @@ func estadoDemoBase(agora time.Time) dados.Estado {
 		At:   agora,
 		Raiz: "/demo/workspace",
 		Mural: []dados.Aviso{
-			{At: agora.Add(-8 * time.Minute), Autor: "gengar-1030-0900", Texto: "vou mexer no delegate-spawn até 12h"},
+			{At: agora.Add(-8 * time.Minute), Autor: "coord-1030-0900", Texto: "vou mexer no delegate-spawn até 12h"},
 			{At: agora.Add(-95 * time.Minute), Autor: "gustavo", Texto: "VPS fora até 15h, sem homologação por enquanto"},
 		},
 		Vivos:    map[string]bool{"c-vt-1": true, "c-vt-2": true, "c-vt-3": true, "c-vt-4": true},
@@ -175,4 +206,18 @@ func estadoDemoBase(agora time.Time) dados.Estado {
 			{Chave: "trava", Rotulo: "trava de testes pesados", Detalhe: "livre", Extra: "ok"},
 		},
 	}
+}
+
+// nomeCoordenador é como a interface chama o coordenador e a figura padrão; o --demo troca por um nome neutro.
+var nomeCoordenador = "gengar"
+
+// ModoDemo troca os nomes próprios da interface por neutros, para gravações públicas. Só o --demo chama.
+func ModoDemo() { nomeCoordenador = "coordenador" }
+
+// rotuloFigura mostra a figura padrão com o nome da interface; as demais ficam como estão.
+func rotuloFigura(v string) string {
+	if v == FiguraPadrao && nomeCoordenador != FiguraPadrao {
+		return "fantasma"
+	}
+	return v
 }

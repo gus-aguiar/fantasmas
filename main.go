@@ -143,6 +143,9 @@ func main() {
 	if err := ui.UsarTema(os.Getenv(config.ChaveTema)); err != nil {
 		aviso = err.Error()
 	}
+	if *demo || *demoVerde {
+		ui.ModoDemo()
+	}
 	m := ui.Novo(coletaDemo(*demo, *demoVerde, coleta), acoes, *intervalo)
 	if aviso != "" {
 		m = m.ComStatus(aviso)

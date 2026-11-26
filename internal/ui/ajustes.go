@@ -77,6 +77,9 @@ func gavetaAjustes(c *corpo, ops OpsAjustes) {
 			glifo, cor, estado = "◆", T.Info, mostravel(o, ops.Valor(o.Chave))
 			det = "vem do shell · " + det
 		}
+		if o.Chave == config.ChaveFigura {
+			estado = rotuloFigura(estado)
+		}
 		if o.Reabrir {
 			det += " · vale ao reabrir"
 		}

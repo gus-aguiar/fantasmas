@@ -36,6 +36,8 @@ type Aberto struct {
 	ComparaTitulo                       string
 	ComparaCab                          []string
 	Compara                             []LinhaCompara
+	// Vision é a regra do vision que o agente cita como motivo da dúvida; vazia = fora do vision.
+	Vision string
 }
 
 var opcoesRelatorio = []Opcao{{ID: "lido", Label: "Lido"}, {ID: "acao", Label: "Lido, e tenho pedido", Livre: true}}
@@ -208,7 +210,7 @@ func PerguntaDe(chave string, questions []byte, id string) (*Aberto, error) {
 		Documentos:   DocumentosDe(i),
 		Recomendacao: textoRec(i["recommendation"]),
 		Coordenador:  s(i["coordinator"]), Destrava: s(i["unlocks"]),
-		Links: linksDe(i["links"]), Quando: s(i["asked_at"]),
+		Links: linksDe(i["links"]), Quando: s(i["asked_at"]), Vision: s(i["vision"]),
 		Diagrama: s(i["diagram"]), LegendaDiagrama: s(i["diagram_caption"]),
 		ComparaTitulo: s(i["compare_title"]), ComparaCab: linhas(i["compare_head"]),
 	}

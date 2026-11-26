@@ -279,7 +279,7 @@ func TestIrAbaEAbrirNoFeed(t *testing.T) {
 	if len(r.abas) != 1 || r.abas[0] != "aba-1" {
 		t.Fatalf("g: %v", r.abas)
 	}
-	m = aperta(t, m, "j")
+	m = aperta(t, m, "s") // fila: o s traz o juntar ao topo
 	if out := render(m, 96, 40); !strings.Contains(out, "o abrir") {
 		t.Fatalf("juntar sem a dica o abrir:\n%s", out)
 	}

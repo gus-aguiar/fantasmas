@@ -145,6 +145,7 @@ func TestRespostaSemTabNemQuebra(t *testing.T) {
 func TestCliqueNoFeedAbreComoEnter(t *testing.T) {
 	c := novaCena(t)
 	m := c.modelo(c.estado("plano", "juntar"))
+	m, _ = apertaTecla(m, 's') // fila: uma decisão por vez; o s traz o juntar ao topo
 	_, y := onde(t, m, "juntar", 0)
 	m, _ = clique(t, m, 4, y)
 	if m.aberto == nil || m.aberto.Merge == nil {

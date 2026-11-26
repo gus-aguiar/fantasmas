@@ -184,6 +184,7 @@ func gavetaMissoes(c *corpo, e dados.Estado, foco string) {
 	if !e.MissoesLigado {
 		c.branco()
 		c.vazioIcone("◆", T.Espera, "missões: ligue FANTASMAS_FONTE=ddb", "o filtro por workspace segue valendo pelo meta")
+		paineisDoDia(c, e)
 		return
 	}
 	w := c.largura - 2
@@ -232,6 +233,7 @@ func gavetaMissoes(c *corpo, e dados.Estado, foco string) {
 		}
 		c.decisoes(e, e.DecisoesSoltas, sem, w)
 	}
+	paineisDoDia(c, e)
 }
 
 // sidequestsPorMissao separa as sidequests por missão; a que não acha missão vai para as soltas, nunca some.
@@ -276,7 +278,7 @@ func (c *corpo) linhaGengarSQ(r dados.Sidequest, faixa func(bg lipgloss.Color) s
 		return nil
 	}
 	return func(bg lipgloss.Color) string {
-		return faixa(bg) + espacos(2, bg) + st(bg, T.Dim).Render("gengar ") + gengarChip(bg, r)
+		return faixa(bg) + espacos(2, bg) + st(bg, T.Dim).Render(nomeCoordenador+" ") + gengarChip(bg, r)
 	}
 }
 
@@ -357,7 +359,7 @@ func faixaPrincipal(c *corpo, e dados.Estado, w int) {
 	l, vivo := e.Coordenadores[p.Gengar]
 	c.texto(func(bg lipgloss.Color) string {
 		b := faixaBg(bg)
-		esq := st(b, T.Acao).Render("▌ ") + st(b, T.Acao).Bold(true).Render("✦ GENGAR") +
+		esq := st(b, T.Acao).Render("▌ ") + st(b, T.Acao).Bold(true).Render("✦ "+strings.ToUpper(nomeCoordenador)) +
 			st(b, T.Texto).Bold(true).Render("  "+nome) + st(b, T.Dim).Render("  coordena todas as missões")
 		dir := st(b, T.Dim).Render(p.Workspace + " ")
 		return ladoALado(esq, dir, w, b)
