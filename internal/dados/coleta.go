@@ -71,7 +71,7 @@ func (c *Coletor) Coletar(ctx context.Context) Estado {
 	py := filepath.Join(scripts, "delegate.py")
 	cl := filepath.Join(scripts, "coleta.sh")
 
-	var tasks, esperando, opcoes, local, worktrees, maquina, prs, agentes string
+	var tasks, esperando, opcoes, local, worktrees, maquina, prs, mergeados, agentes string
 	var ddb *ParteDdb
 	var tickPendente bool
 	var proximo map[string]string
@@ -111,6 +111,7 @@ func (c *Coletor) Coletar(ctx context.Context) Estado {
 	}
 	if c.recursos.GH && c.autor != "" {
 		roda(&prs, timeoutPRs, "gh", "api", "graphql", "-f", "query="+QueryDe(c.autor))
+		roda(&mergeados, timeoutPRs, "gh", "api", "graphql", "-f", "query="+QueryMergeadosDe(c.autor, time.Now()))
 	}
 	var dd Daydreamer
 	if c.recursos.Herdr {
@@ -159,6 +160,11 @@ func (c *Coletor) Coletar(ctx context.Context) Estado {
 		e.MissoesLigado, e.Principal, e.Missoes, e.DecisoesSoltas = true, ddb.Principal, ddb.Missoes, ddb.DecisoesSoltas
 		PreencherPRsVermelhos(e.Missoes, e.Travados)
 	}
+	if mergeados != "" {
+		e.Mergeados = MergeadosDe([]byte(mergeados))
+	}
+	e.Recs = LerRecomendacoes(c.Raiz, e.Esperando, nil)
+	e.Licoes = LicoesDe(filepath.Join(c.Raiz, ".delegate", "_licoes.jsonl"), e.Sidequests, time.Now())
 	e.Caidos = CaidosDe(c.Raiz, vivos, maxCaidos)
 	e.Linhas = LinhasVivas(e, c.Raiz, DirClaude(), time.Now())
 	AtribuirMissoes(&e)

@@ -28,7 +28,38 @@ func EstadoDemo(agora time.Time) dados.Estado {
 		dia + "-VT-19848-pr":      "não lança: aguarda corrigir (after)",
 	}
 	missoesDemo(&e, agora)
+	filaDemo(&e)
+	e.Mergeados = mergeadosDemo(agora)
+	e.Licoes = licoesDemo(agora)
 	return e
+}
+
+// filaDemo: duas decisões na fila, uma com regra do vision e outra fora dele, ambas com recomendação.
+func filaDemo(e *dados.Estado) {
+	e.Esperando = append(e.Esperando, dados.Linha{Chave: "t-working/q2", Rotulo: "c-vt-1 · testes", Detalhe: "Trocar o Testcontainers por banco em memória nos testes de listas?"})
+	e.Recs = map[string]dados.Recomendacao{
+		"t-espera/q1":  {Opcao: "aprovar", Texto: "Aprovar o plano", Regra: "migração de dados só roda com plano aprovado"},
+		"t-working/q2": {Opcao: "manter", Texto: "Manter o Testcontainers"},
+	}
+}
+
+// mergeadosDemo: o que foi mergeado hoje nas duas missões e fora delas.
+func mergeadosDemo(agora time.Time) []dados.Mergeado {
+	return []dados.Mergeado{
+		{Repo: "d21", Number: 4198, Title: "[VT-19597] Placar ao vivo", Branch: "feature/placar-VT-19597", Commits: 6, Em: agora.Add(-40 * time.Minute)},
+		{Repo: "d21", Number: 4190, Title: "[VT-19598] Tabela de pontos", Branch: "feature/pontos-VT-19598", Commits: 3, Em: agora.Add(-3 * time.Hour)},
+		{Repo: "mtgNoPapel", Number: 1299, Title: "[VT-19826] Preço por carta", Branch: "feature/preco-VT-19826", Commits: 4, Em: agora.Add(-2 * time.Hour)},
+		{Repo: "vitrine", Number: 3099, Title: "Ficha do fantasmas", Branch: "docs/ficha-fantasmas", Commits: 1, Em: agora.Add(-1 * time.Hour)},
+	}
+}
+
+// licoesDemo: erros que se repetiram nos fantasminhas e o que os corrigiu.
+func licoesDemo(agora time.Time) []dados.Licao {
+	return []dados.Licao{
+		{Erro: "lint: import não usado", Vezes: 4, Correcao: "rodar o lint antes do commit", Ultima: agora.Add(-25 * time.Minute)},
+		{Erro: "teste de integração sem banco", Vezes: 3, Correcao: "subir o Testcontainers antes da suíte", Ultima: agora.Add(-2 * time.Hour)},
+		{Erro: "snapshot de tela desatualizado", Vezes: 1, Correcao: "regravar só com a mudança aprovada", Ultima: agora.Add(-5 * time.Hour)},
+	}
 }
 
 const (

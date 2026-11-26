@@ -3,6 +3,20 @@
 O que mudou no `gengar` (TUI fantasmas) e no fluxo de missões e sidequests do workspace. A versão mais nova fica no topo.
 Cada entrada diz o que muda para quem usa; os detalhes técnicos ficam no histórico do git.
 
+## 2026-11-26 · Fila de decisões, feito hoje e lições
+
+**Novo**
+- **Esperando você virou uma fila:** a gaveta `1` mostra uma decisão por vez, com o que o agente recomenda e a regra do vision que motivou a dúvida (ou "fora do vision", quando o agente não citou nenhuma). As outras ficam numa linha "+N na fila".
+  - `y` duas vezes aprova a recomendação do agente, sem abrir a pergunta. Só vale quando a recomendação é uma opção que não pede texto; liberar merge continua pelo `enter`, lendo o PR.
+  - `s` pula: a decisão vai para o fim da fila, sem responder.
+  - `enter` continua abrindo a pergunta com todas as opções.
+- **Feito hoje (gaveta `2`):** os seus PRs mergeados hoje, agrupados por missão, com quantos commits cada missão levou; `o` abre o mais recente. Um PR é da missão quando o branch ou o título cita o slug, um card dela ou o card de uma sidequest dela.
+- **Lições (gaveta `2`):** os erros que os fantasminhas corrigiram nos últimos 30 dias, do mais repetido ao menos, com a última correção. Vêm das novas tentativas das sidequests e de `.delegate/_licoes.jsonl`, que o workspace grava.
+
+**Para o workspace**
+- Pergunta com `"vision": "<regra>"` no `questions.json` mostra a regra na fila.
+- Cada linha de `.delegate/_licoes.jsonl` (`{"at","crew","missao","erro","correcao"}`) conta uma vez na lição daquele erro; variações de número, caixa e espaço contam como o mesmo erro.
+
 ## 2026-11-25 · Demonstração no painel interativo
 
 **Corrige**

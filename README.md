@@ -59,6 +59,7 @@ As teclas que mais importam estão abaixo. A lista completa abre com `?`.
 |---|---|
 | `1`–`5` ou `← →` | troca de aba (barra no rodapé): `1` agora (abre aqui), `2` missões, `3` PRs, `4` máquina, `5` configurações |
 | `↑ ↓` e `enter` | escolhe e abre/responde; numa missão, abre as sidequests e as decisões |
+| `y` / `s` | na fila de esperando você: `y` duas vezes aprova a recomendação do agente; `s` pula para a próxima decisão |
 | `ctrl+p` ou `b` | abre a paleta de comandos (Abrir o dia, Planejar o dia, Fechar o dia, o comando extra se configurado, Faxina agora, Esvaziar swap): `1`–`6` ou `enter`, duas vezes, dispara; `esc` fecha |
 | `?` | ajuda curta com a navegação; os atalhos de cada item aparecem à direita da linha selecionada |
 | `m` | abre uma missão nova (enter 2× confirma) |

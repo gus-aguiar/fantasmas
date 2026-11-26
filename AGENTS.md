@@ -66,7 +66,8 @@ A lista completa fica no `?` dentro do app, e a fonte é `ajudaLinhas` em `inter
 
 - `← →`/`h l`/`1-5`: troca de gaveta. São 5 (`Gavetas` em `moldura.go`):
   - `1` **agora** (abre aqui): ESPERANDO VOCÊ (decisão/liberação), TRAVADOS, TRABALHANDO, PARADOS (com os caídos recentes) e o mural; acompanhando e antigos (perguntas velhas e caídos de mais de um dia) ficam recolhidos numa linha "▸ Acompanhando N   ▸ Antigos N", aberta com `enter` ou `a`;
-  - `2` **missões**: cartas enxutas (nome, ▲ suas, o que o gengar faz agora, PR vermelho); `enter` abre a missão (foco) com cards, contagens, sidequests e decisões, e de novo recolhe;
+  - ESPERANDO VOCÊ é uma **fila** (`filaDecisoes` em `gavetas.go`): só a decisão do topo aparece inteira, com a recomendação e a regra do vision (`dados.Recomendacao`, lida do `questions.json` em `dados.LerRecomendacoes`; campo `vision` do item; sem ele, "fora do vision"); as outras ficam em "+N na fila". `y 2×` responde com a opção recomendada (`aprovarFila`, só se ela não for texto livre e o item não for merge); `s` manda o topo para o fim (`pularFila`, `Model.pulados`);
+  - `2` **missões**: cartas enxutas (nome, ▲ suas, o que o gengar faz agora, PR vermelho); `enter` abre a missão (foco) com cards, contagens, sidequests e decisões, e de novo recolhe; no fim, FEITO HOJE (`dados.FeitoHoje`: PRs mergeados hoje por missão, de `QueryMergeadosDe`) e LIÇÕES (`dados.LicoesDe`: retries das sidequests + `.delegate/_licoes.jsonl`), em `paineis.go`;
   - `3` **PRs**: não-rascunho com o CI; os rascunhos ficam numa linha que abre com `enter` ou `d`;
   - `4` **máquina**: máquina, ambiente e worktrees; uma linha quando tudo está verde (enter abre), aberta quando há alerta;
   - `5` **configurações**: os ajustes (tema, figura e variáveis `FANTASMAS_*`) e a seção "ações" (Reconectar MCPs, Atualizar app).

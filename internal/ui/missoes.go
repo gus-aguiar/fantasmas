@@ -184,6 +184,7 @@ func gavetaMissoes(c *corpo, e dados.Estado, foco string) {
 	if !e.MissoesLigado {
 		c.branco()
 		c.vazioIcone("◆", T.Espera, "missões: ligue FANTASMAS_FONTE=ddb", "o filtro por workspace segue valendo pelo meta")
+		paineisDoDia(c, e)
 		return
 	}
 	w := c.largura - 2
@@ -232,6 +233,7 @@ func gavetaMissoes(c *corpo, e dados.Estado, foco string) {
 		}
 		c.decisoes(e, e.DecisoesSoltas, sem, w)
 	}
+	paineisDoDia(c, e)
 }
 
 // sidequestsPorMissao separa as sidequests por missão; a que não acha missão vai para as soltas, nunca some.

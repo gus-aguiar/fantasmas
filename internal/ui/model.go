@@ -124,6 +124,10 @@ type Model struct {
 	atualizando  bool
 	reiniciar    string
 
+	// fila de decisões: y 2× aprova a recomendação do topo; s manda o topo para o fim
+	armadoFila string
+	pulados    map[string]bool
+
 	pipe       int
 	pipeSel    int
 	armadoPipe string
@@ -843,9 +847,18 @@ func (m Model) mouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 
 func (m Model) tecla(k string) (tea.Model, tea.Cmd) {
 	armadoArq, armadoRet, armadoAtu := m.armadoArq, m.armadoRet, m.armadoAtu
-	armadoGengar, armadoCmd := m.armadoGengar, m.armadoCmd
-	m.armadoArq, m.armadoRet, m.armadoAtu, m.armadoGengar, m.armadoCmd = "", "", false, false, ""
+	armadoGengar, armadoCmd, armadoFila := m.armadoGengar, m.armadoCmd, m.armadoFila
+	m.armadoArq, m.armadoRet, m.armadoAtu, m.armadoGengar, m.armadoCmd, m.armadoFila = "", "", false, false, "", ""
 	switch k {
+	case "y":
+		if Gavetas[m.gaveta].ID == "agora" {
+			m.armadoFila = armadoFila
+			return m.aprovarFila()
+		}
+	case "s":
+		if Gavetas[m.gaveta].ID == "agora" {
+			return m.pularFila()
+		}
 	case "U":
 		m.armadoAtu = armadoAtu
 		return m.atualizarApp()
@@ -940,7 +953,7 @@ func (m Model) tecla(k string) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) montarCorpo(largura, altura int) *corpo {
-	c := &corpo{largura: largura, filtro: normaliza(m.busca), antigasAbertas: m.antigas, rascunhos: m.rascunhos}
+	c := &corpo{largura: largura, filtro: normaliza(m.busca), antigasAbertas: m.antigas, rascunhos: m.rascunhos, pulados: m.pulados}
 	e := m.estadoVisto()
 	c.desc = Gavetas[m.gaveta].Descricao
 	switch Gavetas[m.gaveta].ID {
@@ -1061,7 +1074,7 @@ func (m Model) ajudaLinhas(largura int) []string {
 		"? fecha · qualquer tecla ou clique também",
 	}
 	if m.modoImg != "" {
-		ls = append(ls, "", "gengar: "+m.modoImg)
+		ls = append(ls, "", nomeCoordenador+": "+m.modoImg)
 	}
 	out := make([]string, len(ls))
 	for i, l := range ls {
@@ -1349,4 +1362,70 @@ func (m Model) arquivar() (tea.Model, tea.Cmd) {
 	m.status = "arquivada"
 	m = m.mover(0)
 	return m.mostrarToast("arquivada, sem aviso a ninguém", T.Ok)
+}
+
+// topoFila é o alvo da decisão no topo da fila de esperando você (o que o y aprova e o s pula).
+func (m Model) topoFila() (alvo, bool) {
+	for _, a := range m.alvos() {
+		if a.topo {
+			return a, true
+		}
+	}
+	return alvo{}, false
+}
+
+// aprovarFila responde a decisão do topo com a opção que o agente recomendou; pede o y duas vezes.
+func (m Model) aprovarFila() (tea.Model, tea.Cmd) {
+	a, ok := m.topoFila()
+	if !ok || a.fila == "" {
+		m.armadoFila = ""
+		m.status = "nada para aprovar com y: abra a decisão com enter"
+		return m, nil
+	}
+	rec := m.estado.Recs[a.fila]
+	if m.armadoFila != a.fila {
+		m.armadoFila = a.fila
+		m.status = "y de novo aprova: " + rec.Texto
+		return m, nil
+	}
+	m.armadoFila = ""
+	if m.acoes.Responder == nil {
+		m.status = "não respondi: sem como responder nesta máquina"
+		return m, nil
+	}
+	if m.enviando == a.fila {
+		return m, nil
+	}
+	f, chave, texto := m.acoes.Responder, a.fila, rec.Texto
+	m.status, m.enviando = "enviando…", chave
+	return m, func() tea.Msg {
+		e, err := f(chave, texto)
+		return respondeuMsg{Entrega: e, error: err, chave: chave}
+	}
+}
+
+// pularFila manda a decisão do topo para o fim da fila, sem responder.
+func (m Model) pularFila() (tea.Model, tea.Cmd) {
+	a, ok := m.topoFila()
+	chave := a.fila
+	if chave == "" {
+		chave = a.pergunta
+	}
+	if !ok || chave == "" {
+		return m, nil
+	}
+	pulados := map[string]bool{}
+	for k, v := range m.pulados {
+		pulados[k] = v
+	}
+	// quem já foi pulado e voltou ao topo sai da lista, para a fila girar
+	if pulados[chave] {
+		for k := range pulados {
+			delete(pulados, k)
+		}
+	}
+	pulados[chave] = true
+	m.pulados = pulados
+	m.status = "pulada: volta no fim da fila"
+	return m.mover(0), nil
 }
