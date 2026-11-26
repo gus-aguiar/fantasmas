@@ -29,8 +29,8 @@ func TestMuralAusenteSemFaixa(t *testing.T) {
 	if !strings.Contains(s, "MURAL") || !strings.Contains(s, "◆ gengar-1030-0900 · 10:12  vou mexer") {
 		t.Fatalf("faixa faltando:\n%s", s)
 	}
-	if strings.Index(s, "MURAL") > strings.Index(s, "ESPERANDO VOCÊ") {
-		t.Fatalf("mural vai antes de 'precisa de você':\n%s", s)
+	if strings.Index(s, "MURAL") < strings.Index(s, "ESPERANDO VOCÊ") {
+		t.Fatalf("o mural vem depois das listas, a atenção primeiro:\n%s", s)
 	}
 }
 

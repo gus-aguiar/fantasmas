@@ -20,13 +20,6 @@ const (
 	MaxSemBusca = 6
 )
 
-// cores da estética dos fantasminhas do painel do delegate
-var (
-	corFtCorpo   = lipgloss.Color("#a66bff")
-	corFtOlho    = lipgloss.Color("#ff3355")
-	corFtRodando = lipgloss.Color("#67d4f0")
-)
-
 func larguraPaleta(largura int) int { return max(24, min(LarguraPaleta, largura-4)) }
 
 // ComBotoes abre a paleta de comandos (modo quadro).

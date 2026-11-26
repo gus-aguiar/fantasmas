@@ -160,6 +160,13 @@ func abrirRelatorio(t *testing.T, c *cena) Model {
 	e := c.estado()
 	e.Tasks = []dados.Linha{{Chave: filepath.Join(c.dir, "r"), Rotulo: "c-vt-5", Detalhe: "done"}}
 	m := c.modelo(e)
+	// relatório entregue fica recolhido em "Acompanhando"; a abre e a seleção vai ao relatório
+	m = passo(t, m, "a")
+	for i, a := range m.alvos() {
+		if a.relatorio != "" {
+			m.sel = i
+		}
+	}
 	m = passo(t, m, "enter")
 	if m.aberto == nil || m.aberto.Tipo != "relatorio" {
 		t.Fatalf("relatório não abriu; status=%q", m.status)

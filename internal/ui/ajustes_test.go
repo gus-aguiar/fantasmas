@@ -53,7 +53,7 @@ func TestOitoAbreSettings(t *testing.T) {
 		t.Fatalf("gaveta %s", Gavetas[m.gaveta].ID)
 	}
 	out := render(m, 110, 50)
-	for _, s := range []string{"aparência", "variáveis de ambiente", "FANTASMAS_TEMA", "FANTASMAS_EDITOR", "FANTASMAS_CTX_JANELA",
+	for _, s := range []string{"APARÊNCIA", "VARIÁVEIS DE AMBIENTE", "FANTASMAS_TEMA", "FANTASMAS_EDITOR", "FANTASMAS_CTX_JANELA",
 		"1000000", "~/.claude", "delegate.py", "vale ao reabrir"} {
 		if !strings.Contains(out, s) {
 			t.Fatalf("configurações sem %q:\n%s", s, out)
@@ -146,7 +146,7 @@ func TestShellNaoEditavel(t *testing.T) {
 }
 
 func TestSettingsSemLoja(t *testing.T) {
-	m := tecla(modelo(dados.Estado{}, &registro{}), "8")
+	m := tecla(modelo(dados.Estado{}, &registro{}), "5")
 	if !strings.Contains(render(m, 96, 40), "configurações indisponíveis") {
 		t.Fatalf("sem aviso de loja ausente:\n%s", render(m, 96, 40))
 	}

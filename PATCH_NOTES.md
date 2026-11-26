@@ -3,6 +3,11 @@
 O que mudou no `gengar` (TUI fantasmas) e no fluxo de missões e sidequests do workspace. A versão mais nova fica no topo.
 Cada entrada diz o que muda para quem usa; os detalhes técnicos ficam no histórico do git.
 
+## 2026-11-26 · Linha selecionada sem cortar o estado
+
+**Corrige**
+- **A linha selecionada não perde mais o estado:** com a dica de teclas à direita (ex.: "enter 2× executa"), o estado do item ("reconectando… · 1/4 sessões", "decisão", "trabalhando") era cortado. Agora a linha se redesenha mais estreita e o estado continua visível.
+
 ## 2026-11-25 · Demonstração no painel interativo
 
 **Corrige**

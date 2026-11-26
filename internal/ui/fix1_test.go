@@ -223,7 +223,7 @@ func TestRodaRola(t *testing.T) {
 func TestSelecaoVisivelNoAgora(t *testing.T) {
 	m := modelo(fixture(), &registro{})
 	m.largura, m.altura = 96, 30
-	_, y := onde(t, m, "decidir", 0)
+	_, y := onde(t, m, "decisão", 0)
 	l := strings.Split(m.Render(96, 30), "\n")[y]
 	if !strings.Contains(l, "48;2;71;54;105") {
 		t.Fatalf("linha selecionada sem fundo sel: %q", l)

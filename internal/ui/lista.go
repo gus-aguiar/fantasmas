@@ -32,6 +32,9 @@ type alvo struct {
 type linha struct {
 	desenha func(bg lipgloss.Color) string
 	item    int
+	// estreita redesenha a linha numa largura menor, para a dica da linha selecionada não cortar os
+	// metadados alinhados à direita; nil = a linha é só cortada
+	estreita func(bg lipgloss.Color, w int) string
 }
 
 func st(bg, fg lipgloss.Color) lipgloss.Style {
@@ -160,6 +163,12 @@ func (c *corpo) item(a alvo, fs ...func(bg lipgloss.Color) string) {
 	}
 }
 
+// itemColunas é um item de uma linha em colunas (ver colunas) que se redesenha mais estreito quando selecionado.
+func (c *corpo) itemColunas(a alvo, w int, glifo string, cor lipgloss.Color, titulo, meta string) {
+	c.item(a, func(bg lipgloss.Color) string { return colunas(bg, w, glifo, cor, titulo, meta) })
+	c.linhas[len(c.linhas)-1].estreita = func(bg lipgloss.Color, w int) string { return colunas(bg, w, glifo, cor, titulo, meta) }
+}
+
 // colunas é a linha de lista: glifo colorido, título na cor normal e metadados em cinza alinhados
 // à direita; o que não cabe é cortado com "…".
 func colunas(bg lipgloss.Color, largura int, glifo string, cor lipgloss.Color, titulo, meta string) string {
@@ -196,8 +205,7 @@ func (c *corpo) linhaLista(a alvo, glifo string, cor lipgloss.Color, nome, estad
 			meta = append(meta, p)
 		}
 	}
-	w := c.largura - 2
-	c.item(a, func(bg lipgloss.Color) string { return colunas(bg, w, glifo, cor, nome, juntar(meta)) })
+	c.itemColunas(a, c.largura-2, glifo, cor, nome, juntar(meta))
 }
 
 func juntar(partes []string) string { return strings.Join(partes, " · ") }

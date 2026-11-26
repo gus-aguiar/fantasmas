@@ -48,9 +48,11 @@ func comPipes(e dados.Estado, r *runnerPipes) Model {
 	return m
 }
 
-// selecionaSidequest põe a seleção na linha da sidequest id.
+// selecionaSidequest põe a seleção na linha da sidequest id; a carta enxuta só mostra as sidequests
+// da missão em foco, então foca a missão dona dela antes.
 func selecionaSidequest(t *testing.T, m Model, id int) Model {
 	t.Helper()
+	m = focaMissaoDe(m, id)
 	for i, a := range m.alvos() {
 		if a.pipe == id && a.vetoDe == "" && a.missao == "" {
 			m.sel = i
@@ -59,6 +61,30 @@ func selecionaSidequest(t *testing.T, m Model, id int) Model {
 	}
 	t.Fatalf("sidequest %d fora da gaveta", id)
 	return m
+}
+
+// focaMissaoDe foca a missão que tem a sidequest id; solta, tira o foco.
+func focaMissaoDe(m Model, id int) Model {
+	for _, ms := range m.estado.Missoes {
+		for _, x := range ms.Sidequests {
+			if x == id {
+				m.missao = ms.Slug
+				return m
+			}
+		}
+	}
+	m.missao = ""
+	return m
+}
+
+// telaFocada junta a tela com cada missão em foco, para ver as sidequests de todas.
+func telaFocada(m Model, w int) string {
+	var ps []string
+	for _, ms := range m.estado.Missoes {
+		m.missao = ms.Slug
+		ps = append(ps, telaSQ(m, w))
+	}
+	return strings.Join(ps, "\n")
 }
 
 // modeloPipes abre a gaveta missões da demo com a sidequest 13 selecionada.
@@ -118,14 +144,14 @@ func TestSemGavetaPipes(t *testing.T) {
 		t.Fatal("a gaveta pipes não existe mais")
 	}
 	for i, g := range Gavetas {
-		if g.Tecla != fmt.Sprint(i) {
+		if g.Tecla != fmt.Sprint(i+1) {
 			t.Fatalf("%s com tecla %s na posição %d", g.ID, g.Tecla, i)
 		}
 	}
 }
 
 func TestCartaMostraSidequestComBlocos(t *testing.T) {
-	p := telaSQ(comPipes(estadoSQ(), &runnerPipes{}), 140)
+	p := telaFocada(comPipes(estadoSQ(), &runnerPipes{}), 140)
 	for _, s := range []string{"implementar-homologar ■■□ homologar · login", "bugfix ■■■ concluída", "implementar-homologar ■■□ PR · falhou"} {
 		if !strings.Contains(p, s) {
 			t.Errorf("falta %q:\n%s", s, p)
@@ -166,10 +192,11 @@ func TestSoltasNoFimDaGaveta(t *testing.T) {
 	}
 }
 
-func TestRodapeContagem(t *testing.T) {
+// TestContagemNoTitulo: o rodapé de dicas saiu (o ? cobre); a contagem fica no título da seção.
+func TestContagemNoTitulo(t *testing.T) {
 	p := telaSQ(comPipes(estadoSQ(), &runnerPipes{}), 140)
-	if !strings.Contains(p, "2 missões · 4 sidequests (1 solta)") || !strings.Contains(p, "m nova missão") {
-		t.Fatalf("rodapé:\n%s", p)
+	if !strings.Contains(p, "MISSÕES 2") || !strings.Contains(p, "SIDEQUESTS SOLTAS") || strings.Contains(p, "m nova missão") {
+		t.Fatalf("contagem:\n%s", p)
 	}
 }
 
@@ -179,7 +206,7 @@ func TestLarguras56e96(t *testing.T) {
 		e := estadoSQ()
 		e.Sidequests[0].Pipeline = longo
 		m := comPipes(e, &runnerPipes{})
-		m.largura = w
+		m.largura, m.missao = w, "d21-placar"
 		out := m.Render(w, 60)
 		for i, l := range strings.Split(out, "\n") {
 			if lipgloss.Width(l) > w {
@@ -289,6 +316,7 @@ func TestTeclaMAbreMissao(t *testing.T) {
 func TestDecisoesComVetar(t *testing.T) {
 	r := &runnerPipes{}
 	m := comPipes(estadoSQ(), r)
+	m.missao = "mtg-preco-deck" // as decisões ficam na carta aberta
 	p := telaSQ(m, 140)
 	if !strings.Contains(p, "regra aprovou plano") || !strings.Contains(p, "v vetar") || !strings.Contains(p, "você aprovou plano") {
 		t.Fatalf("decisões:\n%s", p)
@@ -326,6 +354,7 @@ func TestDecisaoSemEtapaNaoVeta(t *testing.T) {
 	e.Missoes[1].Decisoes = []dados.Decisao{{Via: "regra", Slug: "A", Item: "pista rápida", Motivo: "pista rápida"}}
 	r := &runnerPipes{}
 	m := comPipes(e, r)
+	m.missao = "mtg-preco-deck"
 	if p := telaSQ(m, 140); !strings.Contains(p, "regra aprovou pista rápida") || strings.Contains(p, "vetar") {
 		t.Fatalf("decisão sem etapa não pode oferecer veto:\n%s", p)
 	}
@@ -350,6 +379,7 @@ func TestDecisaoUsaRunIDEStageID(t *testing.T) {
 	run := 2
 	e.Missoes[1].Decisoes = []dados.Decisao{{Via: "regra", Slug: "fora", Item: "plano", RunID: &run, StageID: "corrigir"}}
 	m := comPipes(e, &runnerPipes{})
+	m.missao = "mtg-preco-deck"
 	if !strings.Contains(telaSQ(m, 140), "v vetar") {
 		t.Fatal("decisão com run_id/stage_id devia ser vetável")
 	}
@@ -442,7 +472,8 @@ func TestPipesFormularioMontaComando(t *testing.T) {
 	m = teclaMsg(m, tea.KeyMsg{Type: tea.KeyTab})
 	m = digitaPipe(m, "Filtro")
 	m = tecla(m, "enter")
-	quer := "python3 /r/ddb.py --raiz /r sidequest new implementar --input card=VT-9 --input repos=WS React --title Filtro"
+	// com a missão d21-placar em foco, a sidequest nasce no workspace dela
+	quer := "python3 /r/ddb.py --raiz /r sidequest new implementar --input card=VT-9 --input repos=WS React --title Filtro --workspace w15"
 	if r.calls[len(r.calls)-1] != quer {
 		t.Fatalf("calls=%v", r.calls)
 	}
@@ -517,8 +548,9 @@ func TestPipesLinhaMostraGengarEProntidao(t *testing.T) {
 		m := comPipes(estadoPipes(), &runnerPipes{})
 		m.largura = w
 		out := m.Render(w, 80)
-		p := ansi.Strip(out)
-		if w >= 46 {
+		p := telaFocada(m, w)
+		// abaixo de 70 colunas a linha do gengar dedicado é cortada com "…"; só a largura é conferida
+		if w >= 70 {
 			for _, s := range []string{"g-mtg-preco-deck", "aguardando prontidão", "g-d21-placar", "✓ pronto"} {
 				if !strings.Contains(p, s) {
 					t.Errorf("w=%d: falta %q:\n%s", w, s, p)

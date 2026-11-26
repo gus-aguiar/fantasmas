@@ -42,10 +42,7 @@ func (c *corpo) itemFeed(i dados.ItemFeed, a alvo) {
 		verbo = s
 	}
 	if c.largura >= 70 {
-		w := c.largura - 2
-		c.item(a, func(bg lipgloss.Color) string {
-			return colunas(bg, w, glifoFeed[i.Tipo], cor, i.Sujeito+"  "+i.Texto, verbo)
-		})
+		c.itemColunas(a, c.largura-2, glifoFeed[i.Tipo], cor, i.Sujeito+"  "+i.Texto, verbo)
 		return
 	}
 	c.item(a,

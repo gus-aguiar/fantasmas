@@ -148,15 +148,20 @@ func TestTopoSemEmoji(t *testing.T) {
 	}
 }
 
-func TestTopoSemTravaForaDoWorkspace(t *testing.T) {
+// TestTopoSoMostraTravaOcupada: o topo só fala da máquina quando há alerta; trava livre ou ausente não aparece.
+func TestTopoSoMostraTravaOcupada(t *testing.T) {
 	e := estadoEx()
 	e.Maquina = []dados.Linha{{Chave: "memoria", Rotulo: "memória", Detalhe: "13 de 31 GB", Extra: "ok"}}
-	if out := ansi.Strip(Topo(e, 96, 0, false, "")); !strings.Contains(out, "sem fila de pesados fora do workspace") {
-		t.Fatalf("sem trava deveria dizer que está fora do workspace:\n%s", out)
+	if out := ansi.Strip(Topo(e, 96, 0, false, "")); strings.Contains(out, "pesados") {
+		t.Fatalf("sem trava, nada de pesados no topo:\n%s", out)
 	}
-	e.Maquina = nil
-	if out := ansi.Strip(Topo(e, 96, 0, false, "")); !strings.Contains(out, "fila de pesados livre") {
-		t.Fatalf("antes da primeira leitura segue o livre:\n%s", out)
+	e.Maquina = []dados.Linha{{Chave: "trava", Rotulo: "trava de testes pesados", Detalhe: "livre", Extra: "ok"}}
+	if out := ansi.Strip(Topo(e, 96, 0, false, "")); strings.Contains(out, "pesados") {
+		t.Fatalf("trava livre não é alerta:\n%s", out)
+	}
+	e.Maquina = []dados.Linha{{Chave: "trava", Rotulo: "trava de testes pesados", Detalhe: "c-vt-1 rodando E2E", Extra: "aviso"}}
+	if out := ansi.Strip(Topo(e, 96, 0, false, "")); !strings.Contains(out, "pesados: c-vt-1 rodando E2E") {
+		t.Fatalf("trava ocupada vira alerta no topo:\n%s", out)
 	}
 }
 
@@ -226,7 +231,8 @@ func TestDescricaoSemItalicoEApagada(t *testing.T) {
 	if want := st(T.Base, T.Dim).Render("  Seus PRs abertos e o que falta"); !strings.Contains(l, want) {
 		t.Fatalf("descrição deveria vir só em Dim, sem itálico: %q", l)
 	}
-	if !strings.Contains(l, st(T.Base, T.Sub).Bold(true).Render("PRs (7)")) {
+	// o título é o mesmo tom secundário, em negrito, com a contagem sem parênteses
+	if !strings.Contains(l, st(T.Base, T.Secundario()).Bold(true).Render("PRs 7")) {
 		t.Fatalf("título fora do estilo: %q", l)
 	}
 }
